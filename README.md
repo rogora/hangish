@@ -9,6 +9,7 @@ To compile this you will need to fetch project nemo-qml-plugin-notifications and
 
 If you like this app and want to contribute to its development, to improve its performance, features set and stability, you can make a donation.
 
+<html>
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
 <input type="hidden" name="cmd" value="_s-xclick">
 <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----MIIHPwYJKoZIhvcNAQcEoIIHMDCCBywCAQExggEwMIIBLAIBADCBlDCBjjELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbGl2ZV9jZXJ0czERMA8GA1UEAxQIbGl2ZV9hcGkxHDAaBgkqhkiG9w0BCQEWDXJlQHBheXBhbC5jb20CAQAwDQYJKoZIhvcNAQEBBQAEgYCZrKTWxjEze1JrA7GoycqeToKuh2xqjZkQhTibjA0rih07FEtXr1fyrwAZAlQdQHBIEZ5ocaCIvVJlAW6pPVe9BQPhRcisRK4LRi7xkOvKQjDZ6+aXa8t/bkTKtFU/jTRhJBZ4bxmkP0BXeO4fQksAcLMsvKGOiVbHQamUpK96JzELMAkGBSsOAwIaBQAwgbwGCSqGSIb3DQEHATAUBggqhkiG9w0DBwQIsqOQkHuuS1mAgZhY7Wd9tlJWuAyFmzNjeME8da+i0kIK8sEM+HtNLh88iJX4Ns78sNhzpkG62UuWuYSQejaAawm6rU/f/vz/Y1VVo6DkoML+Sfan/HaJRVj+l3Y5RxD7QryA0D/jKSmgL/XoKO9PM1eRDuAGXdK7aXBMRrBvicW32Z4pzo3gUVTvXWwBv3A23JdeBZQc47YeH8RpijTQDFMHNaCCA4cwggODMIIC7KADAgECAgEAMA0GCSqGSIb3DQEBBQUAMIGOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWluIFZpZXcxFDASBgNVBAoTC1BheVBhbCBJbmMuMRMwEQYDVQQLFApsaXZlX2NlcnRzMREwDwYDVQQDFAhsaXZlX2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNvbT
@@ -17,4 +18,5 @@ NBMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MRQwEgYDVQQKEwtQYXlQYWwgSW5jLjETMBEGA1UECxQKbG
 ">
 <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 <img alt="" border="0" src="https://www.paypalobjects.com/it_IT/i/scr/pixel.gif" width="1" height="1">
+</html>
 </form>
