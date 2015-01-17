@@ -55,10 +55,7 @@ void ConversationModel::addEventToConversation(QString convId, Event e)
     if (convId == id) {
         //It's the active one, should update model
         QString snd = getSenderName(e.sender.chat_id, conversations[i].participants);
-        //if (snd == myself.chat_id)
-        //    sndName = "Io";
-        //else
-            //sndName = getUserById(snd).first_name;
+
         QString text = "";
         foreach (EventValueSegment evs, e.value.segments)
             text += evs.value;
@@ -113,6 +110,11 @@ QString ConversationModel::getSenderName(QString chatId, QList<Participant> part
 void ConversationModel::loadConversation(QString cId)
 {
     id = cId;
+
+    //In this case the user went back to the roster page; no need to really reset the model yet
+    if (id == "")
+        return;
+
     beginResetModel();
     qDeleteAll(myList);
     myList.clear();
@@ -125,10 +127,6 @@ void ConversationModel::loadConversation(QString cId)
             foreach (Event e, c.events)
             {
                 QString snd = getSenderName(e.sender.chat_id, c.participants);
-                //if (snd == myself.chat_id)
-                //    sndName = "Io";
-                //else
-                    //sndName = getUserById(snd).first_name;
                 QString text = "";
                 foreach (EventValueSegment evs, e.value.segments)
                     text += evs.value;
@@ -156,7 +154,6 @@ void ConversationModel::loadConversation(QString cId)
 void ConversationModel::addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl)
 {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    //qDebug() << "Inserting " << sender << ": " << text;
     myList.append(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl));
     endInsertRows();
 }
@@ -167,7 +164,6 @@ int ConversationModel::rowCount(const QModelIndex &parent) const {
 }
 
 QVariant ConversationModel::data(const QModelIndex &index, int role) const {
-    //qDebug() << "REQUESTING DATA! " << role << " - " << index.row();
     ConversationElement * fobj = myList.at(index.row());
     if (role == SenderRole)
         return QVariant::fromValue(fobj->sender);

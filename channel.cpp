@@ -367,7 +367,6 @@ void Channel::longPollRequest()
     QList<QNetworkCookie> reqCookies;
 
     foreach (QNetworkCookie cookie, session_cookies) {
-        //if (cookie.name()=="SAPISID" || cookie.name()=="SAPISID" || cookie.name()=="HSID" || cookie.name()=="APISID" || cookie.name()=="SID")
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));

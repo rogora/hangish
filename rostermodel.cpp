@@ -111,6 +111,16 @@ void RosterModel::addUnreadMsg(QString convId)
     }
 }
 
+bool RosterModel::hasUnreadMessages(QString convId)
+{
+    foreach (ConvAbstract *c, conversations) {
+        if (c->convId == convId)
+        {
+            return (c->unread > 0);
+        }
+     }
+}
+
 void RosterModel::setReadConv(QString convId)
 {
     int i = 0;

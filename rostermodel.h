@@ -63,6 +63,7 @@ public:
     bool conversationExists(QString convId);
     void setReadConv(QString convId);
     void addUnreadMsg(QString convId);
+    bool hasUnreadMessages(QString convId);
 
 private:
     QList<ConvAbstract *> conversations;

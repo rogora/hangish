@@ -923,6 +923,10 @@ void Client::updateWatermarkReply()
 
 void Client::updateWatermark(QString convId)
 {
+    qDebug() << "Updating wm";
+    //If there are no unread messages we can avoid generating data traffic
+    if (!rosterModel->hasUnreadMessages(convId))
+        return;
     QString body = "[";
     body += getRequestHeader();
     body += ", [";
@@ -933,6 +937,8 @@ void Client::updateWatermark(QString convId)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/updatewatermark",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(updateWatermarkReply()));
+
+    rosterModel->setReadConv(convId);
 }
 
 
