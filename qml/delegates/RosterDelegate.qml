@@ -30,11 +30,4 @@ BackgroundItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
         }
     }
-    onClicked: {
-        //var convPage = Qt.createComponent("Conversation.qml");
-        console.log("Clicked " + id)
-        conversation.loadConversationModel(id);
-        rosterModel.readConv = id;
-        pageStack.push(conversation);
-    }
 }

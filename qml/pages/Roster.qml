@@ -37,7 +37,16 @@ Page {
         header: PageHeader {
             title: qsTr("Conversations")
         }
-        delegate: RosterDelegate { }
+        delegate: RosterDelegate {
+            onClicked: {
+                //var convPage = Qt.createComponent("Conversation.qml");
+                console.log("Clicked " + id)
+                conversation.loadConversationModel(id);
+                rosterModel.readConv = id;
+                conversation.conversationName = name;
+                pageStack.push(conversation);
+            }
+        }
         VerticalScrollDecorator {}
     }
     Connections {
