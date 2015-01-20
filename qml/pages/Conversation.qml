@@ -24,6 +24,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
+import "../delegates"
+
 Page {
     id: page
     objectName: "conversation"
@@ -53,74 +55,17 @@ Page {
         conversationModel.cid = cid;
     }
 
-    function openFullImage(url) {
-        console.log(url)
-        if (url.length>3) {
-            fsImage.loadImage(url)
-            pageStack.push(fsImage)
-        }
-    }
-
     SilicaListView {
         id: listView
         model: conversationModel
         anchors.fill: parent
         width: parent.width
-        anchors.margins: Theme.paddingLarge
         header: PageHeader {
             title: page.conversationName
         }
-        delegate: BackgroundItem {
-            id: delegate
-            height: itemId.height + 10
-            Item {
-            id: itemId
-            width: parent.width
-            height: msgTextLabel.paintedHeight + senderLabel.paintedHeight + imageView.paintedHeight
-            Column {
-                anchors.fill: parent
-                Label {
-                    id: senderLabel
-                    //width: parent.width
-                    x: Theme.paddingSmall
-                    font.pixelSize: Theme.fontSizeExtraSmall
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: sender + " " + timestamp
-                    //anchors.verticalCenter: parent.verticalCenter
-                    color: (senderId == page.selfChatId) ? Theme.highlightColor : Theme.primaryColor
-                }
-
-                Label {
-                    id: msgTextLabel
-                    width: parent.width
-                    x: Theme.paddingSmall
-                    //font.pixelSize: Theme.fontSizeExtraSmall
-                    text: msgtext
-                    wrapMode: Text.Wrap
-                    elide: Text.ElideRight
-                    truncationMode: TruncationMode.Fade
-                    horizontalAlignment: (senderId == page.selfChatId) ? Text.AlignLeft : Text.AlignRight
-                    //anchors.verticalCenter: parent.verticalCenter
-                    color: (senderId == page.selfChatId) ? Theme.highlightColor : Theme.primaryColor
-                }
-
-                Image {
-                    id: imageView
-                    source: previewimage
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
-                    cache: true
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: parent.width / 6 * 5
-                    x: Theme.paddingSmall
-                }
-            }
-            }
-            onClicked: openFullImage(fullimage)
-        }
+        delegate: Message { }
         VerticalScrollDecorator {}
-        footer:
-            Row {
+        footer: Row {
                 TextArea {
                     objectName: "sendTextArea"
                     id: sendBox
