@@ -30,7 +30,6 @@ Dialog {
     id: page
     objectName: "selectPicture"
     canAccept: selectedPath.length > 0
-    forwardNavigation: false
 
     property string selectedPath: ""
     property int selectedRotation: 0
@@ -39,33 +38,18 @@ Dialog {
     DialogHeader {
         id: title
         title: qsTr("Select picture")
-        dialog: Item {
-            width: page.width
-            property alias canAccept: page.canAccept
-            function accept() {
-                //FIXME: why do I have to push on Accept many times to let this function be called
-                console.log("called")
-                if (page.canAccept) {
-                    page.selected(selectedPath)
-                    pageStack.pop()
-                }
-                else {
-                    page.accept()
-                }
-            }
-        }
     }
 
     onStatusChanged: {
-        if (page.status == DialogStatus.Opened) {
+        if (page.status === DialogStatus.Opened) {
             selectedPath = ""
             selectedRotation = 0
         }
     }
 
-    onDone: {
+    onAccepted: {
+        page.selected(selectedPath)
     }
-
 
     SilicaGridView {
         id: view
