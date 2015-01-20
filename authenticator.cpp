@@ -27,7 +27,6 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36";
 static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
 
-static QString SUCCESS_URL = "https://talkgadget.google.com:443/talkgadget/gauth?verify=true&pli=1";
 static QString SECONDFACTOR_URL = "https://accounts.google.com/SecondFactor";
 
 void Authenticator::cb(QNetworkReply *reply) {
@@ -54,7 +53,7 @@ void Authenticator::cb(QNetworkReply *reply) {
                 followRedirection(possibleRedirectUrl.toUrl());
             }
             else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
-                if (reply->url() == SUCCESS_URL)
+                if (amILoggedIn())
                     getAuthCookies();
                 else if (reply->url().toString().startsWith(SECONDFACTOR_URL)) {
                     //2nd factor auth
@@ -95,7 +94,7 @@ void Authenticator::cb(QNetworkReply *reply) {
             //2nd factor response
             if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
                 //TODO: is this really a consistent check for everyone?
-                if (reply->url().toString().startsWith("https://myaccount.google.com"))
+                if (amILoggedIn())
                     getAuthCookies();
                 else {
                     emit authFailed(reply->url().toString());
@@ -142,7 +141,7 @@ void Authenticator::getAuthCookies()
     QJsonObject obj;
     foreach(QNetworkCookie cookie, sessionCookies) {
         //Let's save the relevant cookies
-        if (cookie.name()=="WCM" || cookie.name()=="WCSID" || cookie.name()=="S" || !cookie.isSessionCookie() && cookie.domain().contains("google.com") ) {
+        if (cookie.name()=="S" || !cookie.isSessionCookie() && cookie.domain().contains("google.com") ) {
             qDebug() << "GOOD: " << cookie.name() << " - " << cookie.domain() << " - " << cookie.isSessionCookie() << " - " << cookie.expirationDate().toString();
             obj[cookie.name()] = QJsonValue( QString(cookie.value()) );
             liveSessionCookies.append(cookie);
@@ -192,6 +191,18 @@ void Authenticator::send2ndFactorPin(QString pin)
 QList<QNetworkCookie> Authenticator::getCookies()
 {
     return sessionCookies;
+}
+
+bool Authenticator::amILoggedIn()
+{
+    int i = 0;
+    foreach(QNetworkCookie cookie, sessionCookies) {
+        if (cookie.name()=="APISID" || cookie.name()=="HSID" || cookie.name()=="S" || cookie.name()=="SAPISID" || cookie.name()=="SID" || cookie.name()=="SSID")
+            i++;
+    }
+    if (i>=6)
+        return true;
+    return false;
 }
 
 void Authenticator::updateCookies(QList<QNetworkCookie> cookies)

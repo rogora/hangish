@@ -51,6 +51,7 @@ private:
     void getGalxToken();
     void getAuthCookies();
     void followRedirection(QUrl url);
+    bool amILoggedIn();
 
 public slots:
     void cb(QNetworkReply *reply);
