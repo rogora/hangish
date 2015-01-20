@@ -55,7 +55,6 @@ class Channel : public QObject
 private:
     bool appPaused;
     ChannelEvent parseTypingNotification(QString input, ChannelEvent evt);
-    void longPollRequest();
     void fetchNewSid();
 
 public:
@@ -73,7 +72,9 @@ public slots:
     void nrf();
     void parseSid();
     void slotError(QNetworkReply::NetworkError err);
-    void LPRSlot();
+
+private slots:
+    void longPollRequest();
 
 signals:
     void channelLost();
