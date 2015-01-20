@@ -42,7 +42,8 @@ OTHER_FILES += qml/Hangish.qml \
     qml/pages/FullscreenImage.qml \
     qml/pages/ImagePicker.qml \
     qml/pages/InfoBanner.qml \
-    qml/delegates/Message.qml
+    qml/delegates/Message.qml \
+    qml/delegates/RosterDelegate.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line
