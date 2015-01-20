@@ -53,6 +53,7 @@ Page {
         page.selfChatId = Client.getSelfChatId()
         page.conversationId = cid;
         conversationModel.cid = cid;
+        listView.positionViewAtEnd()
     }
 
     SilicaListView {
