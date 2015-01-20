@@ -57,12 +57,11 @@ void Channel::fastReconnect()
     QTimer::singleShot(500, this, SLOT(LPRSlot()));
 }
 
-Channel::Channel(QQuickView *ui, QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
+Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
 {
     LPrep = NULL;
     channelError = false;
 
-    userInterface = ui;
     nam = n;
     myself = pms;
     conversationModel = cModel;

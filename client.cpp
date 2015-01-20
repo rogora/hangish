@@ -1030,7 +1030,7 @@ void Client::authenticationDone()
 
 void Client::initDone()
 {
-    channel = new Channel(userInterface, nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
+    channel = new Channel(nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
     QObject::connect(channel, SIGNAL(channelLost()), this, SLOT(channelLostSlot()));
     QObject::connect(channel, SIGNAL(channelRestored(QDateTime)), this, SLOT(channelRestoredSlot(QDateTime)));
     QObject::connect(channel, SIGNAL(isTyping(QString,QString,int)), this, SLOT(isTypingSlot(QString,QString,int)));
@@ -1045,11 +1045,10 @@ void Client::initDone()
 
 
 
-Client::Client(QQuickView *ui, RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
+Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
 {
     nam = new QNetworkAccessManager();
     initCompleted = false;
-    userInterface = ui;
     rosterModel = prosterModel;
     conversationModel = pconversationModel;
     contactsModel = pcontactsModel;

@@ -41,7 +41,6 @@ class Channel : public QObject
     Q_OBJECT
     //Used to know wether the network has problems, so that the app doesn't spawn lots of unuseful connections
     bool channelError;
-    QQuickView *userInterface;
     QNetworkReply *LPrep;
     User myself;
     ConversationModel *conversationModel;
@@ -60,7 +59,7 @@ private:
     void fetchNewSid();
 
 public:
-    Channel(QQuickView *ui, QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);
+    Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);
     void listen();
     void parseChannelData(QString sreply);
     QDateTime getLastPushTs();

@@ -59,7 +59,6 @@ private:
     bool appPaused;
     void forceChannelCheckAndRestore();
     bool initCompleted;
-    QQuickView *userInterface;
     User parseMySelf(QString sreply);
     void getPVTToken();
     User getUserById(QString chatId);
@@ -92,7 +91,7 @@ private:
     void syncAllNewEvents(QDateTime timestamp);
 
 public:
-    Client(QQuickView *ui, RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel);
+    Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel);
     void initChat(QString pvt);
     Q_INVOKABLE void sendChatMessage(QString segments, QString conversationId);
     Q_INVOKABLE void sendImage(QString segments, QString conversationId, QString filename);
