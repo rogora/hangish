@@ -34,6 +34,7 @@ QHash<int, QByteArray> RosterModel::roleNames() const {
         roles.insert(NameRole, QByteArray("name"));
         roles.insert(PartnumRole, QByteArray("particpantsNum"));
         roles.insert(UnreadRole, QByteArray("unread"));
+        roles.insert(ImageRole, "imagePath");
         return roles;
 }
 
@@ -55,6 +56,12 @@ QVariant RosterModel::data(const QModelIndex &index, int role) const
         return QVariant::fromValue(conv->convId);
     else if (role == UnreadRole)
         return QVariant::fromValue(conv->unread);
+    else if (role == ImageRole) {
+        if (conv->imagePaths.size()) // TODO once we should support multiple images
+            return conv->imagePaths[0];
+        else
+            return "";
+    }
 
     return QVariant();
 }
@@ -68,16 +75,25 @@ void RosterModel::setMySelf(User pmyself)
 void RosterModel::addConversationAbstract(Conversation pConv)
 {
     QString name = "";
-    if (pConv.name.size()>1)
+    QStringList imagePaths;
+    if (pConv.name.size() > 1) {
         name = pConv.name;
-    else
-        foreach (Participant p, pConv.participants)
-            if (p.user.chat_id!=myself.chat_id)
+    } else {
+        foreach (Participant p, pConv.participants) {
+            if (p.user.chat_id!=myself.chat_id) {
                 if (pConv.participants.last().user.chat_id != p.user.chat_id && pConv.participants.last().user.chat_id != myself.chat_id)  name += QString(p.user.display_name + ", ");
                 else name += QString(p.user.display_name + " ");
+                if (!p.user.photo.isEmpty()) {
+                    QString image = p.user.photo;
+                    if (!image.startsWith("https:")) image.prepend("https:");
+                    imagePaths << image;
+                }
+            }
+        }
+    }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    conversations.append(new ConvAbstract(pConv.id, name, pConv.participants.size(), pConv.unread));
+    conversations.append(new ConvAbstract(pConv.id, name, imagePaths, pConv.participants.size(), pConv.unread));
     endInsertRows();
 }
 

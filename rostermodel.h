@@ -31,12 +31,14 @@ class ConvAbstract {
 public:
     QString convId;
     QString name;
+    QStringList imagePaths;
     int participantsNum;
     int unread;
 
-    ConvAbstract(QString pconvId, QString pname, int ppNum, int pUnread) {
+    ConvAbstract(QString pconvId, QString pname, QStringList imgPaths, int ppNum, int pUnread) {
         convId = pconvId;
         name = pname;
+        imagePaths = imgPaths;
         participantsNum = ppNum;
         unread = pUnread;
     }
@@ -54,7 +56,8 @@ public:
         NameRole = Qt::UserRole + 1,
         PartnumRole,
         ConvIdRole,
-        UnreadRole
+        UnreadRole,
+        ImageRole
     };
     explicit RosterModel(QObject *parent = 0);
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
