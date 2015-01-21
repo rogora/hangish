@@ -21,6 +21,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 */
 
 
+#include <QtCore/QScopedPointer>
+
 #include <sailfishapp.h>
 #include <client.h>
 #include "conversationmodel.h"
@@ -31,22 +33,19 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication *app = SailfishApp::application(argc, argv);
-    QQuickView *view = SailfishApp::createView();
-    //view->rootContext()->setContextProperty("cppproperty", view);
+    QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
+    QScopedPointer<QQuickView> view(SailfishApp::createView());
     ConversationModel *conversationModel = new ConversationModel();
     RosterModel *rosterModel = new RosterModel();
     ContactsModel *contactsModel = new ContactsModel();
     FileModel *fileModel = new FileModel();
-    Client *c = new Client(view, rosterModel, conversationModel, contactsModel);
+    Client *c = new Client(rosterModel, conversationModel, contactsModel);
 
-    //qmlRegisterType<ConversationModel>("org.rogora.hangouts", 1, 0, "ConversationModel");
     view->rootContext()->setContextProperty("conversationModel", conversationModel);
     view->rootContext()->setContextProperty("rosterModel", rosterModel);
     view->rootContext()->setContextProperty("contactsModel", contactsModel);
     view->rootContext()->setContextProperty("fileModel", fileModel);
     view->engine()->rootContext()->setContextProperty("Client", c);
-//    view->rootContext()->setContextProperty("Client", c);
 
     QDBusConnection system = QDBusConnection::systemBus();
         if (!system.isConnected())
@@ -72,6 +71,5 @@ int main(int argc, char *argv[])
     view->setSource(SailfishApp::pathTo("qml/Hangish.qml"));
     view->showFullScreen();
     app->exec();
-    //return SailfishApp::main(argc, argv);
 }
 

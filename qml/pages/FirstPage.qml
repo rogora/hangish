@@ -93,7 +93,7 @@ Dialog {
             TextField {
                 id: passwdField
                 echoMode: TextInput.Password
-                placeholderText: ""
+                placeholderText: "Password"
                 label: "Password"
                 width: parent.width
             }

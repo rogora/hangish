@@ -41,7 +41,7 @@ void Channel::checkChannel()
             delete LPrep;
         }
         */
-        QTimer::singleShot(500, this, SLOT(LPRSlot()));
+        QTimer::singleShot(500, this, SLOT(longPollRequest()));
     }
 }
 
@@ -54,15 +54,14 @@ void Channel::fastReconnect()
         delete LPrep;
     }
     */
-    QTimer::singleShot(500, this, SLOT(LPRSlot()));
+    QTimer::singleShot(500, this, SLOT(longPollRequest()));
 }
 
-Channel::Channel(QQuickView *ui, QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
+Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
 {
     LPrep = NULL;
     channelError = false;
 
-    userInterface = ui;
     nam = n;
     myself = pms;
     conversationModel = cModel;
@@ -409,11 +408,6 @@ void Channel::listen()
         }
         retries--;
     }
-}
-
-void Channel::LPRSlot()
-{
-    longPollRequest();
 }
 
 QDateTime Channel::getLastPushTs()
