@@ -77,6 +77,7 @@ private slots:
     void longPollRequest();
 
 signals:
+    void updateWM(QString convId);
     void channelLost();
     void channelRestored(QDateTime lastRecv);
     void isTyping(QString convId, QString chatId, int type);

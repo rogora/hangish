@@ -110,7 +110,7 @@ bool RosterModel::conversationExists(QString convId)
 void RosterModel::addUnreadMsg(QString convId)
 {
     int i = 0;
-    qDebug() << "Setting as read " << convId;
+    qDebug() << "adding unread msg " << convId;
     foreach (ConvAbstract *c, conversations) {
         if (c->convId == convId)
         {

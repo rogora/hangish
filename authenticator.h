@@ -57,6 +57,7 @@ public slots:
     void cb(QNetworkReply *reply);
 
 signals:
+    void loginNeeded();
     void gotCookies();
     void authFailed(QString error);
 };

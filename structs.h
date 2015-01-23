@@ -86,6 +86,7 @@ struct Event {
     EventValue value;
     Identity sender;
     QDateTime timestamp;
+    int notificationLevel;
 };
 
 struct ContinuationToken {

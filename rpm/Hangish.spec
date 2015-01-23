@@ -14,7 +14,7 @@ Name:       Hangish
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Jolla Google Hangouts Client
 Version:    0.2
-Release:    1
+Release:    4
 Group:      Qt/Qt
 License:    GPL3
 URL:        http://example.org/

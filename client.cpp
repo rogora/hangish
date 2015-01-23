@@ -307,7 +307,7 @@ void Client::parseConversationState(QString conv)
     if (c.events.size() > 1)
         //More than 1 new message -> show a generic notification
         emit showNotification(QString(c.events.size() + "new messages"), "Restored channel", "You have new msgs", "sender");
-    else if (c.events.size() == 1)
+    else if (c.events.size() == 1 && c.events[0].notificationLevel == 30)
         //Only 1 new message -> show a specific notification
         emit showNotification(c.events[0].value.segments[0].value, c.events[0].sender.chat_id, c.events[0].value.segments[0].value, c.events[0].sender.chat_id);
 }
@@ -907,7 +907,7 @@ void Client::setActiveClient()
     body += "]";
     qDebug() << body;
     QNetworkReply *reply = sendRequest("clients/setactiveclient",body);
-    QObject::connect(reply, SIGNAL(finished()), this, SLOT(syncAllNewEventsReply()));
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(setActiveClientReply()));
 }
 
 void Client::updateWatermarkReply()
@@ -1034,6 +1034,7 @@ void Client::initDone()
     QObject::connect(channel, SIGNAL(channelLost()), this, SLOT(channelLostSlot()));
     QObject::connect(channel, SIGNAL(channelRestored(QDateTime)), this, SLOT(channelRestoredSlot(QDateTime)));
     QObject::connect(channel, SIGNAL(isTyping(QString,QString,int)), this, SLOT(isTypingSlot(QString,QString,int)));
+    QObject::connect(channel, SIGNAL(updateWM(QString)), this, SLOT(updateWatermark(QString)));
 
     Notifier *notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
@@ -1043,10 +1044,16 @@ void Client::initDone()
     initCompleted = true;
 }
 
-
+void Client::loginNeededSlot()
+{
+    qDebug() << "lneed";
+    //Using this bool to avoid sending signal before ui is opened (which causes the signal to be ignored)
+    needLogin = true;
+}
 
 Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
 {
+    needLogin = false;
     nam = new QNetworkAccessManager();
     initCompleted = false;
     rosterModel = prosterModel;
@@ -1055,6 +1062,7 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
 
     //init tools
     auth = new Authenticator();
+    QObject::connect(auth, SIGNAL(loginNeeded()), this, SLOT(loginNeededSlot()));
     QObject::connect(auth, SIGNAL(gotCookies()), this, SLOT(authenticationDone()));
     QObject::connect(auth, SIGNAL(authFailed(QString)), this, SLOT(authFailedSlot(QString)));
 
@@ -1125,7 +1133,8 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
 
 void Client::forceChannelRestore()
 {
-    channelRestoredSlot(channel->getLastPushTs());
+    //Ok, channel is dead; don't wait for the timer and try to bring it up again
+    channel->fastReconnect();
 }
 
 void Client::forceChannelCheckAndRestore()
@@ -1142,9 +1151,17 @@ void Client::forceChannelCheckAndRestore()
 
 void Client::setAppOpened()
 {
+    if (needLogin)
+        emit(loginNeeded());
+
     appPaused = false;
     if (!initCompleted)
         return;
+
+    QString convId = conversationModel->getCid();
+    if (convId!="")
+        updateWatermark(convId);
+
     setActiveClient();
     channel->setAppOpened();
     forceChannelCheckAndRestore();

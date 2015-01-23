@@ -51,6 +51,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    bool needLogin;
     QDateTime lastSetActive;
     QList<OutgoingImage> outgoingImages;
 
@@ -102,12 +103,12 @@ public:
     Q_INVOKABLE void testNotification();
     Q_INVOKABLE void forceChannelRestore();
     Q_INVOKABLE void setActiveClient();
-    Q_INVOKABLE void updateWatermark(QString convId);
     Q_INVOKABLE void setAppPaused();
     Q_INVOKABLE void setAppOpened();
 
 
 public slots:
+    Q_INVOKABLE void updateWatermark(QString convId);
     void authenticationDone();
     void initDone();
     void networkReply();
@@ -125,8 +126,10 @@ public slots:
     void connectivityChanged(QString a,QDBusVariant b);
     void isTypingSlot(QString convId, QString chatId, int type);
     void authFailedSlot(QString error);
+    void loginNeededSlot();
 
 signals:
+    void loginNeeded();
     void messageSent();
     void messageNotSent();
     void conversationLoaded();

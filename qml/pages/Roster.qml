@@ -30,6 +30,14 @@ Page {
     id: page
     objectName: "roster"
 
+    onStatusChanged: {
+        console.log(page.status)
+        if (page.status==2) {
+            console.log("Resetting conv")
+            conversationModel.cid = ""
+        }
+     }
+
     SilicaListView {
         id: listView
         model: rosterModel

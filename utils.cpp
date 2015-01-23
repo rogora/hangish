@@ -301,6 +301,22 @@ EventValue Utils::parseEventValue(QString input)
     return res;
 }
 
+int Utils::parseNotificationLevel(QString input)
+{
+    qDebug() << input;
+    int start = 1;
+    //userid
+    getNextAtomicField(input, start);
+    //client_gen_id
+    getNextAtomicField(input, start);
+    //not level
+    QString nl = getNextAtomicField(input, start);
+    qDebug() << nl;
+    if (nl=="")
+        return 0; //Unknown, this is actually possible and used for old messages
+    return nl.toInt();
+}
+
 Event Utils::parseEvent(QString conv)
 {
     int start=1;
@@ -315,8 +331,9 @@ Event Utils::parseEvent(QString conv)
     qint64 ts = (qint64)tsll;
     res.timestamp = QDateTime::fromMSecsSinceEpoch(ts/1000);
 
-    //self event state - needed? let's trash it by now
-    getNextAtomicField(conv, start);
+    //self event state - this hold Notification level -> should we raise a notification for this event?
+    QString self_state = getNextAtomicField(conv, start);
+    res.notificationLevel = parseNotificationLevel(self_state);
 
     //skip 2 fields
     for (int i=0; i<2; i++)

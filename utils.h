@@ -53,6 +53,9 @@ public:
 
     static QString getChatidFromIdentity(QString identity);
 
+    static int parseNotificationLevel(QString input);
+
+
 
 };
 

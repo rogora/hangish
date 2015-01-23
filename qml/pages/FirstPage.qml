@@ -27,22 +27,36 @@ import Sailfish.Silica 1.0
 
 Dialog {
     id: page
+    DialogHeader {
+        id: dhead
+        visible: false
+        acceptText: qsTr("Login")
+    }
 
     Connections
         {
             target: Client
             onInitFinished: {
-                column.destroy()
-                pageStack.push(Qt.resolvedUrl("Roster.qml"))
+                column.visible = false
+                dhead.visible = false
+                pageStack.replace(Qt.resolvedUrl("Roster.qml"))
+                infotext.text = "Logged in"
                 infoColumn.visible = true
             }
+            onLoginNeeded: {
+                infoColumn.visible = false
+                console.log("LOgin needed")
+                dhead.visible = true
+                column.visible = true
+            }
+
             onAuthFailed: resultLabel.text = qsTr("Login Failed ") + error
         }
 
 
     onAccepted: {
         console.log("Accepted")
-        if (pinField.text=="") {
+        if (pinField.text==="") {
             Client.sendCredentials(emailField.text.trim(), passwdField.text.trim())
         }
         else {
@@ -51,9 +65,11 @@ Dialog {
         }
     }
 
+
     // To enable PullDownMenu, place our content in a SilicaFlickable
+    /*
     SilicaFlickable {
-        anchors.fill: parent
+        anchors.top: dhead.bottom
 
         // PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
         PullDownMenu {
@@ -70,20 +86,22 @@ Dialog {
 
         }
 
+
         // Tell SilicaFlickable the height of its content.
         contentHeight: column.height
+        */
 
         // Place our content in a Column.  The PageHeader is always placed at the top
         // of the page, followed by our content.
         Column {
+
             id: column
+            visible: false
+            anchors.top: dhead.bottom
 
             width: page.width
             spacing: Theme.paddingLarge
-            DialogHeader {
-                acceptText: qsTr("Login")
-                cancelText: qsTr("Cancel")
-            }
+
             TextField {
                 id: emailField
                 placeholderText: "Email"
@@ -119,16 +137,18 @@ Dialog {
             }
         }
         Column {
+            anchors.top: dhead.bottom
             id: infoColumn
-            visible: false
+            visible: true
             width: page.width
             spacing: Theme.paddingLarge
             Label {
-                text: qsTr("Hangouts - Logged in")
+                id: infotext
+                text: qsTr("Logging in... wait")
                 width: parent.width
             }
         }
-    }
+   // }
 }
 
 

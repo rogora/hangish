@@ -259,10 +259,10 @@ void Authenticator::auth()
 
     }
     else {
-
         auth_phase = 0;
         QObject::connect(&nam, SIGNAL(finished(QNetworkReply*)), this, SLOT(cb(QNetworkReply *)));
         nam.setCookieJar(&cJar);
+        emit loginNeeded();
         getGalxToken();
     }
 }

@@ -30,6 +30,12 @@ CoverBackground {
             target: Client
             onChannelLost: label.text = "Offline"
             onChannelRestored: label.text = "Hangouts online"
+            onIsTyping: {
+                if (status===1)
+                    label.text = qsTr(uname + " is typing")
+                else if (status===3)
+                    label.text = qsTr("Hangouts online")
+            }
         }
 
     Label {
@@ -38,6 +44,7 @@ CoverBackground {
         text: qsTr("Hangouts")
     }
 
+    /*
     CoverActionList {
         id: coverAction
 
@@ -45,12 +52,12 @@ CoverBackground {
             iconSource: "image://theme/icon-cover-next"
             onTriggered: Client.forceChannelRestore()
         }
-/*
+
         CoverAction {
             iconSource: "image://theme/icon-cover-pause"
         }
-        */
     }
+        */
 
 }
 

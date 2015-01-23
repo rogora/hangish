@@ -110,12 +110,12 @@ Page {
                         console.log("is typing")
                         console.log(id)
                         console.log(convId)
-                        if (page.conversationId == convId) {
-                            if (status == 1)
+                        if (page.conversationId === convId) {
+                            if (status === 1)
                                 sendBox.placeholderText = qsTr(id + " is typing")
-                            else if (status == 2)
+                            else if (status === 2)
                                 sendBox.placeholderText = qsTr(id + " paused")
-                            else if (status == 3)
+                            else if (status === 3)
                                 sendBox.placeholderText = qsTr("Reply")
                         }
                     }

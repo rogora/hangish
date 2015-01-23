@@ -127,7 +127,7 @@ Dialog {
                 id: mArea
                 anchors.fill: parent
                 onClicked: {
-                    if (page.selectedPath == model.path) {
+                    if (page.selectedPath === model.path) {
                         page.selectedPath = ""
                         page.selectedRotation = 0
                     }

@@ -183,14 +183,19 @@ void Channel::parseChannelData(QString sreply)
                 if (evt.value.valid) {
                     qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
                     conversationModel->addEventToConversation(evt.conversationId, evt);
-                    qDebug() << "0";
                     if (evt.sender.chat_id != myself.chat_id) {
                         //Signal new event only if the actual conversation isn't already visible to the user
                         qDebug() << conversationModel->getCid();
                         qDebug() << evt.conversationId;
-                        if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
+                        qDebug() << evt.notificationLevel;
+                        if (evt.notificationLevel==30 && (appPaused || (conversationModel->getCid() != evt.conversationId))) {
                             rosterModel->addUnreadMsg(evt.conversationId);
                             emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
+                        }
+                        else {
+                            //Update watermark, since I've read the message; if notification level this should be the active client
+                            if (evt.notificationLevel==30)
+                                emit updateWM(evt.conversationId);
                         }
                     }
                 }
@@ -287,11 +292,7 @@ void Channel::parseSid()
         qDebug() << cookie.name();
         for (int i=0; i<session_cookies.size(); i++) {
             if (session_cookies[i].name() == cookie.name()) {
-                ////qDebug() << "Found! " << session_cookies[i].value();
-                session_cookies.removeAt(i);
-                session_cookies.append(cookie);
-                //break;
-                ////qDebug() << "now! " << session_cookies[i].value();
+                session_cookies[i].value() = cookie.value();
             }
         }
     }
@@ -363,12 +364,7 @@ void Channel::longPollRequest()
     req.setRawHeader("User-Agent", QVariant::fromValue(user_agent).toByteArray());
     req.setRawHeader("Connection", "Keep-Alive");
 
-    QList<QNetworkCookie> reqCookies;
-
-    foreach (QNetworkCookie cookie, session_cookies) {
-            reqCookies.append(cookie);
-    }
-    req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
+    req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(session_cookies));
     ////qDebug() << "Gonna lp";
     LPrep = nam->get(req);
     QObject::connect(LPrep, SIGNAL(readyRead()), this, SLOT(nr()));
