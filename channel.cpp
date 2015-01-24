@@ -170,8 +170,15 @@ void Channel::parseChannelData(QString sreply)
             if (payload.size() < 30) break;
             ChannelEvent cevt;
             start = 1;
-            //Do i want to parse this? Info about active clients
+            //Info about active clients -- if I'm not the active client then I must disable notifications!
             QString header = Utils::getNextAtomicField(payload, start);
+            qDebug() << header;
+            if (header.size()>10)
+                {
+                    QString newId;
+                    int as = Utils::parseActiveClientUpdate(header, newId);
+                    emit activeClientUpdate(as);
+                }
             //conv notification; always none?
             Utils::getNextAtomicField(payload, start);
             //evt notification -- this holds the actual message
@@ -210,10 +217,13 @@ void Channel::parseChannelData(QString sreply)
             qDebug() << "typing string " << typing;
             if (typing.size() > 3) {
                 cevt = parseTypingNotification(typing, cevt);
-                emit isTyping(cevt.conversationId, cevt.userId, cevt.typingStatus);
+                //I would know wether myself is typing :)
+                if (!cevt.userId.contains(myself.chat_id))
+                    emit isTyping(cevt.conversationId, cevt.userId, cevt.typingStatus);
             }
-            //notification level
-            Utils::getNextAtomicField(payload, start);
+            //notification level; wasn't this already in the event info?
+            QString notifLev = Utils::getNextAtomicField(payload, start);
+            qDebug() << notifLev;
             //reply to invite
             Utils::getNextAtomicField(payload, start);
             //watermark
@@ -287,7 +297,7 @@ void Channel::parseSid()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    ////qDebug() << "Got " << c.size() << "from" << reply->url();
+    //Eventually update cookies, may set S
     foreach(QNetworkCookie cookie, c) {
         qDebug() << cookie.name();
         for (int i=0; i<session_cookies.size(); i++) {
@@ -298,35 +308,80 @@ void Channel::parseSid()
     }
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
-        int start;
-        start = rep.indexOf("[")+1;
-        for (;;) {
-            QString tmp = Utils::getNextAtomicField(rep, start);
-            if (tmp.size() < 5) break;
-            if (tmp.at(1)=='0') {
-                int strt = Utils::findPositionFromComma(tmp, 0, 2);
-                int stop = Utils::findPositionFromComma(tmp, strt, 1);
-                sid = tmp.mid(strt+2, stop-strt-3);
-                ////qDebug() << sid;
-            }
-            else if (tmp.at(1)=='5') {
-                int strt = Utils::findPositionFromComma(tmp, 0, 4);
-                int stop = tmp.indexOf("/", strt);
-                email = tmp.mid(strt+2, stop-strt-2);
-                ////qDebug() << email;
-                strt = stop+1;
-                stop = tmp.indexOf("]", strt);
-                header_client = tmp.mid(strt, stop-strt-2);
-                ////qDebug() << header_client;
-            }
-            else if (tmp.at(1)=='6') {
-                int strt = Utils::findPositionFromComma(tmp, 0, 4);
-                int stop = Utils::findPositionFromComma(tmp, strt, 1);
-                gsessionid = tmp.mid(strt+2, stop-strt-3);
-                ////qDebug() << gsessionid;
-            }
+        qDebug() << rep;
+        int start, start2=1, tmp=1;
+        //ROW 0
+        start = rep.indexOf("[");
+        QString zero = Utils::getNextAtomicField(Utils::getNextAtomicField(rep, start), start2);
+        qDebug() << zero;
+        //Skip 1
+        Utils::getNextAtomicField(zero, tmp);
+        zero = Utils::getNextAtomicField(zero, tmp);
+        tmp = 1;
+        //Skip 1
+        Utils::getNextAtomicField(zero, tmp);
+        sid = Utils::getNextAtomicField(zero, tmp);
+        sid = sid.mid(1, sid.size()-2);
+        qDebug() << sid;
 
-        }
+        //ROW 1 and 2 discarded
+        tmp = 1;
+        start2 = rep.indexOf("[", start2);
+        QString one = Utils::getNextAtomicField(rep, start2);
+        qDebug() << one;
+        start2 = rep.indexOf("[", start2);
+        QString two = Utils::getNextAtomicField(rep, start2);
+        qDebug() << two;
+
+
+        //ROW 3
+        start2 = rep.indexOf("[", start2);
+        QString three = Utils::getNextAtomicField(rep, start2);
+        qDebug() << three;
+        //Skip 1
+        Utils::getNextAtomicField(three, tmp);
+        three = Utils::getNextAtomicField(three, tmp);
+        tmp = 1;
+        //Skip 1
+        Utils::getNextAtomicField(three, tmp);
+        three = Utils::getNextAtomicField(three, tmp);
+        tmp = 1;
+        //Skip 1
+        Utils::getNextAtomicField(three, tmp);
+        three = Utils::getNextAtomicField(three, tmp);
+        tmp = 1;
+
+        Utils::getNextAtomicField(three, tmp);
+        email = Utils::getNextAtomicField(three, tmp);
+        email = email.mid(1, email.size()-2);
+        QStringList temp = email.split("/");
+        qDebug() << temp.at(0);
+        email = temp.at(0);
+        qDebug() << temp.at(1);
+        header_client = temp.at(1);
+        emit updateClientId(header_client);
+
+        //ROW 4
+        start2 = rep.indexOf("[", start2);
+        QString four = Utils::getNextAtomicField(rep, start2);
+        qDebug() << four;
+        //Skip 1
+        Utils::getNextAtomicField(four, tmp);
+        four = Utils::getNextAtomicField(four, tmp);
+        tmp = 1;
+        //Skip 1
+        Utils::getNextAtomicField(four, tmp);
+        four = Utils::getNextAtomicField(four, tmp);
+        tmp = 1;
+        //Skip 1
+        Utils::getNextAtomicField(four, tmp);
+        four = Utils::getNextAtomicField(four, tmp);
+        tmp = 1;
+
+        Utils::getNextAtomicField(four, tmp);
+        gsessionid = Utils::getNextAtomicField(four, tmp);
+        gsessionid = gsessionid.mid(1, gsessionid.size()-2);
+
     }
     //Now the reply should be std
     if (!channelError) longPollRequest();
@@ -375,6 +430,7 @@ void Channel::longPollRequest()
 
 void Channel::fetchNewSid()
 {
+    qDebug() << "fetch new sid";
     QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
     ////qDebug() << req.url().toString();
     //QVariant body = "{\"VER\":8, \"RID\": 81187, \"clid\": \"" + clid + "\", \"ec\": \"" + ec + "\", \"prop\": \"" + prop + "\"}";

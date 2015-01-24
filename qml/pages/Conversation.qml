@@ -74,10 +74,23 @@ Page {
                     focus: true
                     color: Theme.highlightColor
                     font.family: "cursive"
-                    placeholderText: "Reply"
+                    placeholderText: qsTr("Reply")
+                    property int typingStatus: 3
+                    onTextChanged: {
+                        console.log("Text changed!")
+                        if (sendBox.text!=="" && typingStatus === 3) {
+                            typingStatus = 1
+                            Client.setTyping(page.conversationId, typingStatus)
+                        }
+                        if (sendBox.text==="" && typingStatus !== 3) {
+                            typingStatus = 3
+                            Client.setTyping(page.conversationId, typingStatus)
+                        }
+                    }
+
                     function sendMessage() {
-                        if (sendBox.text.trim()=="") {
-                            console.log("Empty message")
+                        if (sendBox.text.trim()==="") {
+                            console.log(qsTr("Empty message"))
                             ibanner.displayError(qsTr("Can't send empty message"))
                             return
                         }

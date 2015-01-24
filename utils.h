@@ -55,6 +55,8 @@ public:
 
     static int parseNotificationLevel(QString input);
 
+    static int parseActiveClientUpdate(QString input, QString &newId);
+
 
 
 };

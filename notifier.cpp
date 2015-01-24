@@ -33,6 +33,9 @@ Notifier::Notifier(QObject *parent, ContactsModel *contacts) :
 
 void Notifier::showNotification(QString preview, QString summary, QString body, QString sender)
 {
+    //if acs == 2 another client is active, don't fire notification!
+    if (activeClientState == 2)
+        return;
     qDebug() << "shn called";
     //Check notification aspect
     Notification *n = new Notification(myParent);
@@ -64,4 +67,9 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     n->publish();
     lastId = n->replacesId();
     qDebug() << "pubbed " << n->replacesId();
+}
+
+void Notifier::activeClientUpdate(int state)
+{
+    activeClientState = state;
 }

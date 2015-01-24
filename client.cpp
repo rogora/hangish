@@ -435,7 +435,7 @@ void Client::networkReply()
             Utils::getNextAtomicField(sreply, start);
             tmp = Utils::getNextAtomicField(sreply, start);
             header_id = tmp.mid(1, tmp.size()-2);
-            clid = header_id;
+            //clid = header_id;
 
             start = sreply.indexOf("AF_initDataCallback({key: 'ds:2'");
             start = sreply.indexOf("data:[[", start) + strlen("data:[[");
@@ -853,7 +853,7 @@ void Client::syncAllNewEventsReply()
             QString cstate = Utils::getNextAtomicField(cstates, start);
             qDebug() << cstate;
             if (cstate.size()<10) break;
-            parseConversationState(cstate);
+                parseConversationState(cstate);
         }
     }
     delete reply;
@@ -865,6 +865,61 @@ void Client::syncAllNewEventsDataArrval()
 
 }
 
+void Client::setPresence(bool goingOffline)
+{
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [720, ";
+    if (goingOffline)
+        body += "1";
+    else
+        body += "40";
+    body += "], null, null, [";
+    if (goingOffline)
+        body += "1";
+    else
+        body += "0";
+    body += "], []]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("presence/setpresence",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(setPresenceReply()));
+}
+
+void Client::setPresenceReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QString sreply = reply->readAll();
+    qDebug() << "Set presence response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
+        qDebug() << "There was an error setting presence! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    }
+}
+
+
+void Client::setTyping(QString convId, int status)
+{
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(status);
+    body += "]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/settyping",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(setTypingReply()));
+}
+
+void Client::setTypingReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QString sreply = reply->readAll();
+    qDebug() << "Set typing response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
+        qDebug() << "There was an error setting typing status! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    }
+}
+
 void Client::setActiveClientReply()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
@@ -872,6 +927,9 @@ void Client::setActiveClientReply()
     qDebug() << "Set active client response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error setting active client! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    }
+    else {
+        notifier->activeClientUpdate(1);
     }
 }
 
@@ -1001,7 +1059,7 @@ void Client::pvtReply()
 
 void Client::initChat(QString pvt)
 {
-    QString surl = QString("https://talkgadget.google.com/u/0/talkgadget/_/chat?prop=aChromeExtension&fid=gtn-roster-iframe-id&ec=[\"ci:ec\",true,true,false]");
+    QString surl = QString("https://talkgadget.google.com/u/0/talkgadget/_/chat?prop=hangish&fid=gtn-roster-iframe-id&ec=[\"ci:ec\",true,true,false]");
     surl += "&pvt=";
     surl += pvt;
     QUrl url(surl);
@@ -1035,10 +1093,12 @@ void Client::initDone()
     QObject::connect(channel, SIGNAL(channelRestored(QDateTime)), this, SLOT(channelRestoredSlot(QDateTime)));
     QObject::connect(channel, SIGNAL(isTyping(QString,QString,int)), this, SLOT(isTypingSlot(QString,QString,int)));
     QObject::connect(channel, SIGNAL(updateWM(QString)), this, SLOT(updateWatermark(QString)));
+    QObject::connect(channel, SIGNAL(updateClientId(QString)), this, SLOT(updateClientId(QString)));
 
-    Notifier *notifier = new Notifier(this, contactsModel);
+    notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
     QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
+    QObject::connect(channel, SIGNAL(activeClientUpdate(int)), notifier, SLOT(activeClientUpdate(int)));
 
     channel->listen();
     initCompleted = true;
@@ -1163,6 +1223,7 @@ void Client::setAppOpened()
         updateWatermark(convId);
 
     setActiveClient();
+    //setPresence(false);
     channel->setAppOpened();
     forceChannelCheckAndRestore();
 }
@@ -1172,10 +1233,17 @@ void Client::setAppPaused()
     if (!initCompleted)
         return;
     channel->setAppPaused();
+    //setPresence(true);
     appPaused = true;
 }
 
 void Client::authFailedSlot(QString error)
 {
     emit authFailed(error);
+}
+
+void Client::updateClientId(QString newID)
+{
+    qDebug() << "Updating clid " << newID;
+    clid = newID;
 }

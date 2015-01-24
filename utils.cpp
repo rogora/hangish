@@ -363,3 +363,19 @@ QString Utils::getChatidFromIdentity(QString identity)
     qDebug() << "User chatid is " << res;
     return res;
 }
+
+int Utils::parseActiveClientUpdate(QString input, QString &newId)
+{
+    newId = "";
+    int start = 1;
+    QString active_client_state = getNextAtomicField(input, start);
+    qDebug() << active_client_state;
+    //Skip 6
+    for (int i=0; i<6; i++)
+        getNextAtomicField(input, start);
+    QString client_id = getNextAtomicField(input, start);
+    if (client_id.size()>10)
+        //Id of the client that triggered the state update
+        newId = client_id.mid(1, client_id.size()-2);
+    return active_client_state.toInt();
+}

@@ -77,6 +77,8 @@ private slots:
     void longPollRequest();
 
 signals:
+    void updateClientId(QString newID);
+    void activeClientUpdate(int state);
     void updateWM(QString convId);
     void channelLost();
     void channelRestored(QDateTime lastRecv);

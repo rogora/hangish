@@ -35,6 +35,7 @@ public:
     Notifier(QObject *parent, ContactsModel *contacts);
 
 private:
+    int activeClientState;
     ContactsModel *cModel;
     QObject *myParent;
     uint lastId;
@@ -43,6 +44,7 @@ signals:
 
 public slots:
     void showNotification(QString preview, QString summary, QString body, QString sender);
+    void activeClientUpdate(int state);
 
 };
 
