@@ -318,15 +318,15 @@ QList<Conversation> Client::parseConversations(QString conv)
     int start = conv.indexOf("</script><script>AF_initDataCallback({key: 'ds:19',");
     start = conv.indexOf("data:[[", start) + strlen("data:[[");
     //Skip 3 fields
-    Utils::getNextAtomicField(conv, start);
-    Utils::getNextAtomicField(conv, start);
-    Utils::getNextAtomicField(conv, start);
+    for (int i=0; i<3; i++)
+        Utils::getNextAtomicField(conv, start);
     QString conversations = Utils::getNextField(conv,start);
     int ptr;
     int st=1;
     for (;;) {
         QString conversation = Utils::getNextAtomicField(conversations,st);
-        if (conversation.size()<10) break;
+        if (conversation.size()<10)
+            break;
         res.append(parseConversation(conversation, ptr));
     }
 
@@ -687,7 +687,7 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
     body += "\"], ";
     body += QString::number(random);
     body += ", 2, [1]], null, null, null, []]";
-    //Eventually body += ", 2, [1]], ["104102810333068211970",null,null,null,null,[]], null, null, []]";
+    //Eventually body += ", 2, [1]], ["chatId",null,null,null,null,[]], null, null, []]";
     qDebug() << "gotH " << body;
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
@@ -860,10 +860,12 @@ void Client::syncAllNewEventsReply()
 
 }
 
+/*
 void Client::syncAllNewEventsDataArrval()
 {
 
 }
+*/
 
 void Client::setPresence(bool goingOffline)
 {
@@ -895,6 +897,29 @@ void Client::setPresenceReply()
     }
 }
 
+void Client::setFocusReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QString sreply = reply->readAll();
+    qDebug() << "Set focus response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
+        qDebug() << "There was an error setting focus! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    }
+}
+
+void Client::setFocus(QString convId, int status)
+{
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(status);
+    body += ", 20]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/setfocus",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(setFocusReply()));
+}
 
 void Client::setTyping(QString convId, int status)
 {

@@ -33,6 +33,7 @@ Page {
     onStatusChanged: {
         console.log(page.status)
         if (page.status==2) {
+            Client.setFocus(conversationModel.cid, 2)
             console.log("Resetting conv")
             conversationModel.cid = ""
         }
@@ -70,10 +71,14 @@ Page {
             if(!Qt.application.active) {
                 // Pauze the game here
                 console.log("app paused")
+                if (conversationModel.cid != "")
+                    Client.setFocus(conversationModel.cid, 2)
                 Client.setAppPaused()
             }
             else {
                 console.log("app opened")
+                if (conversationModel.cid != "")
+                    Client.setFocus(conversationModel.cid, 1)
                 Client.setAppOpened()
             }
         }

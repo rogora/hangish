@@ -104,6 +104,7 @@ public:
     Q_INVOKABLE void testNotification();
     Q_INVOKABLE void forceChannelRestore();
     Q_INVOKABLE void setActiveClient();
+    Q_INVOKABLE void setFocus(QString convId, int status);
     Q_INVOKABLE void setTyping(QString convId, int status);
     Q_INVOKABLE void setPresence(bool goingOffline);
     Q_INVOKABLE void setAppPaused();
@@ -133,6 +134,7 @@ public slots:
     void authFailedSlot(QString error);
     void loginNeededSlot();
     void updateClientId(QString newID);
+    void setFocusReply();
 
 signals:
     void loginNeeded();
