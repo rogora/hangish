@@ -55,6 +55,7 @@ class ConversationModel : public QAbstractListModel
     Q_PROPERTY(QString cid READ getCid WRITE loadConversation FINAL)
 
 public:
+    void updateReadState(ReadState rs);
     void addConversation(Conversation c);
     void addEventToConversation(QString convId, Event e);
     void addSentMessage(QString convId, Event evt);

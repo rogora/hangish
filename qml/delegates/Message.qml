@@ -37,13 +37,17 @@ BackgroundItem {
                 x: Theme.paddingSmall
             }
 
-            Label {
+           Label {
                 id: senderLabel
                 width: parent.width
                 font.pixelSize: Theme.fontSizeExtraSmall
                 text: (sender != "" ? sender + ", " : "") + timestamp
                 horizontalAlignment: (senderId == page.selfChatId) ? Text.AlignLeft : Text.AlignRight
                 color: (senderId == page.selfChatId) ? Theme.secondaryHighlightColor : Theme.secondaryColor
+            }
+            Image {
+                id: hasReadImage
+
             }
 
         }

@@ -31,11 +31,6 @@ enum ConversationType {
     GROUP = 2
 };
 
-struct ReadState {
-    QString userid;
-    QDateTime last_read;
-};
-
 struct InitialData {
     QString self_entity;
     QString entities;
@@ -48,6 +43,13 @@ struct Identity {
     QString chat_id;
     QString gaia_id;
 };
+
+struct ReadState {
+    Identity userid;
+    QDateTime last_read;
+    QString convId;
+};
+
 
 struct User {
     QString chat_id;

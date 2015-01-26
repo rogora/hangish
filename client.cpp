@@ -234,7 +234,7 @@ Conversation Client::parseConversationAbstract(QString abstract, Conversation re
     //Then type
     //res.type = ConversationType(.mid(1,1).toInt());
     QString type = Utils::getNextAtomicField(abstract, start);
-    //qDebug() << "TYPE: " << type;
+    qDebug() << "TYPE: " << type;
     //Name (optional) -- need to see what happens when it is set
     QString name = Utils::getNextAtomicField(abstract, start);
     res.name = name;
@@ -244,14 +244,27 @@ Conversation Client::parseConversationAbstract(QString abstract, Conversation re
     for (int i=0; i<3; i++)
         Utils::getNextAtomicField(abstract, start);
     //Now I have read_state
-    //TODO TODO TODO
-    Utils::getNextAtomicField(abstract, start);
+    QList<ReadState> readStates = Utils::parseReadStates(Utils::getNextAtomicField(abstract, start));
     //skip 4 fields
     for (int i=0; i<4; i++)
         Utils::getNextAtomicField(abstract, start);
     QString current_participants = Utils::getNextAtomicField(abstract, start);
     QString participants_data    = Utils::getNextAtomicField(abstract, start);
     res.participants = parseParticipants(current_participants, participants_data);
+
+    //Merge read states with participants
+    foreach (Participant p, res.participants)
+    {
+        foreach (ReadState r, readStates)
+        {
+            if (p.user.chat_id == r.userid.chat_id)
+            {
+                p.last_read_timestamp = r.last_read;
+                qDebug() << p.last_read_timestamp.toString();
+                break;
+            }
+        }
+    }
 
     return res;
 }

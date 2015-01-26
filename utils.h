@@ -57,8 +57,9 @@ public:
 
     static int parseActiveClientUpdate(QString input, QString &newId);
 
-
-
+    static ReadState parseReadState(QString input);
+    static QList<ReadState> parseReadStates(QString input);
+    static ReadState parseReadStateNotification(QString input);
 };
 
 #endif // UTILS_H

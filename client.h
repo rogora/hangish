@@ -121,7 +121,7 @@ public slots:
     void uploadImageReply();
     void uploadPerformedReply();
     void syncAllNewEventsReply();
-    void syncAllNewEventsDataArrval();
+    //void syncAllNewEventsDataArrval();
     void setActiveClientReply();
     void setTypingReply();
     void setPresenceReply();

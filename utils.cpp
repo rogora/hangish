@@ -33,10 +33,10 @@ QString Utils::getTextAtomicField(QString conv, int &start)
     if (stop==0) {
         return "";
     }
-    QString res = conv.mid(start, stop-start-1);
+    QString res = conv.mid(start, stop-start);
     //WORKAROUND, FIX ME
-    if (res.endsWith("\""))
-        res = res.left(res.size()-1);
+//    if (res.endsWith("\""))
+  //      res = res.left(res.size()-1);
 
     start = stop;
     res = res.remove('\\');
@@ -104,7 +104,7 @@ int Utils::skipTextFields(QString input, int startPos)
         }
         if (obrk == cbrk && ((quotes % 2) == 0))
         {
-            return res+1;
+            return res;
         }
         last = res;
         res++;
@@ -197,7 +197,7 @@ EventValueSegment Utils::parseEventValueSegment(QString segment)
         res.value = tmp.mid(1, lastQuote - 1);
     else
     */
-    res.value = tmp.mid(1, tmp.size() - 1);
+    res.value = tmp.mid(1, tmp.size() - 2);
 
     qDebug() << "value found " << res.value;
     return res;
@@ -378,4 +378,46 @@ int Utils::parseActiveClientUpdate(QString input, QString &newId)
         //Id of the client that triggered the state update
         newId = client_id.mid(1, client_id.size()-2);
     return active_client_state.toInt();
+}
+
+ReadState Utils::parseReadState(QString input)
+{
+    int start = 1;
+    ReadState res;
+    QString uid = getNextAtomicField(input, start);
+    qDebug() << uid;
+    res.userid = parseIdentity(uid);
+    QString ts = getNextAtomicField(input, start);
+    res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
+    qDebug() << ts;
+    return res;
+}
+
+ReadState Utils::parseReadStateNotification(QString input)
+{
+    int start = 1;
+    ReadState res;
+    QString uid = getNextAtomicField(input, start);
+    qDebug() << uid;
+    res.userid = parseIdentity(uid);
+    QString convId = getNextAtomicField(input, start);
+    qDebug() << convId;
+    res.convId = convId.mid(1, convId.size()-2);
+    QString ts = getNextAtomicField(input, start);
+    res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
+    qDebug() << ts;
+    return res;
+}
+
+QList<ReadState> Utils::parseReadStates(QString input)
+{
+    QList<ReadState> res;
+    int start = 1;
+    for (;;) {
+        QString tmp = getNextAtomicField(input, start);
+        if (tmp.size() < 10)
+            break;
+        res.append(parseReadState(tmp));
+    }
+    return res;
 }

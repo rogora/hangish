@@ -227,7 +227,11 @@ void Channel::parseChannelData(QString sreply)
             //reply to invite
             Utils::getNextAtomicField(payload, start);
             //watermark
-            Utils::getNextAtomicField(payload, start);
+            QString wmNotification = Utils::getNextAtomicField(payload, start);
+            qDebug() << wmNotification;
+            if (wmNotification.size()>10) {
+                conversationModel->updateReadState(Utils::parseReadStateNotification(wmNotification));
+            }
             //None?
             Utils::getNextAtomicField(payload, start);
             //settings
@@ -271,7 +275,7 @@ void Channel::nr()
     }
     //if I'm here it means the channel is working fine
     if (channelError) {
-        emit(channelRestored(lastPushReceived.addSecs(5)));
+        emit(channelRestored(lastPushReceived.addMSecs(500)));
         channelError = false;
     }
     lastPushReceived = QDateTime::currentDateTime();

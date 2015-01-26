@@ -107,6 +107,25 @@ QString ConversationModel::getSenderName(QString chatId, QList<Participant> part
             return p.user.first_name;
 }
 
+void ConversationModel::updateReadState(ReadState rs)
+{
+    bool found = false;
+    foreach (Conversation c, conversations) {
+        if (found)
+            break;
+        if (c.id == rs.convId) {
+            foreach (Participant p, c.participants) {
+                if (p.user.chat_id == rs.userid.chat_id) {
+                    p.last_read_timestamp = rs.last_read;
+                    found = true;
+                    //EMIT SIGNAL
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void ConversationModel::loadConversation(QString cId)
 {
     id = cId;
