@@ -218,7 +218,8 @@ QList<Participant> Client::parseParticipants(QString plist, QString data)
     for (;;) {
         QString part = Utils::getNextAtomicField(plist,start);
         if (part.size()<10) break;
-        res.append(parseParticipant(part));
+        Participant p = parseParticipant(part);
+        res.append(p);
     }
     return res;
 }
@@ -253,6 +254,8 @@ Conversation Client::parseConversationAbstract(QString abstract, Conversation re
     res.participants = parseParticipants(current_participants, participants_data);
 
     //Merge read states with participants
+
+    //THIS HOLD INFO ONLY ABOUT MYSELF, NOT NEEDED NOW!
     foreach (Participant p, res.participants)
     {
         foreach (ReadState r, readStates)
@@ -868,6 +871,7 @@ void Client::syncAllNewEventsReply()
             if (cstate.size()<10) break;
                 parseConversationState(cstate);
         }
+        needSync = false;
     }
     delete reply;
 
@@ -1151,6 +1155,7 @@ void Client::loginNeededSlot()
 
 Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
 {
+    needSync = false;
     needLogin = false;
     nam = new QNetworkAccessManager();
     initCompleted = false;
@@ -1211,8 +1216,13 @@ void Client::isTypingSlot(QString convId, QString chatId, int type)
 
 void Client::channelRestoredSlot(QDateTime lastRec)
 {
+    //If there was another pending req use its ts (that should be older)
+    if (!needSync) {
+        needSync = true;
+        needSyncTS = lastRec;
+    }
     qDebug() << "Chnl restored, gonna sync with " << lastRec.toString();
-    syncAllNewEvents(lastRec);
+    syncAllNewEvents(needSyncTS);
     emit(channelRestored());
 }
 
@@ -1255,6 +1265,9 @@ void Client::setAppOpened()
     appPaused = false;
     if (!initCompleted)
         return;
+
+    if (needSync)
+       syncAllNewEvents(needSyncTS);
 
     QString convId = conversationModel->getCid();
     if (convId!="")

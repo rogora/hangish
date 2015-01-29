@@ -36,14 +36,19 @@ public:
     QString senderId;
     QString fullimageUrl;
     QString previewImageUrl;
+    bool read;
 
-    ConversationElement(QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl) {
+    QDateTime ts;
+
+    ConversationElement(QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts) {
         text = pText;
         sender = pSender;
         senderId = pSenderId;
         timestamp = pTS;
         fullimageUrl = pFullImageUrl;
         previewImageUrl = pPrevImageUrl;
+        read = pRead;
+        ts = pts;
     }
 };
 
@@ -70,7 +75,8 @@ public:
         TextRole,
         FullImageRole,
         PreviewImageRole,
-        TimestampRole
+        TimestampRole,
+        ReadRole
     };
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
@@ -80,7 +86,7 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    void addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl);
+    void addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
 
 private:
     QString getSenderName(QString chatId, QList<Participant> participants);

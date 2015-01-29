@@ -41,6 +41,8 @@ BackgroundItem {
                 id: senderLabel
                 width: parent.width
                 font.pixelSize: Theme.fontSizeExtraSmall
+                font.bold: !read
+                font.italic: !read
                 text: (sender != "" ? sender + ", " : "") + timestamp
                 horizontalAlignment: (senderId == page.selfChatId) ? Text.AlignLeft : Text.AlignRight
                 color: (senderId == page.selfChatId) ? Theme.secondaryHighlightColor : Theme.secondaryColor

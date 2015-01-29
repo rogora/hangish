@@ -53,6 +53,8 @@ class Client : public QObject
 private:
     Notifier *notifier;
     bool needLogin;
+    bool needSync;
+    QDateTime needSyncTS;
     QDateTime lastSetActive;
     QList<OutgoingImage> outgoingImages;
 

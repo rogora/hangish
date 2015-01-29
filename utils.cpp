@@ -390,6 +390,7 @@ ReadState Utils::parseReadState(QString input)
     QString ts = getNextAtomicField(input, start);
     res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
     qDebug() << ts;
+    qDebug() << res.last_read.toString();
     return res;
 }
 
@@ -402,7 +403,8 @@ ReadState Utils::parseReadStateNotification(QString input)
     res.userid = parseIdentity(uid);
     QString convId = getNextAtomicField(input, start);
     qDebug() << convId;
-    res.convId = convId.mid(1, convId.size()-2);
+    //Directly skip [] brackets, without parsing another field
+    res.convId = convId.mid(2, convId.size()-4);
     QString ts = getNextAtomicField(input, start);
     res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
     qDebug() << ts;

@@ -73,7 +73,8 @@ void ConversationModel::addEventToConversation(QString convId, Event e)
             ts_string = e.timestamp.toString();
         else
             ts_string = e.timestamp.time().toString();
-        addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage);
+
+        addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
     }
 }
 
@@ -86,6 +87,7 @@ QHash<int, QByteArray> ConversationModel::roleNames() const {
         roles.insert(FullImageRole, QByteArray("fullimage"));
         roles.insert(PreviewImageRole, QByteArray("previewimage"));
         roles.insert(TimestampRole, QByteArray("timestamp"));
+        roles.insert(ReadRole, QByteArray("read"));
         return roles;
 }
 
@@ -109,18 +111,60 @@ QString ConversationModel::getSenderName(QString chatId, QList<Participant> part
 
 void ConversationModel::updateReadState(ReadState rs)
 {
+    qDebug() << "Updating read state: " << rs.convId << ", " << rs.userid.chat_id << " at " << rs.last_read.toString();
     bool found = false;
+    int i=0, j=0;
     foreach (Conversation c, conversations) {
         if (found)
             break;
         if (c.id == rs.convId) {
             foreach (Participant p, c.participants) {
                 if (p.user.chat_id == rs.userid.chat_id) {
-                    p.last_read_timestamp = rs.last_read;
+                    //p.last_read_timestamp = rs.last_read;
+                    qDebug() << "Updating 1 " << i << " - " << j;
+                    conversations[i].participants[j].last_read_timestamp = rs.last_read;
+                    qDebug() << "Updating " << conversations[i].participants[j].last_read_timestamp.toString();
                     found = true;
                     //EMIT SIGNAL
                     break;
                 }
+                j++;
+            }
+        }
+        i++;
+    }
+
+    //update data model if it refers to the active conv
+    if (rs.convId == id) {
+        qDebug() << "Updating model";
+        bool modified = false;
+        //Get a handle to the conv
+        Conversation conv;
+        foreach (Conversation c, conversations) {
+            if (c.id == rs.convId) {
+                conv = c;
+                break;
+            }
+        }
+        foreach (ConversationElement *ce, myList) {
+            bool read = true;
+            foreach (Participant p, conv.participants) {
+                if (p.last_read_timestamp.toMSecsSinceEpoch()>0 && (p.last_read_timestamp < ce->ts)) {
+                    read = false;
+                    break;
+                }
+            }
+            if (read && !ce->read) {
+                ce->read = true;
+                modified = true;
+            }
+        }
+        qDebug() << "modified " << modified;
+        if (modified) {
+            //TODO: check why this is the only (wrong) way to make it work!
+            for (int i=0; i<myList.size(); i++) {
+                QModelIndex r1 = index(i);
+                emit dataChanged(r1, r1);
             }
         }
     }
@@ -163,17 +207,29 @@ void ConversationModel::loadConversation(QString cId)
                     ts_string = e.timestamp.toString();
                 else
                     ts_string = e.timestamp.time().toString();
-                addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage);
+
+                bool read = true;
+                foreach (Participant p, c.participants) {
+                    qDebug() << "PART "  << p.user.display_name << "; " << p.last_read_timestamp.toString();
+                    qDebug() << p.last_read_timestamp.toMSecsSinceEpoch();
+                    qDebug() << e.timestamp.toString();
+                    if (p.last_read_timestamp.toMSecsSinceEpoch() > 0 && p.last_read_timestamp < e.timestamp) {
+                        read = false;
+                        break;
+                    }
+                }
+                addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp);
             }
-            return;
+            qDebug() << "Finished";
+            break;
         }
     }
 }
 
-void ConversationModel::addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl)
+void ConversationModel::addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
 {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    myList.append(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl));
+    myList.append(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
     endInsertRows();
 }
 
@@ -196,6 +252,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const {
         return QVariant::fromValue(fobj->fullimageUrl);
     else if (role == PreviewImageRole)
         return QVariant::fromValue(fobj->previewImageUrl);
+    else if (role == ReadRole)
+        return QVariant::fromValue(fobj->read);
 
     return QVariant();
 }
