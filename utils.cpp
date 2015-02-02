@@ -88,6 +88,7 @@ QString Utils::getNextField(QString conv, int start)
 
 int Utils::skipTextFields(QString input, int startPos)
 {
+    qDebug() << "TEXT: " << input;
     int res = startPos;
     int last = startPos;
     int obrk, cbrk, quotes;
@@ -100,9 +101,10 @@ int Utils::skipTextFields(QString input, int startPos)
         for (int j=last; j<res; j++) {
             if (input.at(j)=='[') obrk++;
             if (input.at(j)==']') cbrk++;
-            if (input.at(j)=='"' && (j>0 && input.at(j-1)!='\\')) quotes++;
+            if (input.at(j)=='"' && (j==input.lastIndexOf('"') || j==input.indexOf('"'))) quotes++;
         }
-        if (obrk == cbrk && ((quotes % 2) == 0))
+        //Workaround: when received from channel I have already removed backslashes from input!
+        if (obrk == cbrk && ((quotes % 2) == 0) && !(input.size() - res > strlen(",[0,0,0,0] \n,[]\n]")))
         {
             return res;
         }

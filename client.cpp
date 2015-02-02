@@ -164,8 +164,8 @@ QList<User> Client::parseGroup(QString input)
 QList<User> Client::parseUsers(QString userString)
 {
     QList<User> res;
-    int start = userString.indexOf("</script><script>AF_initDataCallback({key: 'ds:21',");
-    start = userString.indexOf("data:[[", start) + strlen("data:[[");
+    int start = userString.indexOf("</script><script>AF_initDataCallback({key: 'ds:37',");
+    start = userString.indexOf("return [[", start) + strlen("return [[");
     //Skip 2 fields
     Utils::getNextAtomicField(userString, start);
     Utils::getNextAtomicField(userString, start);
@@ -205,7 +205,6 @@ Participant Client::parseParticipant(QString plist)
 {
     Participant res;
     Identity tmp = Utils::parseIdentity(plist);
-    //qDebug() << "Will look for " << tmp.chat_id;
     res.user = getUserById(tmp.chat_id);
     return res;
 }
@@ -331,8 +330,8 @@ void Client::parseConversationState(QString conv)
 QList<Conversation> Client::parseConversations(QString conv)
 {
     QList<Conversation> res;
-    int start = conv.indexOf("</script><script>AF_initDataCallback({key: 'ds:19',");
-    start = conv.indexOf("data:[[", start) + strlen("data:[[");
+    int start = conv.indexOf("</script><script>AF_initDataCallback({key: 'ds:36',");
+    start = conv.indexOf("return [[", start) + strlen("return [[");
     //Skip 3 fields
     for (int i=0; i<3; i++)
         Utils::getNextAtomicField(conv, start);
@@ -369,11 +368,11 @@ void Client::postReply(QNetworkReply *reply)
 
 User Client::parseMySelf(QString sreply) {
     //SELF INFO
-    int start = sreply.indexOf("AF_initDataCallback({key: 'ds:20'") + strlen("AF_initDataCallback({key: 'ds:20'");
-    start = sreply.indexOf("data:", start) + strlen("data:");
+    int start = sreply.indexOf("AF_initDataCallback({key: 'ds:35'") + strlen("AF_initDataCallback({key: 'ds:35'");
+    start = sreply.indexOf("return ", start) + strlen("return ");
     sreply = Utils::getNextField(sreply, start);
     QString self_info = Utils::getNextField(sreply, 1);
-    qDebug() << "SI: " << self_info;
+    //qDebug() << "SI: " << self_info;
     User res;
     start = 1;
     //skip 2
@@ -421,8 +420,8 @@ void Client::networkReply()
             api_key = sreply.mid(key_start, key_stop - key_start-1);
             qDebug() << "API KEY: " << api_key;
             if (api_key.contains("AF_initDataKeys") || api_key.size() < 10 || api_key.size() > 50 || sreply.contains("Logged")) {
-                qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 qDebug() << sreply;
+                qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 //exit(-1);
                 qDebug() << "Auth expired!";
                 //Not smart for sure, but it should be safe
@@ -472,6 +471,7 @@ void Client::networkReply()
             if (!myself.email.contains("@"))
             {
                 qDebug() << "Error parsing myself info";
+                qDebug() << sreply;
                 //initChat();
                 //return;
             }
@@ -971,7 +971,8 @@ void Client::setActiveClientReply()
         qDebug() << "There was an error setting active client! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
     else {
-        notifier->activeClientUpdate(1);
+        //I've just set this; I can assume I am the active client
+        notifier->activeClientUpdate(IS_ACTIVE_CLIENT);
     }
 }
 
@@ -998,7 +999,7 @@ void Client::setActiveClient()
     lastSetActive = now;
     QString body = "[";
     body += getRequestHeader();
-    body += ", 1, \"";
+    body += ", " + QString::number(IS_ACTIVE_CLIENT) +" , \"";
     body += myself.email;
     body += "/";
     body += clid;

@@ -31,6 +31,29 @@ enum ConversationType {
     GROUP = 2
 };
 
+enum NotificationLevel {
+    UNKNOWN = 0,
+    QUIET   = 10,
+    RING    = 30
+};
+
+enum FocusStatus {
+    FOCUSED     = 1,
+    UNFOCUSED   = 2
+};
+
+enum ActiveClientState {
+    NO_ACTIVE_CLIENT        = 0,
+    IS_ACTIVE_CLIENT        = 1,
+    OTHER_CLIENT_IS_ACTIVE  = 2
+};
+
+enum TypingStatus {
+    TYPING  = 1,
+    PAUSED  = 2,
+    STOPPED = 3
+};
+
 struct InitialData {
     QString self_entity;
     QString entities;

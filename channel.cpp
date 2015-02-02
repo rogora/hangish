@@ -195,14 +195,15 @@ void Channel::parseChannelData(QString sreply)
                         qDebug() << conversationModel->getCid();
                         qDebug() << evt.conversationId;
                         qDebug() << evt.notificationLevel;
-                        if (evt.notificationLevel==30 && (appPaused || (conversationModel->getCid() != evt.conversationId))) {
+                        if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
                             rosterModel->addUnreadMsg(evt.conversationId);
-                            emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
+                            //If notificationLevel == 10 the conversation has been silenced -> don't notify
+                            if (evt.notificationLevel==RING)
+                                emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
                         }
                         else {
                             //Update watermark, since I've read the message; if notification level this should be the active client
-                            if (evt.notificationLevel==30)
-                                emit updateWM(evt.conversationId);
+                            emit updateWM(evt.conversationId);
                         }
                     }
                 }

@@ -121,11 +121,9 @@ void ConversationModel::updateReadState(ReadState rs)
             foreach (Participant p, c.participants) {
                 if (p.user.chat_id == rs.userid.chat_id) {
                     //p.last_read_timestamp = rs.last_read;
-                    qDebug() << "Updating 1 " << i << " - " << j;
                     conversations[i].participants[j].last_read_timestamp = rs.last_read;
-                    qDebug() << "Updating " << conversations[i].participants[j].last_read_timestamp.toString();
                     found = true;
-                    //EMIT SIGNAL
+                    //EMIT SIGNAL?
                     break;
                 }
                 j++;
@@ -136,7 +134,6 @@ void ConversationModel::updateReadState(ReadState rs)
 
     //update data model if it refers to the active conv
     if (rs.convId == id) {
-        qDebug() << "Updating model";
         bool modified = false;
         //Get a handle to the conv
         Conversation conv;
@@ -159,7 +156,6 @@ void ConversationModel::updateReadState(ReadState rs)
                 modified = true;
             }
         }
-        qDebug() << "modified " << modified;
         if (modified) {
             //TODO: check why this is the only (wrong) way to make it work!
             for (int i=0; i<myList.size(); i++) {
@@ -210,9 +206,6 @@ void ConversationModel::loadConversation(QString cId)
 
                 bool read = true;
                 foreach (Participant p, c.participants) {
-                    qDebug() << "PART "  << p.user.display_name << "; " << p.last_read_timestamp.toString();
-                    qDebug() << p.last_read_timestamp.toMSecsSinceEpoch();
-                    qDebug() << e.timestamp.toString();
                     if (p.last_read_timestamp.toMSecsSinceEpoch() > 0 && p.last_read_timestamp < e.timestamp) {
                         read = false;
                         break;
@@ -220,7 +213,6 @@ void ConversationModel::loadConversation(QString cId)
                 }
                 addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp);
             }
-            qDebug() << "Finished";
             break;
         }
     }
