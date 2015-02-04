@@ -104,13 +104,34 @@ ChannelEvent Channel::parseTypingNotification(QString input, ChannelEvent evt)
 
 void Channel::nrf()
 {
-    qDebug() << "FINISHED called!";
-    /*
-    if (LPrep != NULL) {
-        LPrep->close();
-        delete LPrep;
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    //Eventually update cookies, may set S
+    bool cookieUpdated = false;
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+        for (int i=0; i<session_cookies.size(); i++) {
+            if (session_cookies[i].name() == cookie.name()) {
+                session_cookies[i].setValue(cookie.value());
+                emit cookieUpdateNeeded(cookie);
+                qDebug() << "Updated cookie " << cookie.name();
+                cookieUpdated = true;
+            }
+        }
     }
-    */
+    if (cookieUpdated) {
+        nam = new QNetworkAccessManager();
+        emit qnamUpdated(nam);
+    }
+    qDebug() << "FINISHED called! " << channelError;
+    QString srep = reply->readAll();
+    qDebug() << srep;
+    if (srep.contains("Unknown SID")) {
+        //Need new SID
+        fetchNewSid();
+        return;
+    }
     //If there's a network problem don't do anything, the connection will be retried by checkChannelStatus
     if (!channelError) longPollRequest();
 }
@@ -262,6 +283,27 @@ void Channel::parseChannelData(QString sreply)
 void Channel::nr()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    //Eventually update cookies, may set S
+    bool cookieUpdated = false;
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+        for (int i=0; i<session_cookies.size(); i++) {
+            if (session_cookies[i].name() == cookie.name()) {
+                session_cookies[i].setValue(cookie.value());
+                emit cookieUpdateNeeded(cookie);
+                qDebug() << "Updated cookie " << cookie.name();
+                cookieUpdated = true;
+            }
+        }
+    }
+    if (cookieUpdated) {
+        nam = new QNetworkAccessManager();
+        emit qnamUpdated(nam);
+    }
+
+    QString sreply = reply->read(MAX_READ_BYTES);
     ////qDebug() << "Got reply for lp " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     ///
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==401) {
@@ -269,19 +311,14 @@ void Channel::nr()
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==400) {
         //Need new SID?
+        qDebug() << sreply;
         qDebug() << "New seed needed?";
         fetchNewSid();
         qDebug() << "fetched";
         return;
     }
-    //if I'm here it means the channel is working fine
-    if (channelError) {
-        emit(channelRestored(lastPushReceived.addMSecs(500)));
-        channelError = false;
-    }
-    lastPushReceived = QDateTime::currentDateTime();
 
-    QString sreply = reply->read(MAX_READ_BYTES);
+
     if (lastIncompleteParcel!="")
         sreply = QString(lastIncompleteParcel + sreply);
     if (!sreply.endsWith("]\n"))
@@ -291,6 +328,13 @@ void Channel::nr()
         return;
     }
     else lastIncompleteParcel = "";
+
+    //if I'm here it means the channel is working fine
+    if (channelError) {
+        emit(channelRestored(lastPushReceived.addMSecs(500)));
+        channelError = false;
+    }
+    lastPushReceived = QDateTime::currentDateTime();
 
     parseChannelData(sreply);
     //if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200)
@@ -303,13 +347,21 @@ void Channel::parseSid()
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
     //Eventually update cookies, may set S
+    bool cookieUpdated = false;
     foreach(QNetworkCookie cookie, c) {
         qDebug() << cookie.name();
         for (int i=0; i<session_cookies.size(); i++) {
             if (session_cookies[i].name() == cookie.name()) {
-                session_cookies[i].value() = cookie.value();
+                session_cookies[i].setValue(cookie.value());
+                emit cookieUpdateNeeded(cookie);
+                qDebug() << "Updated cookie " << cookie.name();
+                cookieUpdated = true;
             }
         }
+    }
+    if (cookieUpdated) {
+        nam = new QNetworkAccessManager();
+        emit qnamUpdated(nam);
     }
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
@@ -388,6 +440,11 @@ void Channel::parseSid()
         gsessionid = gsessionid.mid(1, gsessionid.size()-2);
 
     }
+    else {
+        QString rep = reply->readAll();
+        qDebug() << rep;
+        qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    }
     //Now the reply should be std
     if (!channelError) longPollRequest();
 }
@@ -425,7 +482,7 @@ void Channel::longPollRequest()
     req.setRawHeader("Connection", "Keep-Alive");
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(session_cookies));
-    ////qDebug() << "Gonna lp";
+    qDebug() << "Making lp req";
     LPrep = nam->get(req);
     QObject::connect(LPrep, SIGNAL(readyRead()), this, SLOT(nr()));
     QObject::connect(LPrep, SIGNAL(finished()), this, SLOT(nrf()));

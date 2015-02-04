@@ -1129,6 +1129,24 @@ void Client::authenticationDone()
     getPVTToken();
 }
 
+void Client::qnamUpdatedSlot(QNetworkAccessManager *qnam)
+{
+    qDebug() << "CLT: upd nam";
+    nam = qnam;
+}
+
+void Client::cookieUpdateSlot(QNetworkCookie cookie)
+{
+    qDebug() << "CLT: upd " << cookie.name();
+    for (int i=0; i<sessionCookies.size(); i++) {
+        if (sessionCookies[i].name() == cookie.name()) {
+            qDebug() << "Updating cookie " << sessionCookies[i].name();
+            sessionCookies[i].setValue(cookie.value());
+        }
+    }
+    //auth->updateCookies(sessionCookies);
+}
+
 void Client::initDone()
 {
     channel = new Channel(nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
@@ -1137,6 +1155,8 @@ void Client::initDone()
     QObject::connect(channel, SIGNAL(isTyping(QString,QString,int)), this, SLOT(isTypingSlot(QString,QString,int)));
     QObject::connect(channel, SIGNAL(updateWM(QString)), this, SLOT(updateWatermark(QString)));
     QObject::connect(channel, SIGNAL(updateClientId(QString)), this, SLOT(updateClientId(QString)));
+    QObject::connect(channel, SIGNAL(cookieUpdateNeeded(QNetworkCookie)), this, SLOT(cookieUpdateSlot(QNetworkCookie)));
+    QObject::connect(channel, SIGNAL(qnamUpdated(QNetworkAccessManager*)), this, SLOT(qnamUpdatedSlot(QNetworkAccessManager*)));
 
     notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
