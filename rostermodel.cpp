@@ -87,6 +87,8 @@ void RosterModel::addConversationAbstract(Conversation pConv)
                     QString image = p.user.photo;
                     if (!image.startsWith("https:")) image.prepend("https:");
                     imagePaths << image;
+                } else {
+                    imagePaths << "https://lh4.googleusercontent.com/-t-90NQEuSh0/AAAAAAAAAAI/AAAAAAAAAAA/iuscVShbLTY/s64-c-k/photo.jpg"; // Seems like this is the default icon.
                 }
             }
         }
