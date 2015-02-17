@@ -39,9 +39,10 @@ Dialog {
             onInitFinished: {
                 column.visible = false
                 dhead.visible = false
-                pageStack.replace(Qt.resolvedUrl("Roster.qml"))
+                loginIndicator.running = false
                 infotext.text = "Logged in"
                 infoColumn.visible = true
+                pageStack.replace(Qt.resolvedUrl("Roster.qml"))
             }
             onLoginNeeded: {
                 infoColumn.visible = false
@@ -137,15 +138,37 @@ Dialog {
             }
         }
         Column {
-            anchors.top: dhead.bottom
+            anchors.fill: parent
             id: infoColumn
             visible: true
-            width: page.width
+            width: parent.width
+            height: parent.height
+
             spacing: Theme.paddingLarge
+
+            Item {
+                // Spacer
+                height: parent.height / 3
+                width: 1
+            }
+
+            BusyIndicator {
+                id: loginIndicator
+                running: true
+                anchors.horizontalCenter: parent.horizontalCenter
+                size: BusyIndicatorSize.Large
+            }
+
             Label {
                 id: infotext
-                text: qsTr("Logging in... wait")
+                text: qsTr("Logging in")
                 width: parent.width
+                font {
+                    pixelSize: Theme.fontSizeLarge
+                    family: Theme.fontFamilyHeading
+                }
+                color: Theme.highlightColor
+                horizontalAlignment: Text.AlignHCenter
             }
         }
    // }
