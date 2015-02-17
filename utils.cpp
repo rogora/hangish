@@ -122,15 +122,21 @@ int Utils::skipFields(QString input, int startPos)
     int res = startPos;
     int last = startPos;
     int openbracket = 0, closebracket = 0;
+    int quotes = 0;
 
     for (; ;) {
         res = input.indexOf(",", res);
         if (res==-1) {
             return input.lastIndexOf("]");
         }
+        int escaped = -1;
         for (int j=last; j<res; j++) {
-            openbracket += input.at(j)=='[';
-            closebracket += input.at(j)==']';
+            if (input.at(j) == '\\') escaped = j;
+            if (escaped != j-1) quotes += input.at(j) == '"'; // If a quote is escaped it is in a string so ignore it.
+            if (quotes % 2 == 0) { // We only care for brackets which are not in quotes (e.g. strings)
+                openbracket += input.at(j)=='[';
+                closebracket += input.at(j)==']';
+            }
         }
         if (openbracket == closebracket)
         {
@@ -201,7 +207,7 @@ EventValueSegment Utils::parseEventValueSegment(QString segment)
     } else if (res.type == 1) { // NEW LINE
         res.value = "";
     } else if (res.type == 2) { // LINK
-        auto matchIt = STRING.globalMatch(segment);
+        QRegularExpressionMatchIterator matchIt = STRING.globalMatch(segment);
         int matches = 0;
         while (matchIt.hasNext()) {
             QString match = matchIt.next().captured();
