@@ -4,6 +4,9 @@ import Sailfish.Silica 1.0
 BackgroundItem {
     id: delegate
     height: itemId.height + 10
+
+    property string styleSheets: "<style type='text/css'>a:link {color:%1}</style>".arg(Theme.highlightColor)
+
     Item {
         id: itemId
         width: parent.width
@@ -15,15 +18,18 @@ BackgroundItem {
             anchors.leftMargin: Theme.paddingLarge
             anchors.rightMargin: Theme.paddingLarge
 
+
             Label {
                 id: msgTextLabel
                 width: parent.width
-                text: msgtext
+                text: styleSheets + msgtext
                 wrapMode: Text.Wrap
                 elide: Text.ElideRight
                 truncationMode: TruncationMode.Fade
                 horizontalAlignment: (senderId == page.selfChatId) ? Text.AlignLeft : Text.AlignRight
                 color: (senderId == page.selfChatId) ? Theme.highlightColor : Theme.primaryColor
+                textFormat: Text.RichText
+                onLinkActivated: Qt.openUrlExternally(link)
             }
 
             Image {

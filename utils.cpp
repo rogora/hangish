@@ -27,6 +27,8 @@ Utils::Utils()
 {
 }
 
+static const QRegularExpression STRING("(\'(([^\\\\\'])|(\\\\.))*?\')|(\"(([^\\\\\"])|(\\\\.))*?\")");
+
 QString Utils::getTextAtomicField(QString conv, int &start)
 {
     int stop = skipTextFields(conv, start);
@@ -119,8 +121,7 @@ int Utils::skipFields(QString input, int startPos)
 
     int res = startPos;
     int last = startPos;
-    int obrk, cbrk;
-    obrk = cbrk = 0;
+    int openbracket = 0, closebracket = 0;
 
     for (; ;) {
         res = input.indexOf(",", res);
@@ -128,10 +129,10 @@ int Utils::skipFields(QString input, int startPos)
             return input.lastIndexOf("]");
         }
         for (int j=last; j<res; j++) {
-            if (input.at(j)=='[') obrk++;
-            if (input.at(j)==']') cbrk++;
+            openbracket += input.at(j)=='[';
+            closebracket += input.at(j)==']';
         }
-        if (obrk == cbrk)
+        if (openbracket == closebracket)
         {
             return res+1;
         }
@@ -192,14 +193,33 @@ EventValueSegment Utils::parseEventValueSegment(QString segment)
     EventValueSegment res;
     int start = 1;
     res.type = getNextAtomicField(segment, start).toUInt();
-    QString tmp = getTextAtomicField(segment, start);
-   /* WORKAROUND
-    * int lastQuote = tmp.lastIndexOf('"');
-    if (lastQuote > 0)
-        res.value = tmp.mid(1, lastQuote - 1);
-    else
-    */
-    res.value = tmp.mid(1, tmp.size() - 2);
+    if (res.type == 0) { // TEXT
+        res.value = STRING.match(segment).captured();
+        // remove quotations
+        res.value = res.value.mid(1, res.value.size()-2);
+        res.value.remove("\\");
+    } else if (res.type == 1) { // NEW LINE
+        res.value = "";
+    } else if (res.type == 2) { // LINK
+        auto matchIt = STRING.globalMatch(segment);
+        int matches = 0;
+        while (matchIt.hasNext()) {
+            QString match = matchIt.next().captured();
+            match = match.mid(1, match.size()-2);
+            match.replace("\\u003d", "=");
+            match.replace("\\u0026", "&");
+            if (matches == 0) {
+                res.value = "<a href=" + match + ">" + match.toHtmlEscaped() + "</href>";
+            } else if (matches == 1) {
+                // ignore the link target, as it currently doesn't work.
+            } else {
+                res.value.append(" ").append(match);
+            }
+            ++matches;
+        }
+    } else {
+        qWarning() << "Unsupported message type" << res.type;
+    }
 
     qDebug() << "value found " << res.value;
     return res;
