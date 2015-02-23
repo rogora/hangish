@@ -27,6 +27,8 @@ Utils::Utils()
 {
 }
 
+static const QRegularExpression STRING("(\'(([^\\\\\'])|(\\\\.))*?\')|(\"(([^\\\\\"])|(\\\\.))*?\")");
+
 QString Utils::getTextAtomicField(QString conv, int &start)
 {
     int stop = skipTextFields(conv, start);
@@ -47,9 +49,9 @@ QString Utils::getTextAtomicField(QString conv, int &start)
 }
 
 
-QString Utils::getNextAtomicField(QString conv, int &start)
+QString Utils::getNextAtomicField(QString conv, int &start, bool parseBracketsInString)
 {
-    int stop = skipFields(conv, start);
+    int stop = skipFields(conv, start, parseBracketsInString);
     if (stop-start==0) {
         return "";
     }
@@ -113,25 +115,30 @@ int Utils::skipTextFields(QString input, int startPos)
     }
 }
 
-int Utils::skipFields(QString input, int startPos)
+int Utils::skipFields(QString input, int startPos, bool parseBracketsInString)
 {
     //Check for empty field
 
     int res = startPos;
     int last = startPos;
-    int obrk, cbrk;
-    obrk = cbrk = 0;
+    int openbracket = 0, closebracket = 0;
+    int quotes = 0;
 
     for (; ;) {
         res = input.indexOf(",", res);
         if (res==-1) {
             return input.lastIndexOf("]");
         }
+        int escaped = -1;
         for (int j=last; j<res; j++) {
-            if (input.at(j)=='[') obrk++;
-            if (input.at(j)==']') cbrk++;
+            if (input.at(j) == '\\') escaped = j;
+            if (escaped != j-1) quotes += input.at(j) == '"'; // If a quote is escaped it is in a string so ignore it.
+            if (parseBracketsInString || quotes % 2 == 0) { // We only care for brackets which are not in quotes (e.g. strings)
+                openbracket += input.at(j)=='[';
+                closebracket += input.at(j)==']';
+            }
         }
-        if (obrk == cbrk)
+        if (openbracket == closebracket)
         {
             return res+1;
         }
@@ -191,15 +198,34 @@ EventValueSegment Utils::parseEventValueSegment(QString segment)
 {
     EventValueSegment res;
     int start = 1;
-    res.type = getNextAtomicField(segment, start).toUInt();
-    QString tmp = getTextAtomicField(segment, start);
-   /* WORKAROUND
-    * int lastQuote = tmp.lastIndexOf('"');
-    if (lastQuote > 0)
-        res.value = tmp.mid(1, lastQuote - 1);
-    else
-    */
-    res.value = tmp.mid(1, tmp.size() - 2);
+    res.type = getNextAtomicField(segment, start, false).toUInt();
+    if (res.type == 0) { // TEXT
+        res.value = STRING.match(segment).captured();
+        // remove quotations
+        res.value = res.value.mid(1, res.value.size()-2);
+        res.value.remove("\\");
+    } else if (res.type == 1) { // NEW LINE
+        res.value = "";
+    } else if (res.type == 2) { // LINK
+        QRegularExpressionMatchIterator matchIt = STRING.globalMatch(segment);
+        int matches = 0;
+        while (matchIt.hasNext()) {
+            QString match = matchIt.next().captured();
+            match = match.mid(1, match.size()-2);
+            match.replace("\\u003d", "=");
+            match.replace("\\u0026", "&");
+            if (matches == 0) {
+                res.value = "<a href=" + match + ">" + match.toHtmlEscaped() + "</href>";
+            } else if (matches == 1) {
+                // ignore the link target, as it currently doesn't work.
+            } else {
+                res.value.append(" ").append(match);
+            }
+            ++matches;
+        }
+    } else {
+        qWarning() << "Unsupported message type" << res.type;
+    }
 
     qDebug() << "value found " << res.value;
     return res;
@@ -210,7 +236,7 @@ QList<EventValueSegment> Utils::parseTexts(QString segments) {
     //this is the actual array, loop over it
     QList<EventValueSegment> res;
     for (;;) {
-        QString value = getNextAtomicField(segments, start);
+        QString value = getNextAtomicField(segments, start, false);
         //if (value.size() == 0) break;
         qDebug() << "Segment: " << value;
         //qDebug() << start << " - " << segments.size();
@@ -292,12 +318,12 @@ EventValue Utils::parseEventValue(QString input)
     int start = 1;
     getNextAtomicField(input, start); //always null?
     getNextAtomicField(input, start); //always []?
-    QString content = getNextAtomicField(input, start);
+    QString content = getNextAtomicField(input, start, false);
     qDebug() << "CONT: " << content;
     start = 1;
-    QString segments = getNextAtomicField(content, start);
+    QString segments = getNextAtomicField(content, start, false);
     res.segments = parseTexts(segments);
-    QString attachments = getNextAtomicField(content, start);
+    QString attachments = getNextAtomicField(content, start, false);
     res.attachments = parseAttachments(attachments);
     qDebug() << "att done";
     return res;
@@ -340,7 +366,7 @@ Event Utils::parseEvent(QString conv)
     //skip 2 fields
     for (int i=0; i<2; i++)
         getNextAtomicField(conv, start);
-    QString message = getNextAtomicField(conv, start);
+    QString message = getNextAtomicField(conv, start, false);
     //This is empty in case of a call?
     if (message.size() > 1) {
         res.value = parseEventValue(message);

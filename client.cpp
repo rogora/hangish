@@ -276,9 +276,11 @@ Conversation Client::parseConversationDetails(QString conversation, Conversation
 {
     int start = 1;
     for (;;) {
-        QString tmp_event = Utils::getNextAtomicField(conversation, start);
+        QString tmp_event = Utils::getNextAtomicField(conversation, start, false);
         if (tmp_event.size()<10) break;
-        res.events.append(Utils::parseEvent(tmp_event));
+        Event e = Utils::parseEvent(tmp_event);
+        if (e.value.valid)
+            res.events.append(e);
     }
     return res;
 }
