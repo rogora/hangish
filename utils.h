@@ -34,9 +34,9 @@ public:
     Utils();
     static Identity parseIdentity(QString input);
     static int skipTextFields(QString input, int startPos);
-    static int skipFields(QString input, int startPos);
+    static int skipFields(QString input, int startPos, bool parseBracketsInString = true);
     static int skipFieldsForPush(QString input, int startPos);
-    static QString getNextAtomicField(QString conv, int &start);
+    static QString getNextAtomicField(QString conv, int &start, bool parseBracketsInString = true);
     static QString getNextAtomicFieldForPush(QString conv, int &start);
     static QString getNextField(QString conv, int start);
     static QString getTextAtomicField(QString conv, int &start);

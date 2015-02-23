@@ -49,9 +49,9 @@ QString Utils::getTextAtomicField(QString conv, int &start)
 }
 
 
-QString Utils::getNextAtomicField(QString conv, int &start)
+QString Utils::getNextAtomicField(QString conv, int &start, bool parseBracketsInString)
 {
-    int stop = skipFields(conv, start);
+    int stop = skipFields(conv, start, parseBracketsInString);
     if (stop-start==0) {
         return "";
     }
@@ -115,7 +115,7 @@ int Utils::skipTextFields(QString input, int startPos)
     }
 }
 
-int Utils::skipFields(QString input, int startPos)
+int Utils::skipFields(QString input, int startPos, bool parseBracketsInString)
 {
     //Check for empty field
 
@@ -133,7 +133,7 @@ int Utils::skipFields(QString input, int startPos)
         for (int j=last; j<res; j++) {
             if (input.at(j) == '\\') escaped = j;
             if (escaped != j-1) quotes += input.at(j) == '"'; // If a quote is escaped it is in a string so ignore it.
-            if (quotes % 2 == 0) { // We only care for brackets which are not in quotes (e.g. strings)
+            if (parseBracketsInString || quotes % 2 == 0) { // We only care for brackets which are not in quotes (e.g. strings)
                 openbracket += input.at(j)=='[';
                 closebracket += input.at(j)==']';
             }
@@ -198,7 +198,7 @@ EventValueSegment Utils::parseEventValueSegment(QString segment)
 {
     EventValueSegment res;
     int start = 1;
-    res.type = getNextAtomicField(segment, start).toUInt();
+    res.type = getNextAtomicField(segment, start, false).toUInt();
     if (res.type == 0) { // TEXT
         res.value = STRING.match(segment).captured();
         // remove quotations
@@ -236,7 +236,7 @@ QList<EventValueSegment> Utils::parseTexts(QString segments) {
     //this is the actual array, loop over it
     QList<EventValueSegment> res;
     for (;;) {
-        QString value = getNextAtomicField(segments, start);
+        QString value = getNextAtomicField(segments, start, false);
         //if (value.size() == 0) break;
         qDebug() << "Segment: " << value;
         //qDebug() << start << " - " << segments.size();
@@ -318,12 +318,12 @@ EventValue Utils::parseEventValue(QString input)
     int start = 1;
     getNextAtomicField(input, start); //always null?
     getNextAtomicField(input, start); //always []?
-    QString content = getNextAtomicField(input, start);
+    QString content = getNextAtomicField(input, start, false);
     qDebug() << "CONT: " << content;
     start = 1;
-    QString segments = getNextAtomicField(content, start);
+    QString segments = getNextAtomicField(content, start, false);
     res.segments = parseTexts(segments);
-    QString attachments = getNextAtomicField(content, start);
+    QString attachments = getNextAtomicField(content, start, false);
     res.attachments = parseAttachments(attachments);
     qDebug() << "att done";
     return res;
@@ -366,7 +366,7 @@ Event Utils::parseEvent(QString conv)
     //skip 2 fields
     for (int i=0; i<2; i++)
         getNextAtomicField(conv, start);
-    QString message = getNextAtomicField(conv, start);
+    QString message = getNextAtomicField(conv, start, false);
     //This is empty in case of a call?
     if (message.size() > 1) {
         res.value = parseEventValue(message);
