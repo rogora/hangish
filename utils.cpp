@@ -29,12 +29,12 @@ Utils::Utils()
 {
 }
 
-QString Utils::extractArrayForDS(QString text, int dsKey)
+QStringRef Utils::extractArrayForDS(const QString &text, int dsKey)
 {
     int index = text.indexOf(QString("<script>AF_initDataCallback({key: 'ds:%1'").arg(dsKey));
     index = text.indexOf("return [", index) + strlen("return [");
     int endIndex = text.indexOf("]\n}});</script>", index);
-    return text.mid(index, endIndex-index);
+    return text.midRef(index, endIndex-index);
 }
 
 int Utils::findPositionFromComma(QString input, int startPos, int commaCount)
@@ -46,20 +46,20 @@ int Utils::findPositionFromComma(QString input, int startPos, int commaCount)
     return res;
 }
 
-Identity Utils::parseIdentity(QList<MessageField> ids)
+Identity Utils::parseIdentity(const QList<MessageField> &ids)
 {
-    return {ids[0].stringValue_, ids[1].stringValue_};
+    return {ids[0].stringValue_.toString(), ids[1].stringValue_.toString()};
 }
 
-Event Utils::parseEvent(QList<MessageField> eventFields)
+Event Utils::parseEvent(const QList<MessageField>& eventFields)
 {
     Event event;
-    event.conversationId = eventFields[0].listValue_[0].stringValue_;
+    event.conversationId = eventFields[0].listValue_[0].stringValue_.toString();
 
     auto ids = eventFields[1].listValue_;
-    event.sender = {ids[0].stringValue_, ids[1].stringValue_};
+    event.sender = parseIdentity(ids);
 
-    QString tss = eventFields[2].numberValue_;
+    QString tss = eventFields[2].numberValue_.toString();
     qulonglong tsll = tss.toULongLong();
     qint64 ts = (qint64)tsll;
     event.timestamp = QDateTime::fromMSecsSinceEpoch(ts/1000);
@@ -85,7 +85,7 @@ Event Utils::parseEvent(QList<MessageField> eventFields)
             // parseEventValueSegment():
             auto textList = text.listValue_;
             int type = textList[0].numberValue_.toInt();
-            QString msg = textList[1].stringValue_;
+            QString msg = textList[1].stringValue_.toString();
             event.value.segments.append({type, msg});
         }
 
@@ -94,11 +94,11 @@ Event Utils::parseEvent(QList<MessageField> eventFields)
             auto attachmentList = attachment.listValue_;
             for (auto innerAttach : attachmentList) {
                 auto innerAttachList = innerAttach.listValue_;
-                if (innerAttachList.size() >= 5 && innerAttachList[4].type_ == MessageField::List) {
-                    innerAttachList = innerAttachList[4].listValue_;
+                if (innerAttachList.size() >= 3 && innerAttachList[2].type_ == MessageField::List) {
+                    innerAttachList = innerAttachList[2].listValue_;
                     if (innerAttachList.size() > 10) {
-                        QString fullImageUrl = innerAttachList[5].stringValue_;
-                        QString previewUrl = innerAttachList[9].stringValue_;
+                        QString fullImageUrl = innerAttachList[5].stringValue_.toString();
+                        QString previewUrl = innerAttachList[9].stringValue_.toString();
                         event.value.attachments.append({0, fullImageUrl, previewUrl});
                     }
                 }
@@ -120,11 +120,11 @@ QString Utils::getChatidFromIdentity(QString identity)
     return res;
 }
 
-ReadState Utils::parseReadState(MessageField rs)
+ReadState Utils::parseReadState(const MessageField &rs)
 {
     ReadState res;
     res.userid = Utils::parseIdentity(rs.listValue_[0].listValue_);
-    QString ts = rs.listValue_[1].numberValue_;
+    auto ts = rs.listValue_[1].numberValue_;
     res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
     qDebug() << ts;
     qDebug() << res.last_read.toString();

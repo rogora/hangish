@@ -123,7 +123,7 @@ void Channel::parseChannelData(QString sreply)
     sreply.remove('\n');
     int idx = sreply.indexOf('['); // at the beginning there is a length, which we ignore.
     qDebug() << "##" << sreply;
-    auto parsedReply = MessageField::parseList(sreply, idx);
+    auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
     parsedReply = parsedReply[0].listValue_;
 
     auto content = parsedReply[1].listValue_;
@@ -142,13 +142,13 @@ void Channel::parseChannelData(QString sreply)
     }
 
     // prepare the inner data to parse:
-    auto stringData = cContent[1].stringValue_;
+    auto stringData = cContent[1].stringValue_.toString();
     stringData.remove("\\n");
     stringData.remove('\\');
     qDebug() << "inner data##" << stringData;
     // we can now parse the inner data:
     idx = 0;
-    auto parsedInner = MessageField::parseList(stringData, idx);
+    auto parsedInner = MessageField::parseListRef(stringData.leftRef(-1), idx);
     // TODO can there be multiple cbu in one reply?
     if (!parsedInner[0].stringValue_.contains("cbu")) return;
 
@@ -206,9 +206,9 @@ void Channel::parseChannelData(QString sreply)
             if (typingData[i].type_ == MessageField::List) {
                 auto currentList = typingData[i].listValue_;
                 if (i == 0)
-                    evt.conversationId = currentList[0].stringValue_;
+                    evt.conversationId = currentList[0].stringValue_.toString();
                 else if (i == 1)
-                    evt.userId = currentList[0].stringValue_;
+                    evt.userId = currentList[0].stringValue_.toString();
             } else if (typingData[i].type_ == MessageField::Number) {
                 if (i == 3)
                     evt.typingStatus = typingData[i].numberValue_.toInt();
@@ -236,7 +236,7 @@ void Channel::parseChannelData(QString sreply)
                 if (i == 0)
                     evt.userid = Utils::parseIdentity(currentList);
                 else if (i == 1)
-                    evt.convId = currentList[0].stringValue_;
+                    evt.convId = currentList[0].stringValue_.toString();
             } else if (readStateInfo[i].type_ == MessageField::Number) {
                 if (i == 2)
                     evt.last_read = QDateTime::fromMSecsSinceEpoch(readStateInfo[i].numberValue_.toLongLong() / 1000);
@@ -358,16 +358,16 @@ void Channel::parseSid()
 
         int start = rep.indexOf("[");
 
-        auto parsedData = MessageField::parseList(rep, start);
+        auto parsedData = MessageField::parseListRef(rep.leftRef(-1), start);
         //ROW 0
-        sid = parsedData[0].listValue_[1].listValue_[1].stringValue_;
+        sid = parsedData[0].listValue_[1].listValue_[1].stringValue_.toString();
         qDebug() << sid;
 
         //ROW 1 and 2 discarded
 
         //ROW 3
         auto row3Data = parsedData[3].listValue_[1].listValue_[1].listValue_[1].listValue_;
-        QString stringData = row3Data[1].stringValue_;
+        QString stringData = row3Data[1].stringValue_.toString();
         QStringList temp = stringData.split("/");
         qDebug() << temp.at(0);
         email = temp.at(0);
@@ -383,7 +383,7 @@ void Channel::parseSid()
 
 
         auto row4Data = parsedData[4].listValue_[1].listValue_[1].listValue_[1].listValue_;
-        gsessionid = row4Data[1].stringValue_;
+        gsessionid = row4Data[1].stringValue_.toString();
         qDebug() << gsessionid;
 
     }

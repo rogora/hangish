@@ -65,14 +65,14 @@ private:
     bool appPaused;
     void forceChannelCheckAndRestore();
     bool initCompleted;
-    User parseMySelf(QString sreply);
+    User parseMySelf(const QString &sreply);
     void getPVTToken();
     User getUserById(QString chatId);
     User parseEntity(QList<MessageField> entity);
     QList<User> parseClientEntities(QList<MessageField> entities);
     QList<User> parseGroup(QList<MessageField> group);
     QList<User> users;
-    QList<User> parseUsers(QString userString);
+    QList<User> parseUsers(const QString &userString);
     Conversation getConvById(QString cid);
 
     RosterModel *rosterModel;
@@ -84,7 +84,7 @@ private:
     void parseConversationAbstract(QList<MessageField> abstractFields, Conversation& res);
     Conversation parseConversation(QList<MessageField> conversation);
     void parseConversationState(MessageField conv);
-    QList<Conversation> parseConversations(QString conv);
+    QList<Conversation> parseConversations(const QString &conv);
     void followRedirection(QUrl url);
 
     QByteArray getAuthHeader();

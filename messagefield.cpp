@@ -3,9 +3,9 @@
 #include <QtCore/QDebug>
 
 // Parses the list and sets start to the end of the list
-QList<MessageField> MessageField::parseList(QString text, int& start)
+QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
 {
-    if (text[start] != '[') {
+    if (text.at(start) != '[') {
         qWarning() << "Not a list to parse";
         return {};
     }
@@ -13,29 +13,29 @@ QList<MessageField> MessageField::parseList(QString text, int& start)
     QList<MessageField> results;
     for(int i = start + 1; i < text.length(); ++i) {
         MessageField nextMessageField;
-        if (text[i] == '[') {
+        if (text.at(i) == '[') {
             nextMessageField.type_ = List;
-            nextMessageField.listValue_ = parseList(text, i);
+            nextMessageField.listValue_ = parseListRef(text, i);
             // move the cursor to the comma
-            if (i + 1 < text.length() && text[i+1] == ',') ++i;
-        } else if (text[i] == ',') {
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+        } else if (text.at(i) == ',') {
             nextMessageField.type_ = Empty;
-        } else if (text[i] == '"') {
+        } else if (text.at(i) == '"') {
             nextMessageField.type_ = String;
             nextMessageField.stringValue_ = parseString(text, i);
             // move the cursor to the comma
-            if (i + 1 < text.length() && text[i+1] == ',') ++i;
-        } else if (text[i].isDigit()) {
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+        } else if (text.at(i).isDigit()) {
             nextMessageField.type_ = Number;
             nextMessageField.numberValue_ = parseNumber(text, i);
             // move the cursor to the comma
-            if (i + 1 < text.length() && text[i+1] == ',') ++i;
-        } else if (text[i] == '\'') {
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+        } else if (text.at(i) == '\'') {
             nextMessageField.type_ = String;
             nextMessageField.stringValue_ = parseCharString(text, i);
             // move the cursor to the comma
-            if (i + 1 < text.length() && text[i+1] == ',') ++i;
-        } else if (text[i] == ']') {
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+        } else if (text.at(i) == ']') {
             if (--openBrackets) {
                 qWarning() << "Here we shouldn't have any open brackets...";
                 Q_ASSERT(false);
@@ -43,67 +43,66 @@ QList<MessageField> MessageField::parseList(QString text, int& start)
             start = i;
             return results;
         } else {
-            qWarning() << "Uknown field type????";
+            // TODO: we should parse maps they look like this:  { key : value, ... }
+            // Image attachments are in maps.
+            // For now ignore them: (seems to work fine)
+            if (text.at(i) == '{' || text.at(i) == ':' || text.at(i) == '}') continue;
+            qWarning() << "Uknown field type????" << text.right(i);
         }
         results << nextMessageField;
     }
     Q_ASSERT(false);
 }
 
-QString MessageField::parseString(QString text, int& start)
+QStringRef MessageField::parseString(QStringRef text, int& start)
 {
-    if (text[start] != '"') {
+    if (text.at(start) != '"') {
         qWarning() << "Not a string to parse";
         return {};
     }
     int escapeInd = -1;
-    QString result = "";
-    for (int i = start + 1; i < text.length(); ++i) {
-        if (text[i] == '\\') {
+    int strStart = start + 1;
+    for (int i = strStart; i < text.length(); ++i) {
+        if (text.at(i) == '\\') {
             escapeInd = i;
-        } else if (text[i] == '"') {
+        } else if (text.at(i) == '"') {
             if (i-1 != escapeInd) {
                 start = i;
-                return result;
+                return text.mid(strStart, i - strStart);
             }
         }
-        result.append(text[i]);
     }
     qWarning() << "no end in string found";
     Q_ASSERT(false);
 }
 
-QString MessageField::parseNumber(QString text, int& start)
+QStringRef MessageField::parseNumber(QStringRef text, int& start)
 {
     int i = start;
-    QString number;
-    while (i < text.length() && text[i].isDigit()) {
-        number.append(text[i++]);
-    }
+    while (i < text.length() && text.at(i).isDigit()) ++i;
+    int nrStart = start;
     start = i-1;
-    return number;
+    return text.mid(nrStart, i-nrStart);
 }
 
-QString MessageField::parseCharString(QString text, int &start)
+QStringRef MessageField::parseCharString(QStringRef text, int &start)
 {
-    if (text[start] != '\'') {
+    if (text.at(start) != '\'') {
         qWarning() << "Not a char string to parse";
         return {};
     }
     int escapeInd = -1;
-    QString result = "";
+    int strStart = start + 1;
     for (int i = start + 1; i < text.length(); ++i) {
-        if (text[i] == '\\') {
+        if (text.at(i) == '\\') {
             escapeInd = i;
-        } else if (text[i] == '\'') {
+        } else if (text.at(i) == '\'') {
             if (i-1 != escapeInd) {
                 start = i;
-                return result;
+                return text.mid(strStart, i - strStart);
             }
         }
-        result.append(text[i]);
     }
     qWarning() << "no end in char string found";
     Q_ASSERT(false);
 }
-

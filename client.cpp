@@ -48,29 +48,29 @@ void Client::parseSelfConversationState(QList<MessageField> stateFields, Convers
     auto ssstate = stateFields[6].listValue_;
     //Entry 0 is my ID, not so interesting
     //This is the ts representing last time I read
-    QString ts = ssstate[1].numberValue_;
+    QString ts = ssstate[1].numberValue_.toString();
     qDebug() << "ssstate, ts: " << ts;
 
     res.lastReadTimestamp = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
     qDebug() << res.lastReadTimestamp.toString();
     //todo: parse this
-    QString status = stateFields[7].numberValue_;
+    QString status = stateFields[7].numberValue_.toString();
     //qDebug() << status;
-    QString notificationLevel = stateFields[8].numberValue_;
+    QString notificationLevel = stateFields[8].numberValue_.toString();
     //qDebug() << notificationLevel;
     auto views = stateFields[9].listValue_;
     //qDebug() << views;
     //TODO:: parse views
     auto inviters_ids = stateFields[10].listValue_;
-    QString inviter_id = inviters_ids[0].stringValue_;
+    QString inviter_id = inviters_ids[0].stringValue_.toString();
     //qDebug() << inviter_id;
     res.creator.chat_id = inviter_id;
-    QString invitation_ts = stateFields[11].numberValue_;
+    QString invitation_ts = stateFields[11].numberValue_.toString();
     //qDebug() << invitation_ts;
     res.creation_ts.fromMSecsSinceEpoch(invitation_ts.toUInt());
-    QString sort_ts = stateFields[12].numberValue_;
+    QString sort_ts = stateFields[12].numberValue_.toString();
     //qDebug() << sort_ts;
-    QString a_ts = stateFields[13].numberValue_;
+    QString a_ts = stateFields[13].numberValue_.toString();
     //qDebug() << a_ts;
     //skip 4 fields
 }
@@ -80,17 +80,17 @@ User Client::parseEntity(QList<MessageField> entity)
 //    qDebug() << "Parsing single entity " << entity.size();
     User res;
     auto ids = entity[8].listValue_;
-    res.chat_id = ids[0].stringValue_;
-    res.gaia_id = ids[1].stringValue_;
+    res.chat_id = ids[0].stringValue_.toString();
+    res.gaia_id = ids[1].stringValue_.toString();
 
     auto properties = entity[9].listValue_;
-    res.display_name = properties[1].stringValue_;
-    res.first_name = properties[2].stringValue_;
+    res.display_name = properties[1].stringValue_.toString();
+    res.first_name = properties[2].stringValue_.toString();
     if (properties[3].type_ == MessageField::String)
-        res.photo = properties[3].stringValue_;
+        res.photo = properties[3].stringValue_.toString();
     auto emails = properties[4].listValue_;
     if (emails.size() >= 1)
-        res.email = emails[0].stringValue_;
+        res.email = emails[0].stringValue_.toString();
 
     qDebug() << "ID: " << res.chat_id;
     qDebug() << "DNAME: " << res.display_name;
@@ -125,13 +125,12 @@ QList<User> Client::parseGroup(QList<MessageField> group)
     return res;
 }
 
-QList<User> Client::parseUsers(QString userString)
+QList<User> Client::parseUsers(const QString& userString)
 {
     QList<User> res;
-    userString.remove('\n');
-    QString dsData = Utils::extractArrayForDS(userString, 21);
+    QStringRef dsData = Utils::extractArrayForDS(userString, 21);
     int idx = 0;
-    auto parsedData = MessageField::parseList(dsData, idx);
+    auto parsedData = MessageField::parseListRef(dsData, idx);
     qDebug() << parsedData.size();
 
     auto entities = parsedData[2].listValue_;
@@ -164,10 +163,10 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
     //First we have ID -- ignore
 
     //Then type
-    QString type = abstractFields[1].numberValue_;
+    QString type = abstractFields[1].numberValue_.toString();
     qDebug() << "TYPE: " << type;
     //Name (optional) -- need to see what happens when it is set
-    if (abstractFields[2].type_ == MessageField::String) res.name = abstractFields[2].stringValue_;
+    if (abstractFields[2].type_ == MessageField::String) res.name = abstractFields[2].stringValue_.toString();
     //qDebug() << "Name: " << res.name;
 
     // parse the state
@@ -209,7 +208,7 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
 Conversation Client::parseConversation(QList<MessageField> conversation)
 {
     Conversation res;
-    res.id = conversation[0].listValue_[0].stringValue_;
+    res.id = conversation[0].listValue_[0].stringValue_.toString();
 
 
     // Abstract
@@ -252,13 +251,13 @@ void Client::parseConversationState(MessageField conv)
     emit showNotificationForCover(c.events.size());
 }
 
-QList<Conversation> Client::parseConversations(QString conv)
+QList<Conversation> Client::parseConversations(const QString& conv)
 {
     QList<Conversation> res;
-    QString dsData = Utils::extractArrayForDS(conv, 19);
-    dsData.remove('\n');
+    QStringRef dsData = Utils::extractArrayForDS(conv, 19);
+    //dsData.remove('\n');
     int idx = 0;
-    auto parsedData = MessageField::parseList(dsData, idx);
+    auto parsedData = MessageField::parseListRef(dsData, idx);
     //Skip 3 fields
     auto conversations = parsedData[3].listValue_;
     for (auto conversation : conversations) {
@@ -286,12 +285,11 @@ void Client::postReply(QNetworkReply *reply)
     }
 }
 
-User Client::parseMySelf(QString sreply) {
+User Client::parseMySelf(const QString& sreply) {
     //SELF INFO
-    sreply.remove('\n');
-    QString dsData = Utils::extractArrayForDS(sreply, 20);
+    QStringRef dsData = Utils::extractArrayForDS(sreply, 20);
     int idx = 0;
-    auto parsedData = MessageField::parseList(dsData, idx);
+    auto parsedData = MessageField::parseListRef(dsData, idx);
     User res;
     //And then parse a common user
 
@@ -332,10 +330,10 @@ void Client::networkReply()
             QString sreply = reply->readAll();
 
             //API KEY
-            QString dsData = Utils::extractArrayForDS(sreply, 7);
+            QStringRef dsData = Utils::extractArrayForDS(sreply, 7);
             int idx = 0;
-            auto ds7Parsed = MessageField::parseList(dsData, idx);
-            api_key = ds7Parsed[2].stringValue_;
+            auto ds7Parsed = MessageField::parseListRef(dsData, idx);
+            api_key = ds7Parsed[2].stringValue_.toString();
             qDebug() << "API KEY: " << api_key;
             if (api_key.contains("AF_initDataKeys") || api_key.size() < 10 || api_key.size() > 50) {
                 qDebug() << sreply;
@@ -346,21 +344,22 @@ void Client::networkReply()
                 deleteCookies();
             }
 
+            sreply.remove('\n');
             // Channel info & header_id
             dsData = Utils::extractArrayForDS(sreply, 4);
             idx = 0;
-            auto ds4Parsed = MessageField::parseList(dsData, idx);
-            channel_path = ds4Parsed[1].stringValue_;
-            channel_ec_param = ds4Parsed[4].stringValue_.remove("\\n").remove('\\');
-            channel_prop_param = ds4Parsed[5].stringValue_;
-            header_id = ds4Parsed[7].stringValue_;
+            auto ds4Parsed = MessageField::parseListRef(dsData, idx);
+            channel_path = ds4Parsed[1].stringValue_.toString();
+            channel_ec_param = ds4Parsed[4].stringValue_.toString().remove("\\n").remove('\\');
+            channel_prop_param = ds4Parsed[5].stringValue_.toString();
+            header_id = ds4Parsed[7].stringValue_.toString();
 
             // Header info
             dsData = Utils::extractArrayForDS(sreply, 2);
             idx = 0;
-            auto ds2Parsed = MessageField::parseList(dsData, idx);
-            header_date = ds2Parsed[4].stringValue_;
-            header_version = ds2Parsed[6].stringValue_;
+            auto ds2Parsed = MessageField::parseListRef(dsData, idx);
+            header_date = ds2Parsed[4].stringValue_.toString();
+            header_version = ds2Parsed[6].stringValue_.toString();
 
             qDebug() << "HID " << header_id;
             qDebug() << "HDA " << header_date;
@@ -756,7 +755,7 @@ void Client::syncAllNewEventsReply()
         sreply.remove('\n');
         qDebug() << "Synced correctly";
         int idx = 0;
-        auto parsedReply = MessageField::parseList(sreply, idx);
+        auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
         //Skip csanerp:         parsedReply[0]
         //Skip response header: parsedReply[1]
         //Skip sync_timestamp:  parsedReply[2]
@@ -971,10 +970,10 @@ void Client::pvtReply()
         QString rep = reply->readAll();
         rep.remove('\n');
         int start = 0;
-        auto parsedRep = MessageField::parseList(rep, start);
+        auto parsedRep = MessageField::parseListRef(rep.leftRef(-1), start);
         QString pvtToken;
         if (parsedRep.size() > 1 && parsedRep[1].type_ == MessageField::String)
-            pvtToken = parsedRep[1].stringValue_;
+            pvtToken = parsedRep[1].stringValue_.toString();
 
         reply->close();
         delete reply;

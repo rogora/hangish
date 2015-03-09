@@ -34,12 +34,12 @@ class Utils
 {
 public:
     Utils();
-    static QString extractArrayForDS(QString text, int dsKey);
-    static Identity parseIdentity(QList<MessageField> ids);
+    static QStringRef extractArrayForDS(const QString& text, int dsKey);
+    static Identity parseIdentity(const QList<MessageField> &ids);
     static int findPositionFromComma(QString input, int startPos, int commaCount);
-    static Event parseEvent(QList<MessageField> eventFields);
+    static Event parseEvent(const QList<MessageField> &eventFields);
     static QString getChatidFromIdentity(QString identity);
-    static ReadState parseReadState(MessageField rs);
+    static ReadState parseReadState(const MessageField &rs);
 };
 
 #endif // UTILS_H
