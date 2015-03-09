@@ -16,7 +16,7 @@ include(notifications.pri)
 
 TARGET = Hangish
 
-CONFIG += sailfishapp
+CONFIG += sailfishapp c++11
 
 SOURCES += src/Hangish.cpp \
     authenticator.cpp \
@@ -27,7 +27,8 @@ SOURCES += src/Hangish.cpp \
     utils.cpp \
     contactsmodel.cpp \
     notifier.cpp \
-    filemodel.cpp
+    filemodel.cpp \
+    messagefield.cpp
 
 OTHER_FILES += qml/Hangish.qml \
     qml/cover/CoverPage.qml \
@@ -61,7 +62,8 @@ HEADERS += \
     structs.h \
     contactsmodel.h \
     notifier.h \
-    filemodel.h
+    filemodel.h \
+    messagefield.h
 
 RESOURCES += \
     Hangish.qrc

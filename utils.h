@@ -28,38 +28,18 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "structs.h"
 #include "notification.h"
 
+class MessageField;
+
 class Utils
 {
 public:
     Utils();
-    static Identity parseIdentity(QString input);
-    static int skipTextFields(QString input, int startPos);
-    static int skipFields(QString input, int startPos);
-    static int skipFieldsForPush(QString input, int startPos);
-    static QString getNextAtomicField(QString conv, int &start);
-    static QString getNextAtomicFieldForPush(QString conv, int &start);
-    static QString getNextField(QString conv, int start);
-    static QString getTextAtomicField(QString conv, int &start);
+    static QString extractArrayForDS(QString text, int dsKey);
+    static Identity parseIdentity(QList<MessageField> ids);
     static int findPositionFromComma(QString input, int startPos, int commaCount);
-
-    static Event parseEvent(QString conv);
-    static EventValueSegment parseEventValueSegment(QString segment);
-    static QList<EventValueSegment> parseTexts(QString segments);
-    static EventAttachmentSegment parseEventValueAttachment(QString att);
-    static QList<EventAttachmentSegment> parseAttachments(QString attachments);
-    static EventValue parseEventValue(QString input);
-    static QString getFullUrlFromImageAttach(QString data);
-    static QString getPreviewUrlFromImageAttach(QString data);
-
+    static Event parseEvent(QList<MessageField> eventFields);
     static QString getChatidFromIdentity(QString identity);
-
-    static int parseNotificationLevel(QString input);
-
-    static int parseActiveClientUpdate(QString input, QString &newId);
-
-    static ReadState parseReadState(QString input);
-    static QList<ReadState> parseReadStates(QString input);
-    static ReadState parseReadStateNotification(QString input);
+    static ReadState parseReadState(MessageField rs);
 };
 
 #endif // UTILS_H

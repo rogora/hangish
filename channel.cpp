@@ -23,6 +23,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 #include "channel.h"
 
+#include "messagefield.h"
+
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36";
 static qint32 MAX_READ_BYTES = 1024 * 1024;
 static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
@@ -82,27 +84,6 @@ Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QStrin
     timer->start(30000);
 }
 
-ChannelEvent Channel::parseTypingNotification(QString input, ChannelEvent evt)
-{
-    int start = 1;
-    QString conversationId = Utils::getNextAtomicField(input, start);
-    conversationId = conversationId.mid(1, conversationId.size()-2);
-    if (conversationId=="") return evt;
-    QString userId = Utils::getNextAtomicField(input, start);
-    if (userId=="") return evt;
-    QString ts = Utils::getNextAtomicField(input, start);
-    if (ts=="") return evt;
-    //QString typingStatus = Utils::getNextAtomicField(input, start);
-    //No need to parse a field, I know what to expect
-    QString typingStatus = input.mid(start, 1);
-    evt.conversationId = conversationId.mid(1, conversationId.size()-2);
-    evt.userId = userId;
-    evt.typingStatus = typingStatus.toInt();
-
-    qDebug() << "User " << userId << " in conv " << conversationId << " is typing " << typingStatus << " at " << ts;
-    return evt;
-}
-
 void Channel::nrf()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
@@ -139,147 +120,152 @@ void Channel::nrf()
 
 void Channel::parseChannelData(QString sreply)
 {
-    qDebug() << sreply;
-    sreply = sreply.remove("\\n");
-    sreply = sreply.remove("\n");
-    sreply = sreply.remove(QChar('\\'));
-    QString parcel;
-    int parcelCursor = 0;
-    for (;;) {
-        //We skip the int representing the (Javascript) len of the parcel
-        parcelCursor = sreply.indexOf("[", parcelCursor);
-        if (parcelCursor==-1)
-            return;
-        parcel = Utils::getNextAtomicFieldForPush(sreply, parcelCursor);
-        ////qDebug() << "PARCEL: " << parcel;
-        if (parcel.size() < 20)
-            return;
+    sreply.remove('\n');
+    int idx = sreply.indexOf('['); // at the beginning there is a length, which we ignore.
+    qDebug() << "##" << sreply;
+    auto parsedReply = MessageField::parseList(sreply, idx);
+    parsedReply = parsedReply[0].listValue_;
 
-        int start = parcel.indexOf("\"c\"");
-        if (start==-1)
-            return;
-        QString payload = Utils::getNextField(parcel, start + 4);
-        //skip id
-        start = 1;
-        Utils::getNextAtomicField(payload, start);
-        //and now the actual payload
-        payload = Utils::getNextAtomicField(payload, start);
-        QString type;
-        start = 1;
-        type = Utils::getNextAtomicField(payload, start);
-        ////qDebug() << type;
-        if (type != "\"bfo\"")
-            continue;
-        //and now the actual payload
-        payload = Utils::getNextAtomicField(payload, start);
-        //////qDebug() << "pld1: " << payload;
+    auto content = parsedReply[1].listValue_;
+//    qDebug() << content[0].stringValue_.contains("c");
+    if (!content[0].stringValue_.contains("c")) return;
 
-        start = 2;
-        type = Utils::getNextAtomicField(payload, start);
-        ////qDebug() << type;
-        if (type != "\"cbu\"")
-            continue;
+    auto cContent = content[1].listValue_;
+    if (cContent.size() < 2) return;
+    cContent = cContent[1].listValue_;
+    // TODO could there be multiple bfo ??
+//    qDebug() << cContent[0].stringValue_.contains("bfo");
+    if (cContent.size() < 1 || !cContent[0].stringValue_.contains("bfo")) {
+        sreply.remove(0, idx+1);
+        if (sreply.isEmpty()) return;
+        return parseChannelData(sreply);
+    }
 
-        //This, finally, is the real payload
-        int globalptr = 1;
-        QString arr_payload = Utils::getNextField(payload, start);
-        //////qDebug() << "arr pld: " << arr_payload;
-        //But there could be more than 1
-        for (;;) {
+    // prepare the inner data to parse:
+    auto stringData = cContent[1].stringValue_;
+    stringData.remove("\\n");
+    stringData.remove('\\');
+    qDebug() << "inner data##" << stringData;
+    // we can now parse the inner data:
+    idx = 0;
+    auto parsedInner = MessageField::parseList(stringData, idx);
+    // TODO can there be multiple cbu in one reply?
+    if (!parsedInner[0].stringValue_.contains("cbu")) return;
 
-            payload = Utils::getNextAtomicField(arr_payload, globalptr);
-            ////qDebug() << "pld: " << payload;
-            if (payload.size() < 30) break;
-            ChannelEvent cevt;
-            start = 1;
-            //Info about active clients -- if I'm not the active client then I must disable notifications!
-            QString header = Utils::getNextAtomicField(payload, start);
-            qDebug() << header;
-            if (header.size()>10)
-                {
-                    QString newId;
-                    int as = Utils::parseActiveClientUpdate(header, newId);
-                    emit activeClientUpdate(as);
-                }
-            //conv notification; always none?
-            Utils::getNextAtomicField(payload, start);
-            //evt notification -- this holds the actual message
-            QString evtstring = Utils::getNextAtomicFieldForPush(payload, start);
-            qDebug() << evtstring;
-            if (evtstring.size() > 10) {
-            //evtstring has [evt, None], so we catch only the first value
-                Event evt = Utils::parseEvent(Utils::getNextField(evtstring, 1));
-                if (evt.value.valid) {
-                    qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
-                    conversationModel->addEventToConversation(evt.conversationId, evt);
+    auto playloadList = parsedInner[1].listValue_;
+    if (!playloadList.size()) return; // TODO is that senseful ??
+    playloadList = playloadList[0].listValue_;
+    if (!playloadList.size()) return; // TODO is that senseful ??
+
+    int as = playloadList[0].listValue_[0].numberValue_.toInt();
+    emit activeClientUpdate(as);
+
+    if (playloadList[2].type_ == MessageField::List) {
+        // parse events
+        auto eventDataList = playloadList[2].listValue_;
+        qDebug() << eventDataList.size();
+
+        for (auto eventData : eventDataList) {
+            Event evt = Utils::parseEvent(eventData.listValue_);
+            if (evt.value.valid) {
+                qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
+                conversationModel->addEventToConversation(evt.conversationId, evt);
                     lastIncomingConvId = evt.conversationId;
-                    if (evt.sender.chat_id != myself.chat_id) {
-                        //Signal new event only if the actual conversation isn't already visible to the user
-                        qDebug() << conversationModel->getCid();
-                        qDebug() << evt.conversationId;
-                        qDebug() << evt.notificationLevel;
-                        if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
-                            rosterModel->addUnreadMsg(evt.conversationId);
-                            //If notificationLevel == 10 the conversation has been silenced -> don't notify
-                            if (evt.notificationLevel==RING)
-                                emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
-                        }
-                        else {
-                            //Update watermark, since I've read the message; if notification level this should be the active client
-                            emit updateWM(evt.conversationId);
-                        }
+                if (evt.sender.chat_id != myself.chat_id) {
+                    //Signal new event only if the actual conversation isn't already visible to the user
+                    qDebug() << conversationModel->getCid();
+                    qDebug() << evt.conversationId;
+                    qDebug() << evt.notificationLevel;
+                    if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
+                        rosterModel->addUnreadMsg(evt.conversationId);
+                        //If notificationLevel == 10 the conversation has been silenced -> don't notify
+                        if (evt.notificationLevel==RING)
+                            emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
+                    }
+                    else {
+                        //Update watermark, since I've read the message; if notification level this should be the active client
+                        emit updateWM(evt.conversationId);
                     }
                 }
-                else {
-                    qDebug() << "Invalid evt received";
-                }
             }
-            //set focus notification
-            Utils::getNextAtomicField(payload, start);
-            //set typing notification
-            QString typing = Utils::getNextAtomicFieldForPush(payload, start);
-            qDebug() << "typing string " << typing;
-            if (typing.size() > 3) {
-                cevt = parseTypingNotification(typing, cevt);
-                //I would know wether myself is typing :)
-                if (!cevt.userId.contains(myself.chat_id))
-                    emit isTyping(cevt.conversationId, cevt.userId, cevt.typingStatus);
+            else {
+                qDebug() << "Invalid evt received";
             }
-            //notification level; wasn't this already in the event info?
-            QString notifLev = Utils::getNextAtomicField(payload, start);
-            qDebug() << notifLev;
-            //reply to invite
-            Utils::getNextAtomicField(payload, start);
-            //watermark
-            QString wmNotification = Utils::getNextAtomicField(payload, start);
-            qDebug() << wmNotification;
-            if (wmNotification.size()>10) {
-                conversationModel->updateReadState(Utils::parseReadStateNotification(wmNotification));
-            }
-            //None?
-            Utils::getNextAtomicField(payload, start);
-            //settings
-            Utils::getNextAtomicField(payload, start);
-            //view modification
-            Utils::getNextAtomicField(payload, start);
-            //easter egg
-            Utils::getNextAtomicField(payload, start);
-            //conversation
-            QString conversation = Utils::getNextAtomicField(payload, start);
-            ////qDebug() << "CONV: " << conversation;
-
-            //self presence
-            Utils::getNextAtomicField(payload, start);
-            //delete notification
-            Utils::getNextAtomicField(payload, start);
-            //presence notification
-            Utils::getNextAtomicField(payload, start);
-            //block notification
-            Utils::getNextAtomicField(payload, start);
-            //invitation notification
-            Utils::getNextAtomicField(payload, start);
         }
     }
+    //set focus notification
+    // playloadList[3]
+
+    if (playloadList.size() < 5) return; // TODO should we really return?
+    // typing notification
+    if (playloadList[4].type_ == MessageField::List) {
+        auto typingData = playloadList[4].listValue_;
+        ChannelEvent evt;
+        // parseTypingNotification():
+        for (int i = 0; i < typingData.size(); ++i) {
+            if (typingData[i].type_ == MessageField::List) {
+                auto currentList = typingData[i].listValue_;
+                if (i == 0)
+                    evt.conversationId = currentList[0].stringValue_;
+                else if (i == 1)
+                    evt.userId = currentList[0].stringValue_;
+            } else if (typingData[i].type_ == MessageField::Number) {
+                if (i == 3)
+                    evt.typingStatus = typingData[i].numberValue_.toInt();
+            }
+        }
+        qDebug() << "Typing" << evt.userId << "in" << evt.conversationId << "state" << evt.typingStatus;
+
+        if (!evt.userId.contains(myself.chat_id))
+            emit isTyping(evt.conversationId, evt.userId, evt.typingStatus);
+    }
+
+    if (playloadList.size() < 6) return; // TODO should we really return?
+    //notification level; wasn't this already in the event info?
+    // playloadList[5]
+
+    // playloadList[6] would be reply to invite
+    if (playloadList.size() < 8) return; // TODO should we really return?
+    // parseReadStateNotification():
+    if (playloadList[7].type_ == MessageField::List) {
+        ReadState evt;
+        auto readStateInfo = playloadList[7].listValue_;
+        for (int i = 0; i < readStateInfo.size(); ++i) {
+            if (readStateInfo[i].type_ == MessageField::List) {
+                auto currentList = readStateInfo[i].listValue_;
+                if (i == 0)
+                    evt.userid = Utils::parseIdentity(currentList);
+                else if (i == 1)
+                    evt.convId = currentList[0].stringValue_;
+            } else if (readStateInfo[i].type_ == MessageField::Number) {
+                if (i == 2)
+                    evt.last_read = QDateTime::fromMSecsSinceEpoch(readStateInfo[i].numberValue_.toLongLong() / 1000);
+            }
+        }
+        conversationModel->updateReadState(evt);
+    }
+//    //None?
+//    Utils::getNextAtomicField(payload, start);
+//    //settings
+//    Utils::getNextAtomicField(payload, start);
+//    //view modification
+//    Utils::getNextAtomicField(payload, start);
+//    //easter egg
+//    Utils::getNextAtomicField(payload, start);
+//    //conversation
+//    QString conversation = Utils::getNextAtomicField(payload, start);
+//    ////qDebug() << "CONV: " << conversation;
+
+//    //self presence
+//    Utils::getNextAtomicField(payload, start);
+//    //delete notification
+//    Utils::getNextAtomicField(payload, start);
+//    //presence notification
+//    Utils::getNextAtomicField(payload, start);
+//    //block notification
+//    Utils::getNextAtomicField(payload, start);
+//    //invitation notification
+//    Utils::getNextAtomicField(payload, start);
 }
 
 void Channel::nr()
@@ -367,53 +353,22 @@ void Channel::parseSid()
     }
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
-        qDebug() << rep;
-        int start, start2=1, tmp=1;
+        rep.remove('\n');
+//        qDebug() << "SID##" << rep;
+
+        int start = rep.indexOf("[");
+
+        auto parsedData = MessageField::parseList(rep, start);
         //ROW 0
-        start = rep.indexOf("[");
-        QString zero = Utils::getNextAtomicField(Utils::getNextAtomicField(rep, start), start2);
-        qDebug() << zero;
-        //Skip 1
-        Utils::getNextAtomicField(zero, tmp);
-        zero = Utils::getNextAtomicField(zero, tmp);
-        tmp = 1;
-        //Skip 1
-        Utils::getNextAtomicField(zero, tmp);
-        sid = Utils::getNextAtomicField(zero, tmp);
-        sid = sid.mid(1, sid.size()-2);
+        sid = parsedData[0].listValue_[1].listValue_[1].stringValue_;
         qDebug() << sid;
 
         //ROW 1 and 2 discarded
-        tmp = 1;
-        start2 = rep.indexOf("[", start2);
-        QString one = Utils::getNextAtomicField(rep, start2);
-        qDebug() << one;
-        start2 = rep.indexOf("[", start2);
-        QString two = Utils::getNextAtomicField(rep, start2);
-        qDebug() << two;
-
 
         //ROW 3
-        start2 = rep.indexOf("[", start2);
-        QString three = Utils::getNextAtomicField(rep, start2);
-        qDebug() << three;
-        //Skip 1
-        Utils::getNextAtomicField(three, tmp);
-        three = Utils::getNextAtomicField(three, tmp);
-        tmp = 1;
-        //Skip 1
-        Utils::getNextAtomicField(three, tmp);
-        three = Utils::getNextAtomicField(three, tmp);
-        tmp = 1;
-        //Skip 1
-        Utils::getNextAtomicField(three, tmp);
-        three = Utils::getNextAtomicField(three, tmp);
-        tmp = 1;
-
-        Utils::getNextAtomicField(three, tmp);
-        email = Utils::getNextAtomicField(three, tmp);
-        email = email.mid(1, email.size()-2);
-        QStringList temp = email.split("/");
+        auto row3Data = parsedData[3].listValue_[1].listValue_[1].listValue_[1].listValue_;
+        QString stringData = row3Data[1].stringValue_;
+        QStringList temp = stringData.split("/");
         qDebug() << temp.at(0);
         email = temp.at(0);
 
@@ -426,26 +381,10 @@ void Channel::parseSid()
         header_client = temp.at(1);
         emit updateClientId(header_client);
 
-        //ROW 4
-        start2 = rep.indexOf("[", start2);
-        QString four = Utils::getNextAtomicField(rep, start2);
-        qDebug() << four;
-        //Skip 1
-        Utils::getNextAtomicField(four, tmp);
-        four = Utils::getNextAtomicField(four, tmp);
-        tmp = 1;
-        //Skip 1
-        Utils::getNextAtomicField(four, tmp);
-        four = Utils::getNextAtomicField(four, tmp);
-        tmp = 1;
-        //Skip 1
-        Utils::getNextAtomicField(four, tmp);
-        four = Utils::getNextAtomicField(four, tmp);
-        tmp = 1;
 
-        Utils::getNextAtomicField(four, tmp);
-        gsessionid = Utils::getNextAtomicField(four, tmp);
-        gsessionid = gsessionid.mid(1, gsessionid.size()-2);
+        auto row4Data = parsedData[4].listValue_[1].listValue_[1].listValue_[1].listValue_;
+        gsessionid = row4Data[1].stringValue_;
+        qDebug() << gsessionid;
 
     }
     else {
