@@ -67,8 +67,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     auto self_state = eventFields[3].listValue_;
     // parseNotificationLevel():
     event.notificationLevel = 0;
-    if (self_state.size() > 1) {
-        event.notificationLevel = self_state[1].stringValue_.toInt();
+    if (self_state.size() > 2) {
+        event.notificationLevel = self_state[2].numberValue_.toInt();
     }
 
     // skip 2 ..
