@@ -120,8 +120,9 @@ void Channel::nrf()
 
 void Channel::parseChannelData(QString sreply)
 {
-    sreply.remove('\n');
     int idx = sreply.indexOf('['); // at the beginning there is a length, which we ignore.
+    // ignore empty messages
+    if (idx == -1) return;
     qDebug() << "##" << sreply;
     auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
     parsedReply = parsedReply[0].listValue_;
@@ -353,7 +354,6 @@ void Channel::parseSid()
     }
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
-        rep.remove('\n');
 //        qDebug() << "SID##" << rep;
 
         int start = rep.indexOf("[");

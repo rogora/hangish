@@ -255,7 +255,6 @@ QList<Conversation> Client::parseConversations(const QString& conv)
 {
     QList<Conversation> res;
     QStringRef dsData = Utils::extractArrayForDS(conv, 19);
-    //dsData.remove('\n');
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
     //Skip 3 fields
@@ -344,7 +343,6 @@ void Client::networkReply()
                 deleteCookies();
             }
 
-            sreply.remove('\n');
             // Channel info & header_id
             dsData = Utils::extractArrayForDS(sreply, 4);
             idx = 0;
@@ -752,7 +750,6 @@ void Client::syncAllNewEventsReply()
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
-        sreply.remove('\n');
         qDebug() << "Synced correctly";
         int idx = 0;
         auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
@@ -968,7 +965,6 @@ void Client::pvtReply()
         //END OF TODO
 
         QString rep = reply->readAll();
-        rep.remove('\n');
         int start = 0;
         auto parsedRep = MessageField::parseListRef(rep.leftRef(-1), start);
         QString pvtToken;

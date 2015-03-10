@@ -42,12 +42,19 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             }
             start = i;
             return results;
+        } else if (text.at(i) == '\n') {
+            // move the cursor to the comma
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+            // don't add garbage to the list:
+            continue;
         } else {
             // TODO: we should parse maps they look like this:  { key : value, ... }
             // Image attachments are in maps.
             // For now ignore them: (seems to work fine)
             if (text.at(i) == '{' || text.at(i) == ':' || text.at(i) == '}') continue;
             qWarning() << "Uknown field type????" << text.right(i);
+            // in any case we do not want garbage in the list
+            continue;
         }
         results << nextMessageField;
     }
