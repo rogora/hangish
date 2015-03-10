@@ -1126,7 +1126,7 @@ void Client::channelLostSlot()
 
 void Client::isTypingSlot(QString convId, QString chatId, int type)
 {
-    QString uname = contactsModel->getContactFName(Utils::getChatidFromIdentity(chatId));
+    QString uname = contactsModel->getContactFName(chatId);
     emit isTyping(convId, uname, type);
 }
 

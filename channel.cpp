@@ -209,6 +209,7 @@ void Channel::parseChannelData(QString sreply)
                 if (i == 0)
                     evt.conversationId = currentList[0].stringValue_.toString();
                 else if (i == 1)
+                    // here currentList contains the Identity, so extract the chat_id:
                     evt.userId = currentList[0].stringValue_.toString();
             } else if (typingData[i].type_ == MessageField::Number) {
                 if (i == 3)
