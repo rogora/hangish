@@ -125,25 +125,25 @@ void Channel::parseChannelData(QString sreply)
     if (idx == -1) return;
     qDebug() << "##" << sreply;
     auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
-    parsedReply = parsedReply[0].listValue_;
+    parsedReply = parsedReply[0].list();
 
-    auto content = parsedReply[1].listValue_;
-//    qDebug() << content[0].stringValue_.contains("c");
-    if (!content[0].stringValue_.contains("c")) return;
+    auto content = parsedReply[1].list();
+//    qDebug() << content[0].string().contains("c");
+    if (!content[0].string().contains("c")) return;
 
-    auto cContent = content[1].listValue_;
+    auto cContent = content[1].list();
     if (cContent.size() < 2) return;
-    cContent = cContent[1].listValue_;
+    cContent = cContent[1].list();
     // TODO could there be multiple bfo ??
-//    qDebug() << cContent[0].stringValue_.contains("bfo");
-    if (cContent.size() < 1 || !cContent[0].stringValue_.contains("bfo")) {
+//    qDebug() << cContent[0].string().contains("bfo");
+    if (cContent.size() < 1 || !cContent[0].string().contains("bfo")) {
         sreply.remove(0, idx+1);
         if (sreply.isEmpty()) return;
         return parseChannelData(sreply);
     }
 
     // prepare the inner data to parse:
-    auto stringData = cContent[1].stringValue_.toString();
+    auto stringData = cContent[1].string();
     stringData.remove("\\n");
     stringData.remove('\\');
     qDebug() << "inner data##" << stringData;
@@ -151,23 +151,23 @@ void Channel::parseChannelData(QString sreply)
     idx = 0;
     auto parsedInner = MessageField::parseListRef(stringData.leftRef(-1), idx);
     // TODO can there be multiple cbu in one reply?
-    if (!parsedInner[0].stringValue_.contains("cbu")) return;
+    if (!parsedInner[0].string().contains("cbu")) return;
 
-    auto playloadList = parsedInner[1].listValue_;
+    auto playloadList = parsedInner[1].list();
     if (!playloadList.size()) return; // TODO is that senseful ??
-    playloadList = playloadList[0].listValue_;
+    playloadList = playloadList[0].list();
     if (!playloadList.size()) return; // TODO is that senseful ??
 
-    int as = playloadList[0].listValue_[0].numberValue_.toInt();
+    int as = playloadList[0].list()[0].number().toInt();
     emit activeClientUpdate(as);
 
-    if (playloadList[2].type_ == MessageField::List) {
+    if (playloadList[2].type() == MessageField::List) {
         // parse events
-        auto eventDataList = playloadList[2].listValue_;
+        auto eventDataList = playloadList[2].list();
         qDebug() << eventDataList.size();
 
         for (auto eventData : eventDataList) {
-            Event evt = Utils::parseEvent(eventData.listValue_);
+            Event evt = Utils::parseEvent(eventData.list());
             if (evt.value.valid) {
                 qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
                 conversationModel->addEventToConversation(evt.conversationId, evt);
@@ -199,21 +199,21 @@ void Channel::parseChannelData(QString sreply)
 
     if (playloadList.size() < 5) return; // TODO should we really return?
     // typing notification
-    if (playloadList[4].type_ == MessageField::List) {
-        auto typingData = playloadList[4].listValue_;
+    if (playloadList[4].type() == MessageField::List) {
+        auto typingData = playloadList[4].list();
         ChannelEvent evt;
         // parseTypingNotification():
         for (int i = 0; i < typingData.size(); ++i) {
-            if (typingData[i].type_ == MessageField::List) {
-                auto currentList = typingData[i].listValue_;
+            if (typingData[i].type() == MessageField::List) {
+                auto currentList = typingData[i].list();
                 if (i == 0)
-                    evt.conversationId = currentList[0].stringValue_.toString();
+                    evt.conversationId = currentList[0].string();
                 else if (i == 1)
                     // here currentList contains the Identity, so extract the chat_id:
-                    evt.userId = currentList[0].stringValue_.toString();
-            } else if (typingData[i].type_ == MessageField::Number) {
+                    evt.userId = currentList[0].string();
+            } else if (typingData[i].type() == MessageField::Number) {
                 if (i == 3)
-                    evt.typingStatus = typingData[i].numberValue_.toInt();
+                    evt.typingStatus = typingData[i].number().toInt();
             }
         }
         qDebug() << "Typing" << evt.userId << "in" << evt.conversationId << "state" << evt.typingStatus;
@@ -229,19 +229,19 @@ void Channel::parseChannelData(QString sreply)
     // playloadList[6] would be reply to invite
     if (playloadList.size() < 8) return; // TODO should we really return?
     // parseReadStateNotification():
-    if (playloadList[7].type_ == MessageField::List) {
+    if (playloadList[7].type() == MessageField::List) {
         ReadState evt;
-        auto readStateInfo = playloadList[7].listValue_;
+        auto readStateInfo = playloadList[7].list();
         for (int i = 0; i < readStateInfo.size(); ++i) {
-            if (readStateInfo[i].type_ == MessageField::List) {
-                auto currentList = readStateInfo[i].listValue_;
+            if (readStateInfo[i].type() == MessageField::List) {
+                auto currentList = readStateInfo[i].list();
                 if (i == 0)
                     evt.userid = Utils::parseIdentity(currentList);
                 else if (i == 1)
-                    evt.convId = currentList[0].stringValue_.toString();
-            } else if (readStateInfo[i].type_ == MessageField::Number) {
+                    evt.convId = currentList[0].string();
+            } else if (readStateInfo[i].type() == MessageField::Number) {
                 if (i == 2)
-                    evt.last_read = QDateTime::fromMSecsSinceEpoch(readStateInfo[i].numberValue_.toLongLong() / 1000);
+                    evt.last_read = QDateTime::fromMSecsSinceEpoch(readStateInfo[i].number().toLongLong() / 1000);
             }
         }
         conversationModel->updateReadState(evt);
@@ -361,14 +361,14 @@ void Channel::parseSid()
 
         auto parsedData = MessageField::parseListRef(rep.leftRef(-1), start);
         //ROW 0
-        sid = parsedData[0].listValue_[1].listValue_[1].stringValue_.toString();
+        sid = parsedData[0].list()[1].list()[1].string();
         qDebug() << sid;
 
         //ROW 1 and 2 discarded
 
         //ROW 3
-        auto row3Data = parsedData[3].listValue_[1].listValue_[1].listValue_[1].listValue_;
-        QString stringData = row3Data[1].stringValue_.toString();
+        auto row3Data = parsedData[3].list()[1].list()[1].list()[1].list();
+        QString stringData = row3Data[1].string();
         QStringList temp = stringData.split("/");
         qDebug() << temp.at(0);
         email = temp.at(0);
@@ -383,8 +383,8 @@ void Channel::parseSid()
         emit updateClientId(header_client);
 
 
-        auto row4Data = parsedData[4].listValue_[1].listValue_[1].listValue_[1].listValue_;
-        gsessionid = row4Data[1].stringValue_.toString();
+        auto row4Data = parsedData[4].list()[1].list()[1].list()[1].list();
+        gsessionid = row4Data[1].string();
         qDebug() << gsessionid;
 
     }
