@@ -70,7 +70,7 @@ QStringRef MessageField::parseString(QStringRef text, int& start)
     int escapeInd = -1;
     int strStart = start + 1;
     for (int i = strStart; i < text.length(); ++i) {
-        if (text.at(i) == '\\') {
+        if (text.at(i) == '\\' && escapeInd != i - 1) { // ignore double escapes
             escapeInd = i;
         } else if (text.at(i) == '"') {
             if (i-1 != escapeInd) {

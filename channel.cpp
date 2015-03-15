@@ -145,7 +145,8 @@ void Channel::parseChannelData(QString sreply)
     // prepare the inner data to parse:
     auto stringData = cContent[1].string();
     stringData.remove("\\n");
-    stringData.remove('\\');
+    stringData.replace("\\\"", "\"");
+    stringData.replace("\\\\", "\\");
     qDebug() << "inner data##" << stringData;
     // we can now parse the inner data:
     idx = 0;
