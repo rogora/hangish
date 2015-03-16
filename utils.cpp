@@ -29,6 +29,42 @@ Utils::Utils()
 {
 }
 
+QString Utils::cleanText(QString text, QString newLineReplacer)
+{
+    QString result;
+    int size = text.size();
+    for (int i = 0; i < size; ++i) {
+        if (text.at(i) == '\\' && i+1 < size) {
+            if (text.at(i+1) == '\"') {
+                ++i;
+                result.append('\"');
+                continue;
+            } else if (text.at(i+1) == '\\') {
+                if (i+2 < size && text.at(i+1) == 'n') {
+                    result.append("<br>");
+                    i+=2;
+                    continue;
+                }
+                ++i;
+                result.append('\\');
+                continue;
+            } else if (text.at(i+1) == 'u') {
+                if (i + 5 < size) { // unicode
+                    QString valueString = text.mid(i+2, 4);
+                    result.append(valueString.toUShort(nullptr, 16));
+                }
+                i+=5;
+                continue;
+            } else if (text.at(i+1) == 'n') {
+                if (!newLineReplacer.isEmpty()) result.append(newLineReplacer);
+                ++i; continue;
+            }
+        }
+        result.append(text.at(i));
+    }
+    return result;
+}
+
 QStringRef Utils::extractArrayForDS(const QString &text, int dsKey)
 {
     int index = text.indexOf(QString("<script>AF_initDataCallback({key: 'ds:%1'").arg(dsKey));
@@ -86,6 +122,7 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
             auto textList = text.list();
             int type = textList[0].number().toInt();
             QString msg = textList[1].string();
+            msg = cleanText(msg, "<br>");
             event.value.segments.append({type, msg});
         }
 

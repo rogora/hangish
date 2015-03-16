@@ -34,6 +34,12 @@ class Utils
 {
 public:
     Utils();
+    /**
+     * Unescapes the string \a text. For example \" is replaced by " \\ is replaced by \
+     * unicode characters are parsed. Newlines inside text (i.e. \\n) is replaced by <br>
+     * and \n can be replaced by \a newLineReplacer.
+     */
+    static QString cleanText(QString text, QString newLineReplacer = "");
     static QStringRef extractArrayForDS(const QString& text, int dsKey);
     static Identity parseIdentity(const QList<MessageField> &ids);
     static int findPositionFromComma(QString input, int startPos, int commaCount);
