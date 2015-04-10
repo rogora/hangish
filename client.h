@@ -139,6 +139,7 @@ public slots:
     void setFocusReply();
     void cookieUpdateSlot(QNetworkCookie cookie);
     void qnamUpdatedSlot(QNetworkAccessManager *qnam);
+    void catchNotificationForCover(QString a, QString b, QString c, QString d);
 
 signals:
     void loginNeeded();
@@ -151,6 +152,8 @@ signals:
     void isTyping(QString convid, QString uname, int status);
     void showNotification(QString preview, QString summary, QString body, QString sender);
     void authFailed(QString error);
+    void showNotificationForCover(int num);
+    void deletedNotifications();
 
 };
 

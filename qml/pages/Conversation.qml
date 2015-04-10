@@ -82,7 +82,7 @@ Page {
                         placeholderText: qsTr("Reply")
                         property int typingStatus: 3
                         onTextChanged: {
-                            console.log("Text changed!")
+                            //console.log("Text changed!")
                             if (sendBox.text!=="" && typingStatus === 3) {
                                 typingStatus = 1
                                 Client.setTyping(page.conversationId, typingStatus)
@@ -101,9 +101,9 @@ Page {
                             }
 
                             Client.sendChatMessage(sendBox.text.trim(), page.conversationId);
+                            sendBox.deselect();
                             sendBox.text = "";
                             sendBox.placeholderText = qsTr("Sending message...");
-                            sendBox.text = "";
                         }
                         function sendImage(path) {
                             sendButton.enabled = false

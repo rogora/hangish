@@ -25,25 +25,60 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 CoverBackground {
+    property var unreadNum: 0
     Connections
         {
             target: Client
-            onChannelLost: label.text = "Offline"
-            onChannelRestored: label.text = "Hangouts online"
+            onChannelLost: {
+                coverIcon.rotation= 90
+            }
+            onChannelRestored: {
+                coverIcon.rotation= 0
+            }
             onIsTyping: {
                 if (status===1)
                     label.text = qsTr(uname + " is typing")
                 else if (status===3)
                     label.text = qsTr("Hangouts online")
             }
+            onShowNotificationForCover: {
+                    console.log("caught shn from cover")
+                    unreadNum = unreadNum + num
+                    unreadlbl.text = unreadNum + qsTr(" unread")
+            }
+            onDeletedNotifications: {
+                console.log("caught delete from cover")
+                unreadNum = 0
+                unreadlbl.text = ""
+            }
         }
 
-    Label {
-        id: label
+    Column {
         anchors.centerIn: parent
-        text: qsTr("Hangouts")
-    }
+        width: parent.width
 
+        Image {
+                        id: coverIcon
+                        source: "/usr/share/icons/hicolor/86x86/apps/Hangish.png"
+                        fillMode: Image.PreserveAspectFit
+                        cache: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width/2
+                        x: Theme.paddingSmall
+                    }
+
+        Label {
+            id: label
+            text: ""
+            font.pixelSize: Theme.fontSizeExtraSmall
+        }
+
+        Label {
+            id: unreadlbl
+            text: ""
+            font.bold: unreadNum
+        }
+    }
     /*
     CoverActionList {
         id: coverAction

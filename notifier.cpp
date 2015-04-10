@@ -31,6 +31,19 @@ Notifier::Notifier(QObject *parent, ContactsModel *contacts) :
     lastId = 0;
 }
 
+void Notifier::closeAllNotifications()
+{
+    qDebug() << "Deleting notif";
+    qDebug() << activeNotifications.size();
+    foreach (Notification *n, activeNotifications) {
+        n->close();
+        qDebug() << "Deleting notif 2";
+        activeNotifications.removeOne(n);
+        qDebug() << "Deleting notif 3";
+        delete n;
+    }
+}
+
 void Notifier::showNotification(QString preview, QString summary, QString body, QString sender)
 {
     //if acs == 2 another client is active, don't fire notification!
@@ -67,6 +80,7 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     n->publish();
     lastId = n->replacesId();
     qDebug() << "pubbed " << n->replacesId();
+    activeNotifications.append(n);
 }
 
 void Notifier::activeClientUpdate(int state)

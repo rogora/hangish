@@ -326,6 +326,8 @@ void Client::parseConversationState(QString conv)
     else if (c.events.size() == 1 && c.events[0].notificationLevel == 30)
         //Only 1 new message -> show a specific notification
         emit showNotification(c.events[0].value.segments[0].value, c.events[0].sender.chat_id, c.events[0].value.segments[0].value, c.events[0].sender.chat_id);
+
+    emit showNotificationForCover(c.events.size());
 }
 
 QList<Conversation> Client::parseConversations(QString conv)
@@ -423,7 +425,7 @@ void Client::networkReply()
             int key_stop = sreply.indexOf("\"", key_start) + 1;
             api_key = sreply.mid(key_start, key_stop - key_start-1);
             qDebug() << "API KEY: " << api_key;
-            if (api_key.contains("AF_initDataKeys") || api_key.size() < 10 || api_key.size() > 50 || sreply.contains("Logged")) {
+            if (api_key.contains("AF_initDataKeys") || api_key.size() < 10 || api_key.size() > 50) {
                 qDebug() << sreply;
                 qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 //exit(-1);
@@ -1151,6 +1153,11 @@ void Client::cookieUpdateSlot(QNetworkCookie cookie)
     //auth->updateCookies(sessionCookies);
 }
 
+void Client::catchNotificationForCover(QString a, QString b, QString c, QString d) {
+    //channel alway receives 1 message
+    emit showNotificationForCover(1);
+}
+
 void Client::initDone()
 {
     channel = new Channel(nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
@@ -1165,6 +1172,7 @@ void Client::initDone()
     notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
     QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
+    QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString)), this, SLOT(catchNotificationForCover(QString,QString,QString,QString)));
     QObject::connect(channel, SIGNAL(activeClientUpdate(int)), notifier, SLOT(activeClientUpdate(int)));
 
     channel->listen();
@@ -1297,6 +1305,9 @@ void Client::setAppOpened()
     QString convId = conversationModel->getCid();
     if (convId!="")
         updateWatermark(convId);
+
+    notifier->closeAllNotifications();
+    emit deletedNotifications();
 
     setActiveClient();
     //setPresence(false);
