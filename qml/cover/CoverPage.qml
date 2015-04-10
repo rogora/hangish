@@ -30,10 +30,10 @@ CoverBackground {
         {
             target: Client
             onChannelLost: {
-                coverIcon.rotation= 90
+                coverIcon.rotation = 45
             }
             onChannelRestored: {
-                coverIcon.rotation= 0
+                coverIcon.rotation = 0
             }
             onIsTyping: {
                 if (status===1)
@@ -44,7 +44,7 @@ CoverBackground {
             onShowNotificationForCover: {
                     console.log("caught shn from cover")
                     unreadNum = unreadNum + num
-                    unreadlbl.text = unreadNum + qsTr(" unread")
+                    unreadlbl.text = unreadNum
             }
             onDeletedNotifications: {
                 console.log("caught delete from cover")
@@ -77,6 +77,8 @@ CoverBackground {
             id: unreadlbl
             text: ""
             font.bold: unreadNum
+            font.pixelSize: Theme.fontSizeMedium
+            color: Theme.highlightColor
         }
     }
     /*
