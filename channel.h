@@ -54,6 +54,7 @@ class Channel : public QObject
 
 private:
     bool appPaused;
+    QString lastIncomingConvId;
     ChannelEvent parseTypingNotification(QString input, ChannelEvent evt);
     void fetchNewSid();
 
@@ -65,6 +66,7 @@ public:
     void fastReconnect();
     void setAppPaused();
     void setAppOpened();
+    QString getLastIncomingConversation();
 
 public slots:
     void checkChannel();

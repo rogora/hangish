@@ -56,6 +56,9 @@ Page {
         conversationModel.cid = cid;
         listView.positionViewAtEnd()
     }
+    function openKeyboard() {
+        listView.footerItem.openKeyboard()
+    }
 
     /*
     SilicaFlickable {
@@ -143,14 +146,15 @@ Page {
                     Button {
                         id: sendButton
                         width: 140
-                        text: "Send"
+                        text: "send"
+                        //icon.source: "qrc:///icons/send.png"
                         onClicked: sendBox.sendMessage()
                         onPressAndHold: {
                             fileModel.searchPath = "/home/nemo/"
                             pageStack.push(imagepicker)
                             imagepicker.selected.connect(sendBox.sendImage)
                         }
-                    }
+                     }
                     Connections
                         {
                             target: Client
@@ -160,6 +164,10 @@ Page {
                             onMessageSent: sendBox.setOnline()
                             onMessageNotSent: sendBox.setSendError()
                         }
+                    function openKeyboard() {
+                        sendBox.forceActiveFocus()
+                    }
+
                 }
           /*
             PushUpMenu {

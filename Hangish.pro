@@ -62,3 +62,6 @@ HEADERS += \
     contactsmodel.h \
     notifier.h \
     filemodel.h
+
+RESOURCES += \
+    Hangish.qrc

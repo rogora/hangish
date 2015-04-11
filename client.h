@@ -111,6 +111,9 @@ public:
     Q_INVOKABLE void setPresence(bool goingOffline);
     Q_INVOKABLE void setAppPaused();
     Q_INVOKABLE void setAppOpened();
+    Q_INVOKABLE QString getLastIncomingConversationId();
+    Q_INVOKABLE QString getLastIncomingConversationName();
+
 
 
 public slots:

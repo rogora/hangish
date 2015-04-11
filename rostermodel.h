@@ -67,6 +67,7 @@ public:
     void setReadConv(QString convId);
     void addUnreadMsg(QString convId);
     bool hasUnreadMessages(QString convId);
+    QString getConversationName(QString convId);
 
 private:
     QList<ConvAbstract *> conversations;

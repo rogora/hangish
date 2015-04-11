@@ -156,3 +156,10 @@ void RosterModel::setReadConv(QString convId)
         emit dataChanged(r1, r1);
     }
 }
+
+QString RosterModel::getConversationName(QString convId) {
+    foreach (ConvAbstract *ca, conversations) {
+        if (ca->convId==convId)
+            return ca->name;
+    }
+}

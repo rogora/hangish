@@ -61,6 +61,7 @@ Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QStrin
 {
     LPrep = NULL;
     channelError = false;
+    lastIncomingConvId = "";
 
     nam = n;
     myself = pms;
@@ -211,6 +212,7 @@ void Channel::parseChannelData(QString sreply)
                 if (evt.value.valid) {
                     qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
                     conversationModel->addEventToConversation(evt.conversationId, evt);
+                    lastIncomingConvId = evt.conversationId;
                     if (evt.sender.chat_id != myself.chat_id) {
                         //Signal new event only if the actual conversation isn't already visible to the user
                         qDebug() << conversationModel->getCid();
@@ -414,6 +416,12 @@ void Channel::parseSid()
         QStringList temp = email.split("/");
         qDebug() << temp.at(0);
         email = temp.at(0);
+
+        if (!email.contains(QChar('@')))
+            //Something went wrong, may happen after channel reestablished
+            //TODO: Try to go on with the old header_client, need some tests
+            return;
+
         qDebug() << temp.at(1);
         header_client = temp.at(1);
         emit updateClientId(header_client);
@@ -537,4 +545,8 @@ void Channel::setAppOpened()
 void Channel::setAppPaused()
 {
     appPaused = true;
+}
+
+QString Channel::getLastIncomingConversation() {
+    return lastIncomingConvId;
 }

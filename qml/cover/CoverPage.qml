@@ -25,21 +25,43 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 CoverBackground {
+    function showRosterPage() {
+        if (pageStack.depth === 1)
+            return;
+        else
+            pageStack.pop()
+    }
+    function showLastConvPage() {
+        if (Client.getLastIncomingConversationId()=="")
+            return;
+        if (pageStack.depth === 1) {}
+        else
+            pageStack.pop()
+
+        conversation.loadConversationModel(Client.getLastIncomingConversationId());
+        rosterModel.readConv = Client.getLastIncomingConversationId();
+        conversation.conversationName = Client.getLastIncomingConversationName();
+        pageStack.push(conversation);
+        conversation.openKeyboard()
+    }
+
     property var unreadNum: 0
     Connections
         {
             target: Client
             onChannelLost: {
                 coverIcon.rotation = 45
+                coverIcon.source = "qrc:///icons/Hangish_ds.png"
             }
             onChannelRestored: {
                 coverIcon.rotation = 0
+                coverIcon.source = "qrc:///icons/Hangish.png"
             }
             onIsTyping: {
                 if (status===1)
-                    label.text = qsTr(uname + " is typing")
+                    label.text = uname + qsTr(" is typing")
                 else if (status===3)
-                    label.text = qsTr("Hangouts online")
+                    label.text = ""
             }
             onShowNotificationForCover: {
                     console.log("caught shn from cover")
@@ -59,7 +81,7 @@ CoverBackground {
 
         Image {
                         id: coverIcon
-                        source: "/usr/share/icons/hicolor/86x86/apps/Hangish.png"
+                        source: "qrc:///icons/Hangish.png"
                         fillMode: Image.PreserveAspectFit
                         cache: true
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -71,6 +93,7 @@ CoverBackground {
             id: label
             text: ""
             font.pixelSize: Theme.fontSizeExtraSmall
+            anchors.horizontalCenter: parent.horizontalCenter
         }
 
         Label {
@@ -79,23 +102,29 @@ CoverBackground {
             font.bold: unreadNum
             font.pixelSize: Theme.fontSizeMedium
             color: Theme.highlightColor
+            anchors.horizontalCenter: parent.horizontalCenter
+
         }
     }
-    /*
     CoverActionList {
         id: coverAction
 
         CoverAction {
-            iconSource: "image://theme/icon-cover-next"
-            onTriggered: Client.forceChannelRestore()
+            iconSource: "image://theme/icon-cover-subview"
+            onTriggered: {
+                showRosterPage()
+                activate()
+            }
         }
 
         CoverAction {
-            iconSource: "image://theme/icon-cover-pause"
+            iconSource: "image://theme/icon-cover-message"
+            onTriggered: {
+                showLastConvPage()
+                activate()
+            }
         }
     }
-        */
-
 }
 
 

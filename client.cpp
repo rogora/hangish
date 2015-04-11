@@ -1334,3 +1334,14 @@ void Client::updateClientId(QString newID)
     qDebug() << "Updating clid " << newID;
     clid = newID;
 }
+
+QString Client::getLastIncomingConversationId() {
+    return channel->getLastIncomingConversation();
+}
+
+QString Client::getLastIncomingConversationName() {
+    QString lastId = channel->getLastIncomingConversation();
+    if (lastId.size()>1)
+        return rosterModel->getConversationName(lastId);
+    return "";
+}
