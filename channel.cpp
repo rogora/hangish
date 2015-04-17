@@ -170,7 +170,7 @@ void Channel::parseChannelData(QString sreply)
             if (evt.value.valid) {
                 qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
                 conversationModel->addEventToConversation(evt.conversationId, evt);
-                    lastIncomingConvId = evt.conversationId;
+                lastIncomingConvId = evt.conversationId;
                 if (evt.sender.chat_id != myself.chat_id) {
                     //Signal new event only if the actual conversation isn't already visible to the user
                     qDebug() << conversationModel->getCid();
