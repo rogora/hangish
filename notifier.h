@@ -42,10 +42,11 @@ private:
     uint lastId;
 
 signals:
+    void showNotificationForCover(int num);
 
 public slots:
     void closeAllNotifications();
-    void showNotification(QString preview, QString summary, QString body, QString sender);
+    void showNotification(QString preview, QString summary, QString body, QString sender, int num);
     void activeClientUpdate(int state);
 
 };

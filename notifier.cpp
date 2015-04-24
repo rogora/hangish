@@ -44,7 +44,7 @@ void Notifier::closeAllNotifications()
     }
 }
 
-void Notifier::showNotification(QString preview, QString summary, QString body, QString sender)
+void Notifier::showNotification(QString preview, QString summary, QString body, QString sender, int num)
 {
     //if acs == 2 another client is active, don't fire notification!
     if (activeClientState == 2)
@@ -77,6 +77,8 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     n->setRemoteDBusCallInterface("org.nemomobile.example");
     n->setRemoteDBusCallMethodName("doSomething");
     */
+    emit showNotificationForCover(num);
+
     n->publish();
     lastId = n->replacesId();
     qDebug() << "pubbed " << n->replacesId();
@@ -86,4 +88,6 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
 void Notifier::activeClientUpdate(int state)
 {
     activeClientState = state;
+    if (activeClientState == 2)
+        closeAllNotifications();
 }

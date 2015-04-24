@@ -51,6 +51,7 @@ class Channel : public QObject
     QString sid, clid, ec, path, prop, header_client, email, gsessionid;
     QString lastIncompleteParcel;
     QDateTime lastPushReceived;
+    int lastAs;
 
 private:
     bool appPaused;
