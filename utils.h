@@ -28,38 +28,24 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "structs.h"
 #include "notification.h"
 
+class MessageField;
+
 class Utils
 {
 public:
     Utils();
-    static Identity parseIdentity(QString input);
-    static int skipTextFields(QString input, int startPos);
-    static int skipFields(QString input, int startPos);
-    static int skipFieldsForPush(QString input, int startPos);
-    static QString getNextAtomicField(QString conv, int &start);
-    static QString getNextAtomicFieldForPush(QString conv, int &start);
-    static QString getNextField(QString conv, int start);
-    static QString getTextAtomicField(QString conv, int &start);
+    /**
+     * Unescapes the string \a text. For example \" is replaced by " \\ is replaced by \
+     * unicode characters are parsed. Newlines inside text (i.e. \\n) is replaced by <br>
+     * and \n can be replaced by \a newLineReplacer.
+     */
+    static QString cleanText(QString text, QString newLineReplacer = "");
+    static QStringRef extractArrayForDS(const QString& text, int dsKey);
+    static Identity parseIdentity(const QList<MessageField> &ids);
     static int findPositionFromComma(QString input, int startPos, int commaCount);
-
-    static Event parseEvent(QString conv);
-    static EventValueSegment parseEventValueSegment(QString segment);
-    static QList<EventValueSegment> parseTexts(QString segments);
-    static EventAttachmentSegment parseEventValueAttachment(QString att);
-    static QList<EventAttachmentSegment> parseAttachments(QString attachments);
-    static EventValue parseEventValue(QString input);
-    static QString getFullUrlFromImageAttach(QString data);
-    static QString getPreviewUrlFromImageAttach(QString data);
-
+    static Event parseEvent(const QList<MessageField> &eventFields);
     static QString getChatidFromIdentity(QString identity);
-
-    static int parseNotificationLevel(QString input);
-
-    static int parseActiveClientUpdate(QString input, QString &newId);
-
-    static ReadState parseReadState(QString input);
-    static QList<ReadState> parseReadStates(QString input);
-    static ReadState parseReadStateNotification(QString input);
+    static ReadState parseReadState(const MessageField &rs);
 };
 
 #endif // UTILS_H

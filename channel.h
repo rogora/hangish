@@ -55,7 +55,6 @@ class Channel : public QObject
 private:
     bool appPaused;
     QString lastIncomingConvId;
-    ChannelEvent parseTypingNotification(QString input, ChannelEvent evt);
     void fetchNewSid();
 
 public:

@@ -35,6 +35,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "utils.h"
 #include "notifier.h"
 
+class MessageField;
+
 
 class Client : public QObject
 {
@@ -63,14 +65,14 @@ private:
     bool appPaused;
     void forceChannelCheckAndRestore();
     bool initCompleted;
-    User parseMySelf(QString sreply);
+    User parseMySelf(const QString &sreply);
     void getPVTToken();
     User getUserById(QString chatId);
-    User parseEntity(QString input);
-    QList<User> parseClientEntities(QString input);
-    QList<User> parseGroup(QString input);
+    User parseEntity(QList<MessageField> entity);
+    QList<User> parseClientEntities(QList<MessageField> entities);
+    QList<User> parseGroup(QList<MessageField> group);
     QList<User> users;
-    QList<User> parseUsers(QString userString);
+    QList<User> parseUsers(const QString &userString);
     Conversation getConvById(QString cid);
 
     RosterModel *rosterModel;
@@ -78,17 +80,12 @@ private:
     ContactsModel *contactsModel;
 
     QString getRequestHeader();
-    Participant parseParticipant(QString plist);
-    QList<Participant> parseParticipants(QString plist, QString data);
-    Conversation parseConversationDetails(QString conversation, Conversation res);
-    Conversation parseSelfConversationState(QString scState, Conversation res);
-    Conversation parseConversationAbstract(QString conv, Conversation res);
-    Conversation parseConversation(QString conv, int &start);
-    void parseConversationState(QString conv);
-    User parseUser(QString conv, int &startPos);
-    QList<Conversation> parseConversations(QString conv);
+    void parseSelfConversationState(QList<MessageField> stateFields, Conversation& res);
+    void parseConversationAbstract(QList<MessageField> abstractFields, Conversation& res);
+    Conversation parseConversation(QList<MessageField> conversation);
+    void parseConversationState(MessageField conv);
+    QList<Conversation> parseConversations(const QString &conv);
     void followRedirection(QUrl url);
-    int findPositionFromComma(QString input, int startPos, int commaCount);
 
     QByteArray getAuthHeader();
     QNetworkReply * sendRequest(QString function, QString json);
