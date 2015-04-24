@@ -3,6 +3,7 @@
         <file alias="Hangish_ds.png">resources/icons/Hangish_ds.png</file>
         <file alias="Hangish.png">resources/icons/Hangish.png</file>
         <file alias="send.png">resources/icons/send.png</file>
+	<file alias="unknown.png">resources/icons/unknown.png</file>
     </qresource>
 </RCC>
 

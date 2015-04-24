@@ -32,7 +32,7 @@ CoverBackground {
             pageStack.pop()
     }
     function showLastConvPage() {
-        if (Client.getLastIncomingConversationId()=="")
+        if (Client.getLastIncomingConversationId()==="")
             return;
         if (pageStack.depth === 1) {}
         else

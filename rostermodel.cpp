@@ -88,6 +88,9 @@ void RosterModel::addConversationAbstract(Conversation pConv)
                     if (!image.startsWith("https:")) image.prepend("https:");
                     imagePaths << image;
                 }
+                else {
+                    imagePaths << "qrc:///icons/unknown.png";
+                }
             }
         }
     }

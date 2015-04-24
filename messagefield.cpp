@@ -7,6 +7,7 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
 {
     if (text.at(start) != '[') {
         qWarning() << "Not a list to parse";
+        start += text.size();
         return {};
     }
     int openBrackets = 1;
@@ -52,8 +53,9 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             // Image attachments are in maps.
             // For now ignore them: (seems to work fine)
             if (text.at(i) == '{' || text.at(i) == ':' || text.at(i) == '}') continue;
-            qWarning() << "Uknown field type????" << text.right(i);
+            qWarning() << "Unknown field type????" << text.right(i);
             // in any case we do not want garbage in the list
+            start += text.right(i).size();
             continue;
         }
         results << nextMessageField;
