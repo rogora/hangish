@@ -43,6 +43,7 @@ private:
 
 signals:
     void showNotificationForCover(int num);
+    void deletedNotifications();
 
 public slots:
     void closeAllNotifications();

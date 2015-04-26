@@ -140,6 +140,7 @@ public slots:
     void cookieUpdateSlot(QNetworkCookie cookie);
     void qnamUpdatedSlot(QNetworkAccessManager *qnam);
     void catchNotificationForCover(int num);
+    void catchDeletedNotifications();
 
 signals:
     void loginNeeded();

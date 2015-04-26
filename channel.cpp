@@ -205,9 +205,9 @@ void Channel::parseChannelData(QString sreply)
                             //If notificationLevel == 10 the conversation has been silenced -> don't notify
                             if (evt.notificationLevel==RING)
                                 if (evt.value.segments.size()==0)
-                                    emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id);
+                                    emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1);
                                 else
-                                    emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id);
+                                    emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1);
                         }
                         else {
                             //Update watermark, since I've read the message; if notification level this should be the active client

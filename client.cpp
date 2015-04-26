@@ -1051,8 +1051,9 @@ void Client::initDone()
 
     notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString,int)), notifier, SLOT(showNotification(QString,QString,QString,QString,int)));
-    QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString)));
+    QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString,int)), notifier, SLOT(showNotification(QString,QString,QString,QString,int)));
     QObject::connect(notifier, SIGNAL(showNotificationForCover(int)), this, SLOT(catchNotificationForCover(int)));
+    QObject::connect(notifier, SIGNAL(deletedNotifications()), this, SLOT(catchDeletedNotifications()));
     QObject::connect(channel, SIGNAL(activeClientUpdate(int)), notifier, SLOT(activeClientUpdate(int)));
 
     channel->listen();
@@ -1193,6 +1194,11 @@ void Client::setAppOpened()
     //setPresence(false);
     channel->setAppOpened();
     forceChannelCheckAndRestore();
+}
+
+void Client::catchDeletedNotifications()
+{
+    emit deletedNotifications();
 }
 
 void Client::setAppPaused()

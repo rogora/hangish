@@ -42,6 +42,7 @@ void Notifier::closeAllNotifications()
         qDebug() << "Deleting notif 3";
         delete n;
     }
+    emit deletedNotifications();
 }
 
 void Notifier::showNotification(QString preview, QString summary, QString body, QString sender, int num)
