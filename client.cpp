@@ -215,9 +215,11 @@ Conversation Client::parseConversation(QList<MessageField> conversation)
     parseConversationAbstract(abstract, res);
     // Events
     auto details = conversation[2].list();
-    for (auto event : details)
-        res.events.append(Utils::parseEvent(event.list()));
-
+    for (auto event : details) {
+        Event e = Utils::parseEvent(event.list());
+        if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
+            res.events.append(e);
+    }
     return res;
 }
 
@@ -238,7 +240,8 @@ void Client::parseConversationState(MessageField conv)
         rosterModel->addConversationAbstract(c);
     }
     foreach (Event e, c.events)
-        conversationModel->addEventToConversation(c.id, e);
+        if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
+            conversationModel->addEventToConversation(c.id, e);
 
     if (c.events.size() > 1)
         //More than 1 new message -> show a generic notification
@@ -789,6 +792,73 @@ void Client::setPresence(bool goingOffline)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("presence/setpresence",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(setPresenceReply()));
+}
+
+void Client::retrieveConversationLog(QString convId)
+{
+    qDebug() << "Retr history";
+    int maxEvents = 20;
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [[\"";
+    body += convId;
+    body += "\"], [], []],1,1,null,";
+    body += QString::number(maxEvents);
+    body += ", [null,null,";
+    body += QString::number(conversationModel->getFirstEventTs(convId) .toMSecsSinceEpoch()*1000);
+    body += "]]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/getconversation",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(retrieveConversationLogReply()));
+}
+
+void Client::parseConversationLog(MessageField conv)
+{
+    qDebug() << "CONV_STATE: ";// << conv;
+
+    Conversation c = parseConversation(conv.list());
+    qDebug() << c.id;
+    qDebug() << c.events.size();
+
+    //Now formalize what happened:
+
+    //New messages for existing convs?
+    if (!rosterModel->conversationExists(c.id)) {
+        //A new conv? Here?? no way
+        return;
+    }
+    for (int i=c.events.size()-1; i>=0; i--)
+    {
+        Event e = c.events[i];
+        if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
+            conversationModel->addEventToConversation(c.id, e, false);
+    }
+}
+
+void Client::retrieveConversationLogReply()
+{
+    //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Synced correctly";
+        int idx = 0;
+        auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
+
+        //Skip cgcrp:         parsedReply[0]
+        //Skip response header: parsedReply[1]
+        //Parse the actual data
+        parseConversationLog(parsedReply[2]);
+    }
+    delete reply;
 }
 
 void Client::setPresenceReply()

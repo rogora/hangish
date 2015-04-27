@@ -84,6 +84,7 @@ private:
     void parseConversationAbstract(QList<MessageField> abstractFields, Conversation& res);
     Conversation parseConversation(QList<MessageField> conversation);
     void parseConversationState(MessageField conv);
+    void parseConversationLog(MessageField conv);
     QList<Conversation> parseConversations(const QString &conv);
     void followRedirection(QUrl url);
 
@@ -110,6 +111,8 @@ public:
     Q_INVOKABLE void setAppOpened();
     Q_INVOKABLE QString getLastIncomingConversationId();
     Q_INVOKABLE QString getLastIncomingConversationName();
+    Q_INVOKABLE void retrieveConversationLog(QString convId);
+
 
 
 
@@ -141,6 +144,7 @@ public slots:
     void qnamUpdatedSlot(QNetworkAccessManager *qnam);
     void catchNotificationForCover(int num);
     void catchDeletedNotifications();
+    void retrieveConversationLogReply();
 
 signals:
     void loginNeeded();

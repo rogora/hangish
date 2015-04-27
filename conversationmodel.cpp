@@ -44,14 +44,16 @@ void ConversationModel::addOutgoingMessage(QString convId, Event evt)
     qDebug() << "TODO: implement outgoing message";
 }
 
-void ConversationModel::addEventToConversation(QString convId, Event e)
+void ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
 {
     int i=0;
     for (i=0; i<conversations.size(); i++)
         if (conversations.at(i).id==convId)
             break;
-
-    conversations[i].events.append(e);
+    if (bottom)
+        conversations[i].events.append(e);
+    else
+        conversations[i].events.prepend(e);
     if (convId == id) {
         //It's the active one, should update model
         QString snd = getSenderName(e.sender.chat_id, conversations[i].participants);
@@ -74,7 +76,11 @@ void ConversationModel::addEventToConversation(QString convId, Event e)
         else
             ts_string = e.timestamp.time().toString();
 
-        addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
+        //Were to add this message? Bottom -> new msg / Top -> old msg
+        if (bottom)
+            addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
+        else
+            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
     }
 }
 
@@ -225,6 +231,14 @@ void ConversationModel::addConversationElement(QString sender, QString senderId,
     endInsertRows();
 }
 
+void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
+{
+    beginInsertRows(QModelIndex(), 0, rowCount());
+    myList.prepend(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
+    endInsertRows();
+}
+
+
 int ConversationModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return myList.size();
@@ -248,4 +262,12 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const {
         return QVariant::fromValue(fobj->read);
 
     return QVariant();
+}
+
+QDateTime ConversationModel::getFirstEventTs(QString convId) {
+    foreach (Conversation c, conversations) {
+        if (c.events.size() && c.id == convId)
+            return c.events[0].timestamp;
+    }
+    return QDateTime::currentDateTime();
 }

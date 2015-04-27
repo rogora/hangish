@@ -62,9 +62,10 @@ class ConversationModel : public QAbstractListModel
 public:
     void updateReadState(ReadState rs);
     void addConversation(Conversation c);
-    void addEventToConversation(QString convId, Event e);
+    void addEventToConversation(QString convId, Event e, bool bottom=true);
     void addSentMessage(QString convId, Event evt);
     void addOutgoingMessage(QString convId, Event evt);
+    QDateTime getFirstEventTs(QString convId);
 
     QString id, name;
 
@@ -87,6 +88,8 @@ public:
     void loadConversation(QString cId);
     QString getCid();
     void addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
+    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
+
 
 private:
     QString getSenderName(QString chatId, QList<Participant> participants);

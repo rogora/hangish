@@ -188,8 +188,10 @@ void Channel::parseChannelData(QString sreply)
             for (auto eventData : eventDataList) {
                 Event evt = Utils::parseEvent(eventData.list());
                 if (evt.value.valid) {
-                    if (evt.value.segments.size()==0)
-                        qDebug() << "No segs!";
+                    if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
+                        qDebug() << "No segs! Skipping";
+                        continue;
+                    }
                     else
                         qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
 

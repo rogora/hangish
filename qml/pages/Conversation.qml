@@ -65,6 +65,13 @@ Page {
         anchors.fill: parent
         */
         SilicaListView {
+            PullDownMenu {
+                MenuItem {
+                    text: qsTr("Load more...")
+                    onClicked: Client.retrieveConversationLog(page.conversationId)
+                    }
+            }
+
             id: listView
             model: conversationModel
             anchors.fill: parent
