@@ -150,11 +150,11 @@ Page {
 
 
                     }
-                    Button {
+                    IconButton {
                         id: sendButton
                         width: 140
-                        text: "send"
-                        //icon.source: "qrc:///icons/send.png"
+                        //text: "send"
+                        icon.source: "image://theme/icon-l-right"
                         onClicked: sendBox.sendMessage()
                         onPressAndHold: {
                             fileModel.searchPath = "/home/nemo/"

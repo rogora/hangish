@@ -233,7 +233,7 @@ void ConversationModel::addConversationElement(QString sender, QString senderId,
 
 void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
 {
-    beginInsertRows(QModelIndex(), 0, rowCount());
+    beginInsertRows(QModelIndex(), 0, 0);
     myList.prepend(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
     endInsertRows();
 }
