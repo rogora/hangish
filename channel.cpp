@@ -124,7 +124,6 @@ void Channel::parseChannelData(QString sreply)
     for (;;) {
         idx = sreply.indexOf('[', idx+1); // at the beginning there is a length, which we ignore.
         qDebug() << idx;
-        qDebug() << sreply[idx] << sreply[idx+1];
         // ignore empty messages
         if (idx == -1) return;
         qDebug() << "##" << sreply;
