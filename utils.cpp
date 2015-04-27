@@ -123,6 +123,9 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
             int type = textList[0].number().toInt();
             QString msg = textList[1].string();
             msg = cleanText(msg, "<br>");
+            if (type == 2) { // linke
+                msg = QString("<a href=\"%1\">%1</a>").arg(msg);
+            }
             event.value.segments.append({type, msg});
         }
 
