@@ -24,6 +24,8 @@ BackgroundItem {
                 truncationMode: TruncationMode.Fade
                 horizontalAlignment: (senderId == page.selfChatId) ? Text.AlignLeft : Text.AlignRight
                 color: (senderId == page.selfChatId) ? Theme.highlightColor : Theme.primaryColor
+                textFormat: Text.StyledText
+                onLinkActivated: Qt.openUrlExternally(link)
             }
 
             Image {
