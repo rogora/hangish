@@ -24,10 +24,14 @@ BackgroundItem {
         }
 
         Label {
+            width: parent.width - img.width - 2 * Theme.paddingLarge
             text: (unread > 0) ? qsTr(name + " " + unread) : qsTr(name)
             font.bold: (unread > 0) ? true : false
             anchors.verticalCenter: parent.verticalCenter
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+            maximumLineCount: 2
+            wrapMode: Text.WordWrap
+            truncationMode: TruncationMode.Fade
         }
     }
 }
