@@ -25,7 +25,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include <QtWidgets/QApplication>
 #include <QProcess>
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36";
-static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
+static QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/harbour-hangish";
+static QString homePath = homeDir + "/cookies.json";
 
 static QString SECONDFACTOR_URL = "https://accounts.google.com/SecondFactor";
 
@@ -235,7 +236,7 @@ void Authenticator::updateCookies(QList<QNetworkCookie> cookies)
 
 void Authenticator::auth()
 {
-    QFile cookieFile(homePath);
+   QFile cookieFile(homePath);
    if (cookieFile.exists()) {
        cookieFile.open(QIODevice::ReadOnly | QIODevice::Text);
        QString val = cookieFile.readAll();
@@ -269,4 +270,6 @@ void Authenticator::auth()
 
 Authenticator::Authenticator()
 {
+    qDebug() << "Making dir " << homeDir;
+    QDir().mkdir(homeDir);
 }

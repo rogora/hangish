@@ -51,7 +51,12 @@ Dialog {
                 column.visible = true
             }
 
-            onAuthFailed: resultLabel.text = qsTr("Login Failed ") + error
+            onAuthFailed: {
+                loginIndicator.running = false
+                infotext.text = qsTr(error)
+                resultLabel.text = qsTr("Login Failed ") + error
+                delauthbtn.visible = true
+            }
         }
 
 
@@ -169,6 +174,13 @@ Dialog {
                 }
                 color: Theme.highlightColor
                 horizontalAlignment: Text.AlignHCenter
+            }
+            Button {
+                id: delauthbtn
+                visible: false
+                text: qsTr("Delete authentication cookie")
+                onClicked: Client.deleteCookies()
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
    // }

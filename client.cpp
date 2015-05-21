@@ -26,7 +26,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 static QString CHAT_INIT_URL = "https://talkgadget.google.com/u/0/talkgadget/_/chat";
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36";
-static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
+static QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/harbour-hangish";
+static QString homePath = homeDir + "/cookies.json";
 
 
 //Timeout to send for setactiveclient requests:
@@ -396,6 +397,7 @@ void Client::networkReply()
     else {
         //failure
         //qDebug() << "Failure" << reply->errorString();
+        emit authFailed("Login Failed " + reply->errorString());
         delete reply;
     }
 }
@@ -1050,6 +1052,18 @@ void Client::pvtReply()
     }
     else {
         qDebug() << "Pvt req returned " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==0)
+        {
+            qDebug() << "No network?";
+            //exit(0);
+            stuckWithNoNetwork = true;
+            emit authFailed("No network");
+        }
+        else {
+            qDebug() << "Unk Error";
+            //exit(0);
+            emit authFailed("Unknown Error " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toString());
+        }
         reply->close();
         delete reply;
     }
@@ -1082,6 +1096,7 @@ void Client::getPVTToken()
 void Client::authenticationDone()
 {
     sessionCookies = auth->getCookies();
+    stuckWithNoNetwork = false;
     getPVTToken();
 }
 
@@ -1219,8 +1234,13 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
     // a == Connected -> connectivity change
     // a == Powered -> toggled wifi
 
-    if (a=="Connected" && b.variant().toBool()==true)
+    if (a=="Connected" && b.variant().toBool()==true) {
+        if (stuckWithNoNetwork) {
+            getPVTToken();
+            return;
+        }
         channel->fastReconnect();
+    }
 }
 
 void Client::forceChannelRestore()

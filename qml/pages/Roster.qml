@@ -39,7 +39,14 @@ Page {
         }
      }
 
-    SilicaListView {
+    SilicaListView {        
+            PullDownMenu {
+                MenuItem {
+                    text: qsTr("Log out and close the app")
+                    onClicked: Client.deleteCookies()
+                }
+            }
+
         id: listView
         model: rosterModel
         anchors.fill: parent
@@ -85,8 +92,6 @@ Page {
     }
 
 }
-
-
 
 
 

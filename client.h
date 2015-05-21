@@ -56,6 +56,7 @@ private:
     Notifier *notifier;
     bool needLogin;
     bool needSync;
+    bool stuckWithNoNetwork;
     QDateTime needSyncTS;
     QDateTime lastSetActive;
     QList<OutgoingImage> outgoingImages;

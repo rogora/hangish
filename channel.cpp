@@ -110,8 +110,8 @@ void Channel::nrf()
     QString srep = reply->readAll();
     qDebug() << srep;
     if (srep.contains("Unknown SID")) {
-        //Need new SID
-        fetchNewSid();
+        //Need new SID, but new fetch should already be triggered by 400
+        //fetchNewSid();
         return;
     }
     //If there's a network problem don't do anything, the connection will be retried by checkChannelStatus
@@ -385,7 +385,7 @@ void Channel::parseSid()
     }
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
-//        qDebug() << "SID##" << rep;
+        qDebug() << "SID##" << rep;
 
         int start = rep.indexOf("[");
 
@@ -397,9 +397,23 @@ void Channel::parseSid()
         //ROW 1 and 2 discarded
 
         //ROW 3
-        auto row3Data = parsedData[3].list()[1].list()[1].list()[1].list();
-        QString stringData = row3Data[1].string();
+        //TODO: add check for ALL these lists
+        auto rowData = parsedData[3].list()[1].list()[1].list()[1].list();
+        if (rowData[0].string()!="cfj") {
+            //Not the right line! Try with the second one
+            rowData = parsedData[2].list()[1].list()[1].list()[1].list();
+            if (rowData[0].string()!="cfj") {
+                qDebug() << "Couldn't find cfj line, returning";
+                return;
+            }
+        }
+
+        QString stringData = rowData[1].string();
         QStringList temp = stringData.split("/");
+        if (!temp.size()) {
+            qDebug() << "temp size is 0";
+            qDebug() << stringData;
+        }
         qDebug() << temp.at(0);
         email = temp.at(0);
 
