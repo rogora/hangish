@@ -25,24 +25,30 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 CoverBackground {
+    //TODO: these 2 functions are hacky, need to figure out how to properly interact with the page stack
+    //probably should use replaceAbove()
     function showRosterPage() {
-        if (pageStack.depth === 1)
-            return;
-        else
-            pageStack.pop()
+            if (pageStack.depth === 2) {
+                pageStack.pop()
+            }
     }
     function showLastConvPage() {
-        if (Client.getLastIncomingConversationId()==="")
+        if (Client.getLastIncomingConversationId()==="") {
+            showRosterPage();
             return;
-        if (pageStack.depth === 1) {}
-        else
-            pageStack.pop()
-
+        }
+        //PageStack.update()
         conversation.loadConversationModel(Client.getLastIncomingConversationId());
         rosterModel.readConv = Client.getLastIncomingConversationId();
         conversation.conversationName = Client.getLastIncomingConversationName();
-        pageStack.push(conversation);
-        conversation.openKeyboard()
+        if (pageStack.depth === 1) {
+            pageStack.push(conversation);
+        }
+        else if (pageStack.depth === 3) {
+            //we're in the picture selection page
+            pageStack.pop();
+        }
+        conversation.openKeyboard();
     }
 
     property var unreadNum: 0

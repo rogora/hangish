@@ -186,17 +186,18 @@ void Channel::parseChannelData(QString sreply)
 
             for (auto eventData : eventDataList) {
                 Event evt = Utils::parseEvent(eventData.list());
+                qDebug() << "evt parsed";
                 if (evt.value.valid) {
                     if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
                         qDebug() << "No segs! Skipping";
                         continue;
                     }
-                    else
-                        qDebug() << evt.sender.chat_id << " sent " << evt.value.segments[0].value;
 
                     conversationModel->addEventToConversation(evt.conversationId, evt);
+                    qDebug() << "Added";
                     lastIncomingConvId = evt.conversationId;
                     if (evt.sender.chat_id != myself.chat_id) {
+                        qDebug() << "Going to notify";
                         //Signal new event only if the actual conversation isn't already visible to the user
                         qDebug() << conversationModel->getCid();
                         qDebug() << evt.conversationId;
