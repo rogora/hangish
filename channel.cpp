@@ -174,11 +174,12 @@ void Channel::parseChannelData(QString sreply)
         auto playloadList = parsedInner[1].list();
         if (!playloadList.size()) continue; // TODO is that senseful ??
         playloadList = playloadList[0].list();
-        if (!playloadList.size()) continue; // TODO is that senseful ??
+        if (!playloadList.size() || !playloadList[0].list().size()) continue; // TODO is that senseful ??
         qDebug() << playloadList.size();
         int as = playloadList[0].list()[0].number().toInt();
         emit activeClientUpdate(as);
-
+        if (playloadList.size() < 2)
+            continue;
         if (playloadList[2].type() == MessageField::List) {
             // parse events
             auto eventDataList = playloadList[2].list();
@@ -392,6 +393,8 @@ void Channel::parseSid()
 
         auto parsedData = MessageField::parseListRef(rep.leftRef(-1), start);
         //ROW 0
+        if (parsedData.size() < 1 || parsedData[0].list().size() < 2 || parsedData[0].list()[1].list().size() < 2)
+            return;
         sid = parsedData[0].list()[1].list()[1].string();
         qDebug() << sid;
 
@@ -399,9 +402,13 @@ void Channel::parseSid()
 
         //ROW 3
         //TODO: add check for ALL these lists
+        if (parsedData.size() < 4 || parsedData[3].list().size() < 2 || parsedData[3].list()[1].list().size() < 2 || parsedData[3].list()[1].list()[1].list().size() < 2)
+            return;
         auto rowData = parsedData[3].list()[1].list()[1].list()[1].list();
         if (rowData[0].string()!="cfj") {
             //Not the right line! Try with the second one
+            if (parsedData.size() < 4 || parsedData[2].list().size() < 2 || parsedData[2].list()[1].list().size() < 2 || parsedData[2].list()[1].list()[1].list().size() < 2)
+                return;
             rowData = parsedData[2].list()[1].list()[1].list()[1].list();
             if (rowData[0].string()!="cfj") {
                 qDebug() << "Couldn't find cfj line, returning";
@@ -411,8 +418,8 @@ void Channel::parseSid()
 
         QString stringData = rowData[1].string();
         QStringList temp = stringData.split("/");
-        if (!temp.size()) {
-            qDebug() << "temp size is 0";
+        if (temp.size() < 2) {
+            qDebug() << "temp size is " << temp.size();
             qDebug() << stringData;
         }
         qDebug() << temp.at(0);
@@ -427,7 +434,8 @@ void Channel::parseSid()
         header_client = temp.at(1);
         emit updateClientId(header_client);
 
-
+        if (parsedData.size() < 5 || parsedData[4].list().size() < 2 || parsedData[4].list()[1].list().size() < 2 || parsedData[4].list()[1].list()[1].list().size() < 2)
+            return;
         auto row4Data = parsedData[4].list()[1].list()[1].list()[1].list();
         gsessionid = row4Data[1].string();
         qDebug() << gsessionid;
@@ -488,12 +496,10 @@ void Channel::fetchNewSid()
     qDebug() << "fetch new sid";
     QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
     ////qDebug() << req.url().toString();
-    //QVariant body = "{\"VER\":8, \"RID\": 81187, \"clid\": \"" + clid + "\", \"ec\": \"" + ec + "\", \"prop\": \"" + prop + "\"}";
     QVariant body = "VER=8&RID=81187&clid=" + clid + "&prop=" + prop + "&ec="+ec;
     ////qDebug() << body.toString();
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, session_cookies) {
-        //if (cookie.name()=="SAPISID" || cookie.name()=="SAPISID" || cookie.name()=="HSID" || cookie.name()=="APISID" || cookie.name()=="SID")
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));

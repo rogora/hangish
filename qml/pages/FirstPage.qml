@@ -57,6 +57,10 @@ Dialog {
                 resultLabel.text = qsTr("Login Failed ") + error
                 delauthbtn.visible = true
             }
+
+            onSecondFactorNeeded: {
+                secondColumn.visible = true
+            }
         }
 
 
@@ -121,10 +125,23 @@ Dialog {
                 label: "Password"
                 width: parent.width
             }
+
+            Label {
+                id: resultLabel
+                color: "red"
+            }
+        }
+        Column {
+            id: secondColumn
+            visible: false
+            width: page.width
+            spacing: Theme.paddingLarge
+            anchors.top: column.bottom
+
             TextField {
                 id: pinField
                 //readOnly: true
-                placeholderText: "Leave empty if not needed"
+                placeholderText: "Write your pin here and push Send pin"
                 label: "2nd factor pin"
                 width: parent.width
             }
@@ -137,11 +154,8 @@ Dialog {
                     resultLabel.text = "Logging in... wait"
                 }
             }
-            Label {
-                id: resultLabel
-                color: "red"
-            }
         }
+
         Column {
             anchors.fill: parent
             id: infoColumn

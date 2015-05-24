@@ -60,6 +60,7 @@ signals:
     void loginNeeded();
     void gotCookies();
     void authFailed(QString error);
+    void secondFactorNeeded();
 };
 
 #endif // AUTHENTICATOR_H

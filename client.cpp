@@ -609,7 +609,8 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 
 void Client::sendChatMessage(QString segments, QString conversationId) {
     QString seg = "[[0, \"";
-    seg += segments;
+    //Correct quotes
+    seg += segments.replace('"', "\\\"");
     seg += "\", [0, 0, 0, 0], [null]]]";
     //qDebug() << "Sending cm " << segments;
 
@@ -759,6 +760,10 @@ void Client::syncAllNewEventsReply()
         //Skip response header: parsedReply[1]
         //Skip sync_timestamp:  parsedReply[2]
         //Parse the actual data
+        if (parsedReply.size() < 4) {
+            delete reply;
+            return;
+        }
         auto cstates = parsedReply[3].list();
         for (auto state : cstates) {
             parseConversationState(state);
@@ -1145,6 +1150,11 @@ void Client::initDone()
     initCompleted = true;
 }
 
+void Client::secondFactorNeededSlot()
+{
+    emit secondFactorNeeded();
+}
+
 void Client::loginNeededSlot()
 {
     qDebug() << "lneed";
@@ -1167,6 +1177,7 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
     QObject::connect(auth, SIGNAL(loginNeeded()), this, SLOT(loginNeededSlot()));
     QObject::connect(auth, SIGNAL(gotCookies()), this, SLOT(authenticationDone()));
     QObject::connect(auth, SIGNAL(authFailed(QString)), this, SLOT(authFailedSlot(QString)));
+    QObject::connect(auth, SIGNAL(secondFactorNeeded()), this, SLOT(secondFactorNeededSlot()));
 
     auth->auth();
 

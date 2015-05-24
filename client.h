@@ -138,6 +138,7 @@ public slots:
     void connectivityChanged(QString a,QDBusVariant b);
     void isTypingSlot(QString convId, QString chatId, int type);
     void authFailedSlot(QString error);
+    void secondFactorNeededSlot();
     void loginNeededSlot();
     void updateClientId(QString newID);
     void setFocusReply();
@@ -158,6 +159,7 @@ signals:
     void isTyping(QString convid, QString uname, int status);
     void showNotification(QString preview, QString summary, QString body, QString sender, int num);
     void authFailed(QString error);
+    void secondFactorNeeded();
     void showNotificationForCover(int num);
     void deletedNotifications();
 

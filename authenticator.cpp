@@ -75,7 +75,7 @@ void Authenticator::cb(QNetworkReply *reply) {
                     qDebug() << ssreply;
                     qDebug() << secTok;
                     qDebug() << timeStmp;
-                    emit authFailed("2nd factor needed");
+                    emit secondFactorNeeded();
                 }
                 else {
                     //Something went wrong
