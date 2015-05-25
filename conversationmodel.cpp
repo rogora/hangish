@@ -76,7 +76,7 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
         else
             ts_string = e.timestamp.time().toString();
 
-        //Were to add this message? Bottom -> new msg / Top -> old msg
+        //Where to add this message? Bottom -> new msg / Top -> old msg
         if (bottom)
             addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
         else
@@ -84,7 +84,11 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
     }
 
     //put the referenced conversation on top of the list
-    conversations.move(i,conversations.length());
+    if (i!=conversations.length()-1) {
+        qDebug() << "Moving";
+        conversations.move(i,conversations.length()-1);
+        qDebug() << "Moved";
+    }
 }
 
 QHash<int, QByteArray> ConversationModel::roleNames() const {
