@@ -246,10 +246,10 @@ void Client::parseConversationState(MessageField conv)
 
     if (c.events.size() > 1)
         //More than 1 new message -> show a generic notification
-        emit showNotification(QString(c.events.size() + "new messages"), "Restored channel", "You have new msgs", "sender", c.events.size());
+        emit showNotification(QString(c.events.size() + "new messages"), "Restored channel", "You have new msgs", "sender", c.events.size(), c.id);
     else if (c.events.size() == 1 && c.events[0].notificationLevel == 30)
         //Only 1 new message -> show a specific notification
-        emit showNotification(c.events[0].value.segments[0].value, c.events[0].sender.chat_id, c.events[0].value.segments[0].value, c.events[0].sender.chat_id, 1);
+        emit showNotification(c.events[0].value.segments[0].value, c.events[0].sender.chat_id, c.events[0].value.segments[0].value, c.events[0].sender.chat_id, 1, c.id);
 }
 
 QList<Conversation> Client::parseConversations(const QString& conv)
@@ -1128,6 +1128,10 @@ void Client::catchNotificationForCover(int num) {
     emit showNotificationForCover(1);
 }
 
+void Client::notificationPushedSlot(QString convId) {
+    emit notificationPushed(convId);
+}
+
 void Client::initDone()
 {
     channel = new Channel(nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
@@ -1140,10 +1144,11 @@ void Client::initDone()
     QObject::connect(channel, SIGNAL(qnamUpdated(QNetworkAccessManager*)), this, SLOT(qnamUpdatedSlot(QNetworkAccessManager*)));
 
     notifier = new Notifier(this, contactsModel);
-    QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString,int)), notifier, SLOT(showNotification(QString,QString,QString,QString,int)));
-    QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString,int)), notifier, SLOT(showNotification(QString,QString,QString,QString,int)));
+    QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString,int,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString,int,QString)));
+    QObject::connect(channel, SIGNAL(showNotification(QString,QString,QString,QString,int,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString,int,QString)));
     QObject::connect(notifier, SIGNAL(showNotificationForCover(int)), this, SLOT(catchNotificationForCover(int)));
     QObject::connect(notifier, SIGNAL(deletedNotifications()), this, SLOT(catchDeletedNotifications()));
+    QObject::connect(notifier, SIGNAL(notificationPushed(QString)), this, SLOT(notificationPushedSlot(QString)));
     QObject::connect(channel, SIGNAL(activeClientUpdate(int)), notifier, SLOT(activeClientUpdate(int)));
 
     channel->listen();
@@ -1210,7 +1215,7 @@ void Client::deleteCookies()
 void Client::testNotification()
 {
     //qDebug() << "Sending test notif";
-    emit showNotification("preview", "summary", "body", "sender", 1);
+    emit showNotification("preview", "summary", "body", "sender", 1, "foo");
 }
 
 void Client::channelLostSlot()

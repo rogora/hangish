@@ -66,6 +66,21 @@ Page {
         VerticalScrollDecorator {}
     }
     Connections {
+        target: Client
+        onNotificationPushed: {
+            console.log("Clicked " + convId)
+            if (convId!="foo") {
+                conversation.loadConversationModel(convId);
+                rosterModel.readConv = convId;
+                conversation.conversationName = name;
+                if (pageStack.depth==1)
+                    pageStack.push(conversation);
+            }
+            activate()
+        }
+    }
+
+    Connections {
             target: listView.model
             onDataChanged: {
                 //console.log("Changing data")

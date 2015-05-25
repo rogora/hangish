@@ -87,7 +87,7 @@ signals:
     void channelLost();
     void channelRestored(QDateTime lastRecv);
     void isTyping(QString convId, QString chatId, int type);
-    void showNotification(QString preview, QString summary, QString body, QString sender, int num);
+    void showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId);
 
 };
 

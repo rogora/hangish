@@ -44,11 +44,16 @@ private:
 signals:
     void showNotificationForCover(int num);
     void deletedNotifications();
+    void notificationPushed(QString convId);
 
 public slots:
     void closeAllNotifications();
-    void showNotification(QString preview, QString summary, QString body, QString sender, int num);
+    void showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId);
     void activeClientUpdate(int state);
+
+public Q_SLOTS:
+    void test();
+    void notificationPushedIntf(const QString &convId);
 
 };
 

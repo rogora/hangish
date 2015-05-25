@@ -119,6 +119,7 @@ public:
 
 public slots:
     Q_INVOKABLE void updateWatermark(QString convId);
+    void notificationPushedSlot(QString convId);
     void authenticationDone();
     void initDone();
     void networkReply();
@@ -149,6 +150,7 @@ public slots:
     void retrieveConversationLogReply();
 
 signals:
+    void notificationPushed(QString convId);
     void loginNeeded();
     void messageSent();
     void messageNotSent();
@@ -157,7 +159,7 @@ signals:
     void channelLost();
     void channelRestored();
     void isTyping(QString convid, QString uname, int status);
-    void showNotification(QString preview, QString summary, QString body, QString sender, int num);
+    void showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId);
     void authFailed(QString error);
     void secondFactorNeeded();
     void showNotificationForCover(int num);

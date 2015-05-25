@@ -22,6 +22,10 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "notifier.h"
+#include "adaptor.h"
+
+static const char *SERVICE = "harbour.hangish";
+static const char *PATH = "/";
 
 Notifier::Notifier(QObject *parent, ContactsModel *contacts) :
     QObject(parent)
@@ -29,6 +33,27 @@ Notifier::Notifier(QObject *parent, ContactsModel *contacts) :
     cModel = contacts;
     myParent = parent;
     lastId = 0;
+
+    new HangishAdaptor(this);
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    if (!connection.registerService(SERVICE)) {
+    qDebug() << "Failed to register DBus service";
+    return;
+    }
+    if (!connection.registerObject(PATH, this)) {
+    qDebug() << "Failed to register DBus object";
+    return;
+    }
+}
+
+void Notifier::test()
+{
+    qDebug() << "test succeeded!";
+}
+
+void Notifier::notificationPushedIntf(const QString &convId)
+{
+    emit notificationPushed(convId);
 }
 
 void Notifier::closeAllNotifications()
@@ -45,7 +70,7 @@ void Notifier::closeAllNotifications()
     emit deletedNotifications();
 }
 
-void Notifier::showNotification(QString preview, QString summary, QString body, QString sender, int num)
+void Notifier::showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId)
 {
     //if acs == 2 another client is active, don't fire notification!
     if (activeClientState == 2)
@@ -72,12 +97,12 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     n->setSummary(cModel->getContactDName(sender));
 
     n->setTimestamp(QDateTime::currentDateTime());
-    /*
-    n->setRemoteDBusCallServiceName("hangouts");
-    n->setRemoteDBusCallObjectPath("/example");
-    n->setRemoteDBusCallInterface("org.nemomobile.example");
-    n->setRemoteDBusCallMethodName("doSomething");
-    */
+
+    n->setRemoteDBusCallServiceName("harbour.hangish");
+    n->setRemoteDBusCallObjectPath("/");
+    n->setRemoteDBusCallInterface("harbour.hangish");
+    n->setRemoteDBusCallMethodName("notificationPushedIntf");
+    n->setRemoteDBusCallArguments(QVariantList() << convId);
     emit showNotificationForCover(num);
 
     n->publish();

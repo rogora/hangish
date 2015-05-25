@@ -82,6 +82,9 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
         else
             prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
     }
+
+    //put the referenced conversation on top of the list
+    conversations.move(i,conversations.length());
 }
 
 QHash<int, QByteArray> ConversationModel::roleNames() const {

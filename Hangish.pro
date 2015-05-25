@@ -18,6 +18,8 @@ TARGET = Hangish
 
 CONFIG += sailfishapp c++11
 
+system(qdbusxml2cpp harbour.hangish.xml -i notifier.h -a adaptor)
+
 SOURCES += src/Hangish.cpp \
     authenticator.cpp \
     client.cpp \
@@ -28,7 +30,8 @@ SOURCES += src/Hangish.cpp \
     contactsmodel.cpp \
     notifier.cpp \
     filemodel.cpp \
-    messagefield.cpp
+    messagefield.cpp \
+    adaptor.cpp
 
 OTHER_FILES += qml/Hangish.qml \
     qml/cover/CoverPage.qml \
@@ -44,7 +47,8 @@ OTHER_FILES += qml/Hangish.qml \
     qml/pages/ImagePicker.qml \
     qml/pages/InfoBanner.qml \
     qml/delegates/Message.qml \
-    qml/delegates/RosterDelegate.qml
+    qml/delegates/RosterDelegate.qml \
+    harbour.hangish.xml
 
 # to disable building translations every time, comment out the
 # following CONFIG line
@@ -63,7 +67,8 @@ HEADERS += \
     contactsmodel.h \
     notifier.h \
     filemodel.h \
-    messagefield.h
+    messagefield.h \
+    adaptor.h
 
 RESOURCES += \
     Hangish.qrc

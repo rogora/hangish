@@ -208,9 +208,9 @@ void Channel::parseChannelData(QString sreply)
                             //If notificationLevel == 10 the conversation has been silenced -> don't notify
                             if (evt.notificationLevel==RING)
                                 if (evt.value.segments.size()==0)
-                                    emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1);
+                                    emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1,evt.conversationId);
                                 else
-                                    emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1);
+                                    emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1,evt.conversationId);
                         }
                         else {
                             //Update watermark, since I've read the message; if notification level this should be the active client
@@ -274,9 +274,12 @@ void Channel::parseChannelData(QString sreply)
                 }
             }
             conversationModel->updateReadState(evt);
+            qDebug() << "Done parsing";
         }
         //parse one more list to update idx? It should contain conv info btw
         MessageField::parseListRef(stringData.leftRef(-1), idx);
+        qDebug() << "parsed the rest of the parcel";
+
     //    //None?
     //    Utils::getNextAtomicField(payload, start);
     //    //settings
