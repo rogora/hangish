@@ -47,7 +47,7 @@ void FileModel::searchFiles(QString path)
     QDir dir(path);
     QStringList sl;
     sl << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.png" << "*.PNG" << "*.gif" << "*.GIF";
-    const QFileInfoList &list = dir.entryInfoList(sl, QDir::AllDirs | QDir::NoDot | QDir::NoSymLinks | QDir::Files, QDir::DirsFirst);
+    const QFileInfoList &list = dir.entryInfoList(sl, QDir::AllDirs | QDir::NoDot | QDir::NoSymLinks | QDir::Files, QDir::DirsFirst | QDir::Time);
         foreach (const QFileInfo &info, list) {
             if (info.fileName() == "..")
                 continue;
