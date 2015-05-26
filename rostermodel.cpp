@@ -118,6 +118,12 @@ void RosterModel::addUnreadMsg(QString convId)
         if (c->convId == convId)
         {
             c->unread += 1;
+            //put the referenced conversation on top of the list
+            if (i!=conversations.length()-1) {
+                qDebug() << "Moving";
+                conversations.move(i,conversations.length()-1);
+                qDebug() << "Moved";
+            }
             break;
         }
         i++;
@@ -138,6 +144,31 @@ bool RosterModel::hasUnreadMessages(QString convId)
             return (c->unread > 0);
         }
      }
+}
+
+void RosterModel::putOnTop(QString convId)
+{
+    qDebug() << "Putting on top " << convId;
+    int i = 0;
+    foreach (ConvAbstract *c, conversations) {
+        if (c->convId == convId)
+        {
+            //put the referenced conversation on top of the list
+            if (i!=conversations.length()-1) {
+                qDebug() << "Moving";
+                conversations.move(i,conversations.length()-1);
+                qDebug() << "Moved";
+            }
+            break;
+        }
+        i++;
+    }
+
+    //TODO: check why this is the only (wrong) way to make it work!
+    for (int i=0; i<conversations.size(); i++) {
+        QModelIndex r1 = index(i);
+        emit dataChanged(r1, r1);
+    }
 }
 
 void RosterModel::setReadConv(QString convId)

@@ -122,16 +122,18 @@ void Channel::parseChannelData(QString sreply)
 {
     int idx=0;
     for (;;) {
-        idx = sreply.indexOf('[', idx+1); // at the beginning there is a length, which we ignore.
+        idx = sreply.indexOf('[', idx); // at the beginning there is a length, which we ignore.
         qDebug() << idx;
         // ignore empty messages
         if (idx == -1) return;
-        qDebug() << "##" << sreply;
+        qDebug() << "##" << sreply.right(sreply.size()-idx);
         auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
+        qDebug() << idx;
         qDebug() << parsedReply.size();
         if (!parsedReply.size())
             continue;
         parsedReply = parsedReply[0].list();
+        qDebug() << parsedReply.size();
         if (parsedReply.size()<2)
             continue;
         auto content = parsedReply[1].list();
@@ -166,6 +168,7 @@ void Channel::parseChannelData(QString sreply)
         // we can now parse the inner data:
         int idx2 = 0;
         auto parsedInner = MessageField::parseListRef(stringData.leftRef(-1), idx2);
+        qDebug() << idx2;
         if (parsedInner.size()<2)
             continue;
         // TODO can there be multiple cbu in one reply?
@@ -277,8 +280,8 @@ void Channel::parseChannelData(QString sreply)
             qDebug() << "Done parsing";
         }
         //parse one more list to update idx? It should contain conv info btw
-        MessageField::parseListRef(stringData.leftRef(-1), idx);
-        qDebug() << "parsed the rest of the parcel";
+        //MessageField::parseListRef(stringData.leftRef(-1), idx);
+        //qDebug() << "parsed the rest of the parcel";
 
     //    //None?
     //    Utils::getNextAtomicField(payload, start);

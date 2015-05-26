@@ -579,6 +579,8 @@ QString Client::getRequestHeader()
 
 void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 {
+    rosterModel->putOnTop(convId);
+
     QString seg = "[[0, \"";
     seg += segments;
     seg += "\", [0, 0, 0, 0], [null]]]";
@@ -608,6 +610,8 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 }
 
 void Client::sendChatMessage(QString segments, QString conversationId) {
+    rosterModel->putOnTop(conversationId);
+
     QString seg = "[[0, \"";
     //Correct quotes
     seg += segments.replace('"', "\\\"");
