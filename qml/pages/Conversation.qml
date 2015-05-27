@@ -37,16 +37,6 @@ Page {
     InfoBanner {
         id: ibanner
     }
-    //property int pIndex
-
-    /*
-    onStatusChanged: {
-        console.log(page.status)
-        console.log("CONV Entered")
-        console.log(conversationId)
-    }
-    */
-
 
     function loadConversationModel(cid) {
         Client.updateWatermark(cid)
@@ -61,10 +51,6 @@ Page {
         listView.footerItem.openKeyboard()
     }
 
-    /*
-    SilicaFlickable {
-        anchors.fill: parent
-        */
         SilicaListView {
             PullDownMenu {
                 MenuItem {

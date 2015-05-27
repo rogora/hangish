@@ -46,6 +46,10 @@ ApplicationWindow
     ImagePicker {
             id: imagepicker
     }
+
+    About {
+        id: about
+    }
 }
 
 

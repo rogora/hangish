@@ -86,18 +86,14 @@ Page {
 
                     onPressed: {
                         imageView.anchors.horizontalCenter = undefined
-                        //dragArea.anchors.right = undefined
-                        //dragArea.anchors.left = undefined
-
-                        //console.log("Pressed ")
-                        //console.log(mouseX)
-                        //oldMouseX = mouseX
                     }
 
                     onPositionChanged: {
                     if (pressed) {
-                        //console.log(mouseX)
-                        //console.log(mouseY)
+                        /*
+                        console.log(mouseX)
+                        console.log(mouseY)
+                        */
                                 }
                     }
                 }

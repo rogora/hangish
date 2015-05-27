@@ -49,7 +49,8 @@ OTHER_FILES += \
     rpm/harbour-hangish.spec \
     rpm/harbour-hangish.yaml \
     rpm/harbour-hangish.changes.in \
-    qml/harbour-hangish.qml
+    qml/harbour-hangish.qml \
+    qml/pages/About.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line

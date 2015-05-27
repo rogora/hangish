@@ -42,7 +42,11 @@ Page {
     SilicaListView {        
             PullDownMenu {
                 MenuItem {
-                    text: qsTr("Log out and close the app")
+                    text: qsTr("About Hangish")
+                    onClicked: pageStack.push(about)
+                }
+                MenuItem {
+                    text: qsTr("Log out and exit")
                     onClicked: Client.deleteCookies()
                 }
             }
@@ -55,7 +59,6 @@ Page {
         }
         delegate: RosterDelegate {
             onClicked: {
-                //var convPage = Qt.createComponent("Conversation.qml");
                 console.log("Clicked " + id)
                 conversation.loadConversationModel(id);
                 rosterModel.readConv = id;
