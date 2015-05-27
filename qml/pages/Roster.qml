@@ -59,7 +59,6 @@ Page {
                 console.log("Clicked " + id)
                 conversation.loadConversationModel(id);
                 rosterModel.readConv = id;
-                conversation.conversationName = name;
                 pageStack.push(conversation);
             }
         }
@@ -72,8 +71,6 @@ Page {
             if (convId!="foo") {
                 conversation.loadConversationModel(convId);
                 rosterModel.readConv = convId;
-                //TODO: put the right name it; must add it to notifier -> dbus -> notifier -> client -> page
-                conversation.conversationName = convId;
                 if (pageStack.depth==1)
                     pageStack.push(conversation);
             }

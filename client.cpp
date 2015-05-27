@@ -50,10 +50,10 @@ void Client::parseSelfConversationState(QList<MessageField> stateFields, Convers
     //Entry 0 is my ID, not so interesting
     //This is the ts representing last time I read
     QString ts = ssstate[1].number();
-    qDebug() << "ssstate, ts: " << ts;
+    //qDebug() << "ssstate, ts: " << ts;
 
     res.lastReadTimestamp = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
-    qDebug() << res.lastReadTimestamp.toString();
+    //qDebug() << res.lastReadTimestamp.toString();
     //todo: parse this
     QString status = stateFields[7].number();
     //qDebug() << status;
@@ -92,10 +92,12 @@ User Client::parseEntity(QList<MessageField> entity)
     if (emails.size() >= 1)
         res.email = emails[0].string();
 
+    /*
     qDebug() << "ID: " << res.chat_id;
     qDebug() << "DNAME: " << res.display_name;
     qDebug() << "FNAME: " << res.first_name;
     qDebug() << "EMAIL: " << res.email;
+    */
     return res;
 }
 
@@ -131,7 +133,7 @@ QList<User> Client::parseUsers(const QString& userString)
     QStringRef dsData = Utils::extractArrayForDS(userString, 21);
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
-    qDebug() << parsedData.size();
+    //qDebug() << parsedData.size();
 
     auto entities = parsedData[2].list();
     res.append(parseClientEntities(entities));
@@ -158,13 +160,18 @@ User Client::getUserById(QString chatId)
     return foo;
 }
 
+QString Client::getConversationName(QString convId)
+{
+    return rosterModel->getConversationName(convId);
+}
+
 void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conversation &res)
 {
     //First we have ID -- ignore
 
     //Then type
     QString type = abstractFields[1].number();
-    qDebug() << "TYPE: " << type;
+    //qDebug() << "TYPE: " << type;
     //Name (optional) -- need to see what happens when it is set
     res.name = abstractFields[2].string();
     //qDebug() << "Name: " << res.name;
@@ -198,7 +205,7 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
             if (p.user.chat_id == r.userid.chat_id)
             {
                 p.last_read_timestamp = r.last_read;
-                qDebug() << p.last_read_timestamp.toString();
+                //qDebug() << p.last_read_timestamp.toString();
                 break;
             }
         }
@@ -226,11 +233,11 @@ Conversation Client::parseConversation(QList<MessageField> conversation)
 
 void Client::parseConversationState(MessageField conv)
 {
-    qDebug() << "CONV_STATE: ";// << conv;
+    //qDebug() << "CONV_STATE: ";// << conv;
 
     Conversation c = parseConversation(conv.list());
-    qDebug() << c.id;
-    qDebug() << c.events.size();
+    //qDebug() << c.id;
+    //qDebug() << c.events.size();
 
     //Now formalize what happened:
 
@@ -296,10 +303,13 @@ User Client::parseMySelf(const QString& sreply) {
     auto entity = parsedData[2].list();
 
     res = parseEntity(entity);
+
+    /*
     qDebug() << res.chat_id;
     qDebug() << res.display_name;
     qDebug() << res.first_name;
     qDebug() << res.photo;
+    */
 
     return res;
 }
@@ -1003,7 +1013,6 @@ void Client::updateWatermark(QString convId)
     body += "], ";
     body += QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch()*1000);
     body += "]";
-    qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/updatewatermark",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(updateWatermarkReply()));
 

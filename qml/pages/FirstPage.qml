@@ -59,6 +59,7 @@ Dialog {
             }
 
             onSecondFactorNeeded: {
+                column.visible = false
                 secondColumn.visible = true
             }
         }

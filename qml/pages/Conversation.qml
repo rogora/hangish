@@ -51,6 +51,7 @@ Page {
     function loadConversationModel(cid) {
         Client.updateWatermark(cid)
         Client.setFocus(cid, 1)
+        page.conversationName = Client.getConversationName(cid)
         page.selfChatId = Client.getSelfChatId()
         page.conversationId = cid;
         conversationModel.cid = cid;

@@ -40,7 +40,6 @@ CoverBackground {
         //PageStack.update()
         conversation.loadConversationModel(Client.getLastIncomingConversationId());
         rosterModel.readConv = Client.getLastIncomingConversationId();
-        conversation.conversationName = Client.getLastIncomingConversationName();
         if (pageStack.depth === 1) {
             pageStack.push(conversation);
         }
@@ -57,11 +56,11 @@ CoverBackground {
             target: Client
             onChannelLost: {
                 coverIcon.rotation = 45
-                coverIcon.source = "qrc:///icons/Hangish_ds.png"
+                coverIcon.source = "qrc:///icons/harbour-hangish_ds.png"
             }
             onChannelRestored: {
                 coverIcon.rotation = 0
-                coverIcon.source = "qrc:///icons/Hangish.png"
+                coverIcon.source = "qrc:///icons/harbour-hangish.png"
             }
             onIsTyping: {
                 if (status===1)
@@ -87,7 +86,7 @@ CoverBackground {
 
         Image {
                         id: coverIcon
-                        source: "qrc:///icons/Hangish.png"
+                        source: "qrc:///icons/harbour-hangish.png"
                         fillMode: Image.PreserveAspectFit
                         cache: true
                         anchors.horizontalCenter: parent.horizontalCenter

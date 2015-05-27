@@ -14,7 +14,7 @@ QT += dbus
 include(notifications.pri)
 #include(keepalive.pri)
 
-TARGET = Hangish
+TARGET = harbour-hangish
 
 CONFIG += sailfishapp c++11
 
@@ -33,14 +33,10 @@ SOURCES += src/Hangish.cpp \
     messagefield.cpp \
     adaptor.cpp
 
-OTHER_FILES += qml/Hangish.qml \
+OTHER_FILES += \
     qml/cover/CoverPage.qml \
     qml/pages/FirstPage.qml \
-    rpm/Hangish.changes.in \
-    rpm/Hangish.spec \
-    rpm/Hangish.yaml \
     translations/*.ts \
-    Hangish.desktop \
     qml/pages/Conversation.qml \
     qml/pages/Roster.qml \
     qml/pages/FullscreenImage.qml \
@@ -48,12 +44,17 @@ OTHER_FILES += qml/Hangish.qml \
     qml/pages/InfoBanner.qml \
     qml/delegates/Message.qml \
     qml/delegates/RosterDelegate.qml \
-    harbour.hangish.xml
+    harbour.hangish.xml \
+    harbour-hangish.desktop \
+    rpm/harbour-hangish.spec \
+    rpm/harbour-hangish.yaml \
+    rpm/harbour-hangish.changes.in \
+    qml/harbour-hangish.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line
 CONFIG += sailfishapp_i18n
-TRANSLATIONS += translations/Hangish-de.ts
+#TRANSLATIONS += translations/Hangish-de.ts
 
 HEADERS += \
     authenticator.h \
@@ -71,4 +72,4 @@ HEADERS += \
     adaptor.h
 
 RESOURCES += \
-    Hangish.qrc
+    harbour-hangish.qrc

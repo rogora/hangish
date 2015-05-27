@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/icons">
-        <file alias="Hangish_ds.png">resources/icons/Hangish_ds.png</file>
-        <file alias="Hangish.png">resources/icons/Hangish.png</file>
+        <file alias="harbour-hangish_ds.png">resources/icons/harbour-hangish_ds.png</file>
+        <file alias="harbour-hangish.png">resources/icons/harbour-hangish.png</file>
         <file alias="send.png">resources/icons/send.png</file>
 	<file alias="unknown.png">resources/icons/unknown.png</file>
     </qresource>

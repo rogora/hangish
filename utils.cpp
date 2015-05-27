@@ -156,7 +156,6 @@ QString Utils::getChatidFromIdentity(QString identity)
     int start = 2;
     int stop = findPositionFromComma(identity, start, 1);
     QString res = identity.mid(start, stop-3);
-    qDebug() << "User chatid is " << res;
     return res;
 }
 
@@ -166,7 +165,5 @@ ReadState Utils::parseReadState(const MessageField &rs)
     res.userid = Utils::parseIdentity(rs.list()[0].list());
     auto ts = rs.list()[1].number();
     res.last_read = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
-    qDebug() << ts;
-    qDebug() << res.last_read.toString();
     return res;
 }

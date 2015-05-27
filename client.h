@@ -112,6 +112,7 @@ public:
     Q_INVOKABLE void setAppOpened();
     Q_INVOKABLE QString getLastIncomingConversationId();
     Q_INVOKABLE QString getLastIncomingConversationName();
+    Q_INVOKABLE QString getConversationName(QString convId);
     Q_INVOKABLE void retrieveConversationLog(QString convId);
 
 

@@ -33,6 +33,10 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setOrganizationName("Hangish");
+    QCoreApplication::setApplicationName("Hangish");
+    QCoreApplication::setApplicationVersion("0.3.1");
+
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QScopedPointer<QQuickView> view(SailfishApp::createView());
     ConversationModel *conversationModel = new ConversationModel();
@@ -68,7 +72,7 @@ int main(int argc, char *argv[])
                           SLOT(connectivityChanged(QString,QDBusVariant))
                           );
 
-    view->setSource(SailfishApp::pathTo("qml/Hangish.qml"));
+    view->setSource(SailfishApp::pathTo("qml/harbour-hangish.qml"));
     view->showFullScreen();
     app->exec();
 }

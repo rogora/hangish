@@ -54,6 +54,7 @@ Page {
                 pinch.target: imageView
                 pinch.minimumScale: minScale * 0.5 // This is to create "bounce back effect"
                 pinch.maximumScale: maxScale * 1.5 // when over zoomed
+                pinch.dragAxis: Pinch.XAndYAxis
 
                 onPinchFinished: {
                     //imageFlickable.returnToBounds()
@@ -74,6 +75,33 @@ Page {
                     property: "scale"
                     from: imageView.scale
                 }
+
+                MouseArea {
+                    id: dragArea
+
+                    anchors.fill: parent
+                    drag.target: imageView
+                    drag.axis: Drag.XAndYAxis
+                    //enabled: imageView.status == Image.Ready
+
+                    onPressed: {
+                        imageView.anchors.horizontalCenter = undefined
+                        //dragArea.anchors.right = undefined
+                        //dragArea.anchors.left = undefined
+
+                        //console.log("Pressed ")
+                        //console.log(mouseX)
+                        //oldMouseX = mouseX
+                    }
+
+                    onPositionChanged: {
+                    if (pressed) {
+                        //console.log(mouseX)
+                        //console.log(mouseY)
+                                }
+                    }
+                }
+
             }
 
             //ScrollDecorator {}
