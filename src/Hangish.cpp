@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("Hangish");
     QCoreApplication::setApplicationName("Hangish");
-    QCoreApplication::setApplicationVersion("0.3.1");
+    QCoreApplication::setApplicationVersion("0.4.0");
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QScopedPointer<QQuickView> view(SailfishApp::createView());
