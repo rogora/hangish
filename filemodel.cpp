@@ -78,7 +78,8 @@ QVariant FileModel::data(const QModelIndex &index, int role) const
 
 QString FileModel::getSearchPath()
 {
-    return "/home/nemo";
+    QString res = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    return res;
 }
 
 void FileModel::setSearchPath(QString path)
@@ -87,5 +88,8 @@ void FileModel::setSearchPath(QString path)
     qDeleteAll(fileList);
     fileList.clear();
     endResetModel();
-    searchFiles(path);
+
+    //Let's make this harbour compatible
+    //searchFiles(path);
+    searchFiles(getSearchPath());
 }

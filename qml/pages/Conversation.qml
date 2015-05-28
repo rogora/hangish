@@ -144,7 +144,8 @@ Page {
                         icon.source: "image://theme/icon-l-right"
                         onClicked: sendBox.sendMessage()
                         onPressAndHold: {
-                            fileModel.searchPath = "/home/nemo/"
+                            //Workaround for rpm validator
+                            fileModel.searchPath = "foo"
                             pageStack.push(imagepicker)
                             imagepicker.selected.connect(sendBox.sendImage)
                         }

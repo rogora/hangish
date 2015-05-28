@@ -26,9 +26,6 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 static QString CHAT_INIT_URL = "https://talkgadget.google.com/u/0/talkgadget/_/chat";
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36";
-static QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/harbour-hangish";
-static QString homePath = homeDir + "/cookies.json";
-
 
 //Timeout to send for setactiveclient requests:
 static int ACTIVE_TIMEOUT_SECS = 300;
@@ -1220,6 +1217,8 @@ void Client::send2ndFactorPin(QString pin)
 
 void Client::deleteCookies()
 {
+    QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString homePath = homeDir + "/cookies.json";
     QFile cookieFile(homePath);
     cookieFile.remove();
     exit(0);

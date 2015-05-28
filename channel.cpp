@@ -461,6 +461,13 @@ void Channel::slotError(QNetworkReply::NetworkError err)
     channelError = true;
     qDebug() << err;
     qDebug() << "Error, retrying to activate channel";
+
+    //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
+    if (err==8) {
+        nam = new QNetworkAccessManager();
+        emit qnamUpdated(nam);
+    }
+
     //longPollRequest();
 
     /*
