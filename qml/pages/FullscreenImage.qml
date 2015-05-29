@@ -30,7 +30,18 @@ Page {
     allowedOrientations: Orientation.All
 
     function loadImage(url) {
+        imageView.y = 0
+        imageView.x = 0
         imageView.source = url;
+    }
+
+    BusyIndicator {
+        id: loadingIndicator
+        visible: true
+        running: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        size: BusyIndicatorSize.Large
     }
 
     Image {
@@ -41,6 +52,12 @@ Page {
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width
         x: Theme.paddingSmall
+        onStatusChanged: {
+            if (imageView.status === Image.Ready) loadingIndicator.visible = false
+            else if (imageView.status === Image.Loading) loadingIndicator.visible = true
+        }
+        sourceSize.height: 1080
+        sourceSize.width: 1920
     }
 
     PinchArea {
