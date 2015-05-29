@@ -1,8 +1,7 @@
 # hangish
 A Google Hangouts native client for Sailfish, with support for all the main features of the Android/IOS/Desktop clients, except for video calls.
 
-You can download compiled binaries from openrepos:
-> https://openrepos.net/content/daniele/hangish
+You can download compiled binaries from Harbour
 
 To compile this you will need to fetch project nemo-qml-plugin-notifications and put it in the main directory:
 > https://github.com/nemomobile/nemo-qml-plugin-notifications
