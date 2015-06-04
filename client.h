@@ -26,7 +26,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 #include <QDateTime>
 
-#include "authenticator.h"
+//#include "authenticator.h"
+#include "oauth2auth.h"
 #include "channel.h"
 #include "rostermodel.h"
 #include "conversationmodel.h"
@@ -42,7 +43,8 @@ class Client : public QObject
 {
     Q_OBJECT
 
-    Authenticator *auth;
+    //Authenticator *auth;
+    OAuth2Auth *auth;
     QNetworkAccessManager *nam;
     QNetworkCookieJar cJar;
     QList<QNetworkCookie> sessionCookies;
@@ -100,7 +102,7 @@ public:
     Q_INVOKABLE void sendImage(QString segments, QString conversationId, QString filename);
     Q_INVOKABLE QString getSelfChatId();
     Q_INVOKABLE void sendCredentials(QString uname, QString passwd);
-    Q_INVOKABLE void send2ndFactorPin(QString pin);
+    Q_INVOKABLE void sendAuthCode(QString pin);
     Q_INVOKABLE void deleteCookies();
     Q_INVOKABLE void testNotification();
     Q_INVOKABLE void forceChannelRestore();

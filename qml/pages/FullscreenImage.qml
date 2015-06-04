@@ -58,7 +58,6 @@ Page {
         }
         sourceSize.height: 1080
         sourceSize.width: 1920
-    }
 
     PinchArea {
                 id: pinchArea
@@ -75,6 +74,9 @@ Page {
 
                 onPinchFinished: {
                     //imageFlickable.returnToBounds()
+                    if (imageView.scale <= pinchArea.pinch.minimumScale) {
+                        pageStack.pop()
+                    }
                     if (imageView.scale < pinchArea.minScale) {
                         bounceBackAnimation.to = pinchArea.minScale
                         bounceBackAnimation.start()
@@ -83,6 +85,7 @@ Page {
                         bounceBackAnimation.to = pinchArea.maxScale
                         bounceBackAnimation.start()
                     }
+
                 }
 
                 NumberAnimation {
@@ -116,6 +119,7 @@ Page {
                 }
 
             }
+    }
 
             //ScrollDecorator {}
 

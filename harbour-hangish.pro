@@ -21,7 +21,7 @@ CONFIG += sailfishapp c++11
 system(qdbusxml2cpp harbour.hangish.xml -i notifier.h -a adaptor)
 
 SOURCES += src/Hangish.cpp \
-    authenticator.cpp \
+    #authenticator.cpp \
     client.cpp \
     channel.cpp \
     conversationmodel.cpp \
@@ -31,7 +31,8 @@ SOURCES += src/Hangish.cpp \
     notifier.cpp \
     filemodel.cpp \
     messagefield.cpp \
-    adaptor.cpp
+    adaptor.cpp \
+    oauth2auth.cpp
 
 OTHER_FILES += \
     qml/cover/CoverPage.qml \
@@ -58,7 +59,7 @@ CONFIG += sailfishapp_i18n
 #TRANSLATIONS += translations/Hangish-de.ts
 
 HEADERS += \
-    authenticator.h \
+    #authenticator.h \
     client.h \
     channel.h \
     qtimports.h \
@@ -70,7 +71,8 @@ HEADERS += \
     notifier.h \
     filemodel.h \
     messagefield.h \
-    adaptor.h
+    adaptor.h \
+    oauth2auth.h
 
 RESOURCES += \
     harbour-hangish.qrc

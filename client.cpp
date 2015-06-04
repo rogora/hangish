@@ -1188,11 +1188,11 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
     contactsModel = pcontactsModel;
 
     //init tools
-    auth = new Authenticator();
+    //auth = new Authenticator();
+    auth = new OAuth2Auth();
     QObject::connect(auth, SIGNAL(loginNeeded()), this, SLOT(loginNeededSlot()));
     QObject::connect(auth, SIGNAL(gotCookies()), this, SLOT(authenticationDone()));
     QObject::connect(auth, SIGNAL(authFailed(QString)), this, SLOT(authFailedSlot(QString)));
-    QObject::connect(auth, SIGNAL(secondFactorNeeded()), this, SLOT(secondFactorNeededSlot()));
 
     auth->auth();
 
@@ -1207,18 +1207,20 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
 
 void Client::sendCredentials(QString uname, QString passwd)
 {
-    auth->send_credentials(uname, passwd);
+    qDebug() << "Should I still send something?";
+    //auth->send_credentials(uname, passwd);
 }
 
-void Client::send2ndFactorPin(QString pin)
+void Client::sendAuthCode(QString pin)
 {
-    auth->send2ndFactorPin(pin);
+    //auth->send2ndFactorPin(pin);
+    auth->sendAuthRequest(pin);
 }
 
 void Client::deleteCookies()
 {
     QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-    QString homePath = homeDir + "/cookies.json";
+    QString homePath = homeDir + "/oauth2.json";
     QFile cookieFile(homePath);
     cookieFile.remove();
     exit(0);

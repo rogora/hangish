@@ -25,30 +25,22 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 
-Dialog {
+Page {
     id: page
-    DialogHeader {
-        id: dhead
-        visible: false
-        acceptText: qsTr("Login")
-    }
 
     Connections
         {
             target: Client
             onInitFinished: {
-                column.visible = false
-                dhead.visible = false
-                loginIndicator.running = false
-                infotext.text = "Logged in"
-                infoColumn.visible = true
+                console.log("Init finished")
                 pageStack.replace(Qt.resolvedUrl("Roster.qml"))
             }
             onLoginNeeded: {
-                infoColumn.visible = false
-                console.log("LOgin needed")
-                dhead.visible = true
-                column.visible = true
+                infotext.visible = false
+                loginIndicator.visible = false
+                wv.visible = true
+                wv.url = "https://accounts.google.com/o/oauth2/auth?scope=https://www.google.com/accounts/OAuthLogin%20https://www.googleapis.com/auth/userinfo.email&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=936475272427.apps.googleusercontent.com"
+                //pageStack.push(Qt.openUrlExternally())
             }
 
             onAuthFailed: {
@@ -59,146 +51,76 @@ Dialog {
             }
 
             onSecondFactorNeeded: {
-                column.visible = false
-                secondColumn.visible = true
             }
         }
 
+    Column {
+        width: parent.width
+        height: parent.height
+        spacing: Theme.paddingLarge
 
-    onAccepted: {
-        console.log("Accepted")
-        if (pinField.text==="") {
-            Client.sendCredentials(emailField.text.trim(), passwdField.text.trim())
+        Item {
+       // Spacer
+       height: parent.height / 3
+       width: 1
+       }
+
+    BusyIndicator {
+        id: loginIndicator
+        running: true
+        anchors.horizontalCenter: parent.horizontalCenter
+        size: BusyIndicatorSize.Large
+    }
+
+    Label {
+        id: infotext
+        text: qsTr("Logging in")
+        width: parent.width
+        font {
+            pixelSize: Theme.fontSizeLarge
+            family: Theme.fontFamilyHeading
         }
-        else {
-            console.log(pinField.text)
-            Client.send2ndFactorPin(pinField.text)
+        color: Theme.highlightColor
+        horizontalAlignment: Text.AlignHCenter
+    }
+
+    Label {
+        id: resultLabel
+        color: "red"
+    }
+
+    Button {
+        id: delauthbtn
+        visible: false
+        text: qsTr("Delete authentication cookie")
+        onClicked: Client.deleteCookies()
+        anchors.horizontalCenter: parent.horizontalCenter
         }
     }
 
-
-    // To enable PullDownMenu, place our content in a SilicaFlickable
-    /*
-    SilicaFlickable {
-        anchors.top: dhead.bottom
-
-        // PullDownMenu and PushUpMenu must be declared in SilicaFlickable, SilicaListView or SilicaGridView
-        PullDownMenu {
-            MenuItem {
-                text: qsTr("Conversations")
-                onClicked: pageStack.push(Qt.resolvedUrl("Roster.qml"))
-                //onClicked: pageStack.push(Qt.resolvedUrl("FullscreenImage.qml"))
-            }
-            MenuItem {
-                text: qsTr("Log out")
-                //onClicked: Client.testNotification()
-                onClicked: Client.deleteCookies()
-            }
-
+    SilicaWebView {
+        id: wv
+        visible: false
+        header: Label {
+            text: "Hangish login"
         }
-
-
-        // Tell SilicaFlickable the height of its content.
-        contentHeight: column.height
-        */
-
-        // Place our content in a Column.  The PageHeader is always placed at the top
-        // of the page, followed by our content.
-        Column {
-
-            id: column
-            visible: false
-            anchors.top: dhead.bottom
-
-            width: page.width
-            spacing: Theme.paddingLarge
-
-            TextField {
-                id: emailField
-                placeholderText: "Email"
-                label: "Email"
-                width: parent.width
-            }
-            TextField {
-                id: passwdField
-                echoMode: TextInput.Password
-                placeholderText: "Password"
-                label: "Password"
-                width: parent.width
-            }
-
-            Label {
-                id: resultLabel
-                color: "red"
-            }
-        }
-        Column {
-            id: secondColumn
-            visible: false
-            width: page.width
-            spacing: Theme.paddingLarge
-            anchors.top: column.bottom
-
-            TextField {
-                id: pinField
-                //readOnly: true
-                placeholderText: "Write your pin here and push Send pin"
-                label: "2nd factor pin"
-                width: parent.width
-            }
-            Button {
-                id: sendButton
-                width: 140
-                text: "Send pin"
-                onClicked: {
-                    Client.send2ndFactorPin(pinField.text)
-                    resultLabel.text = "Logging in... wait"
-                }
+        width: parent.width
+        anchors.fill: parent
+        onTitleChanged: {
+            console.log(wv.url)
+            console.log(wv.title)
+            if (wv.title.indexOf("Success code=")!=-1) {
+                console.log("Got the code!")
+                console.log(wv.title.substring(wv.title.indexOf("Success code=")+13))
+                wv.visible = false
+                infotext.visible = true
+                loginIndicator.visible = true
+                Client.sendAuthCode(wv.title.substring(wv.title.indexOf("Success code=")+13))
             }
         }
 
-        Column {
-            anchors.fill: parent
-            id: infoColumn
-            visible: true
-            width: parent.width
-            height: parent.height
+    }
 
-            spacing: Theme.paddingLarge
-
-            Item {
-                // Spacer
-                height: parent.height / 3
-                width: 1
-            }
-
-            BusyIndicator {
-                id: loginIndicator
-                running: true
-                anchors.horizontalCenter: parent.horizontalCenter
-                size: BusyIndicatorSize.Large
-            }
-
-            Label {
-                id: infotext
-                text: qsTr("Logging in")
-                width: parent.width
-                font {
-                    pixelSize: Theme.fontSizeLarge
-                    family: Theme.fontFamilyHeading
-                }
-                color: Theme.highlightColor
-                horizontalAlignment: Text.AlignHCenter
-            }
-            Button {
-                id: delauthbtn
-                visible: false
-                text: qsTr("Delete authentication cookie")
-                onClicked: Client.deleteCookies()
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-        }
-   // }
 }
 
 
