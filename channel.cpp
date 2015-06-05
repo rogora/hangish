@@ -191,7 +191,8 @@ void Channel::parseChannelData(QString sreply)
             for (auto eventData : eventDataList) {
                 Event evt = Utils::parseEvent(eventData.list());
                 qDebug() << "evt parsed";
-                if (evt.value.valid) {
+                //This is old, on the channel? Skip
+                if (!evt.isOld) {
                     if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
                         qDebug() << "No segs! Skipping";
                         continue;
@@ -279,32 +280,6 @@ void Channel::parseChannelData(QString sreply)
             conversationModel->updateReadState(evt);
             qDebug() << "Done parsing";
         }
-        //parse one more list to update idx? It should contain conv info btw
-        //MessageField::parseListRef(stringData.leftRef(-1), idx);
-        //qDebug() << "parsed the rest of the parcel";
-
-    //    //None?
-    //    Utils::getNextAtomicField(payload, start);
-    //    //settings
-    //    Utils::getNextAtomicField(payload, start);
-    //    //view modification
-    //    Utils::getNextAtomicField(payload, start);
-    //    //easter egg
-    //    Utils::getNextAtomicField(payload, start);
-    //    //conversation
-    //    QString conversation = Utils::getNextAtomicField(payload, start);
-    //    ////qDebug() << "CONV: " << conversation;
-
-    //    //self presence
-    //    Utils::getNextAtomicField(payload, start);
-    //    //delete notification
-    //    Utils::getNextAtomicField(payload, start);
-    //    //presence notification
-    //    Utils::getNextAtomicField(payload, start);
-    //    //block notification
-    //    Utils::getNextAtomicField(payload, start);
-    //    //invitation notification
-    //    Utils::getNextAtomicField(payload, start);
     }
 }
 

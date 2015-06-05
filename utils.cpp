@@ -25,6 +25,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 #include "messagefield.h"
 
+QDateTime lastParsedEvent=QDateTime::fromMSecsSinceEpoch(0);
+
 Utils::Utils()
 {
 }
@@ -98,8 +100,17 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     QString tss = eventFields[2].number();
     qulonglong tsll = tss.toULongLong();
     qint64 ts = (qint64)tsll;
-    event.timestamp = QDateTime::fromMSecsSinceEpoch(ts/1000);
+    QDateTime timestmp = QDateTime::fromMSecsSinceEpoch(ts/1000);
+    //Sometimes events are received more than once, as example from channel and getlast... use timestamp as UID and discard
+    if (timestmp <= lastParsedEvent) {
+        event.isOld = true;
+    }
+    else {
+        event.isOld = false;
+        lastParsedEvent = timestmp;
+    }
 
+    event.timestamp = timestmp;
     auto self_state = eventFields[3].list();
     // parseNotificationLevel():
     event.notificationLevel = 0;

@@ -112,6 +112,7 @@ struct Event {
     Identity sender;
     QDateTime timestamp;
     int notificationLevel;
+    bool isOld;
 };
 
 struct ContinuationToken {

@@ -45,7 +45,7 @@ Page {
 
             onAuthFailed: {
                 loginIndicator.running = false
-                infotext.text = qsTr(error)
+                infotext.text = error
                 resultLabel.text = qsTr("Login Failed ") + error
                 delauthbtn.visible = true
             }
