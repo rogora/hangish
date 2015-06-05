@@ -8,8 +8,9 @@
 # * date Author's Name <author's email> version-release
 # - Summary of changes
 
-* Sun Apr 13 2014 Jack Tar <jack.tar@example.com> 0.0.1-1
-- Scrubbed the deck
-- Hoisted the sails
+* Thu Jun 4 2015 Daniele Rogora <daniele.rogora@gmail.com> 0.4.1
+- Implemented oauth2 authentication
+- Small fixes for UI
+- Can now exit from full screen image pinching to the minimum level
 
 

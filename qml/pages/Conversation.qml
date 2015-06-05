@@ -92,7 +92,7 @@ Page {
 
                         function sendMessage() {
                             if (sendBox.text.trim()==="") {
-                                console.log(qsTr("Empty message"))
+                                console.log("Empty message")
                                 ibanner.displayError(qsTr("Can't send empty message"))
                                 return
                             }
@@ -127,9 +127,9 @@ Page {
                             console.log(convId)
                             if (page.conversationId === convId) {
                                 if (status === 1)
-                                    sendBox.placeholderText = qsTr(id + " is typing")
+                                    sendBox.placeholderText = id + qsTr(" is typing")
                                 else if (status === 2)
-                                    sendBox.placeholderText = qsTr(id + " paused")
+                                    sendBox.placeholderText = id + qsTr(" paused")
                                 else if (status === 3)
                                     sendBox.placeholderText = qsTr("Reply")
                             }

@@ -244,16 +244,33 @@ void Client::parseConversationState(MessageField conv)
         //TODO: test this case
         rosterModel->addConversationAbstract(c);
     }
-    foreach (Event e, c.events)
-        if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
-            conversationModel->addEventToConversation(c.id, e);
 
-    if (c.events.size() > 1)
+    int newValidEvts = 0, validIdx=0;
+    bool diffConv = false;
+    int i=0;
+
+    foreach (Event e, c.events) {
+        //skip empty messages (voice calls)
+        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) && !e.isOld) {
+            conversationModel->addEventToConversation(c.id, e);
+            newValidEvts++;
+            if (i+1 < c.events.size() && c.events[i].conversationId != c.events[i+1].conversationId)
+                diffConv = true;
+            validIdx = i;
+        }
+        i++;
+    }
+
+    if (newValidEvts > 1) {
         //More than 1 new message -> show a generic notification
-        emit showNotification(QString(c.events.size() + "new messages"), "Restored channel", "You have new msgs", "sender", c.events.size(), c.id);
-    else if (c.events.size() == 1 && c.events[0].notificationLevel == 30)
+        if (diffConv)
+            emit showNotification(QString(newValidEvts + "new messages"), "Restored channel", "You have new msgs", "Many conversations", newValidEvts, c.id);
+        else
+            emit  showNotification(QString(newValidEvts + "new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
+    }
+    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel == 30 && !c.events[validIdx].isOld)
         //Only 1 new message -> show a specific notification
-        emit showNotification(c.events[0].value.segments[0].value, c.events[0].sender.chat_id, c.events[0].value.segments[0].value, c.events[0].sender.chat_id, 1, c.id);
+        emit showNotification(c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, 1, c.id);
 }
 
 QList<Conversation> Client::parseConversations(const QString& conv)
@@ -848,7 +865,7 @@ void Client::parseConversationLog(MessageField conv)
     for (int i=c.events.size()-1; i>=0; i--)
     {
         Event e = c.events[i];
-        if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
+        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) && e.value.valid) //skip empty messages (voice calls)
             conversationModel->addEventToConversation(c.id, e, false);
     }
 }
@@ -1223,6 +1240,9 @@ void Client::deleteCookies()
     QString homePath = homeDir + "/oauth2.json";
     QFile cookieFile(homePath);
     cookieFile.remove();
+    QString vwCookiesPath = homeDir + "/.QtWebKit";
+    QDir wvdir(vwCookiesPath);
+    wvdir.removeRecursively();
     exit(0);
 }
 
