@@ -33,6 +33,8 @@ class Notifier : public QObject
     Q_OBJECT
 public:
     Notifier(QObject *parent, ContactsModel *contacts);
+    bool amITheActiveClient();
+    bool isAnotherClientActive();
 
 private:
     QList<Notification *> activeNotifications;

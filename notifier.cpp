@@ -73,9 +73,10 @@ void Notifier::closeAllNotifications()
 void Notifier::showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId)
 {
     //if acs == 2 another client is active, don't fire notification!
-    if (activeClientState == 2)
+    if (activeClientState == OTHER_CLIENT_IS_ACTIVE) {
+        qDebug() << "There's another client active, dropping notification!";
         return;
-    qDebug() << "shn called";
+    }
     //Check notification aspect
     Notification *n = new Notification(myParent);
 
@@ -114,6 +115,16 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
 void Notifier::activeClientUpdate(int state)
 {
     activeClientState = state;
-    if (activeClientState == 2)
+    if (activeClientState == OTHER_CLIENT_IS_ACTIVE)
         closeAllNotifications();
+}
+
+bool Notifier::isAnotherClientActive()
+{
+    return activeClientState == OTHER_CLIENT_IS_ACTIVE;
+}
+
+bool Notifier::amITheActiveClient()
+{
+    return activeClientState == IS_ACTIVE_CLIENT;
 }

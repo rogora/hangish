@@ -194,7 +194,7 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
     }
 
     //Merge read states with participants
-    //THIS HOLD INFO ONLY ABOUT MYSELF, NOT NEEDED NOW!
+    //THIS HOLDS INFO ONLY ABOUT MYSELF, NOT NEEDED NOW!
     foreach (Participant p, res.participants)
     {
         foreach (ReadState r, readStates)
@@ -252,11 +252,12 @@ void Client::parseConversationState(MessageField conv)
     foreach (Event e, c.events) {
         //skip empty messages (voice calls)
         if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) && !e.isOld) {
+            qDebug() << "I have a valid msg here";
             conversationModel->addEventToConversation(c.id, e);
             //I should put on top the conversation anyway
             rosterModel->putOnTop(c.id);
-            //Is this unread? I can read the notificationLevel...
-            if (e.notificationLevel == RING)
+            //If I'm not the active client these messages have already been read probably
+            if (!notifier->isAnotherClientActive())
                 rosterModel->addUnreadMsg(c.id);
             newValidEvts++;
             if (i+1 < c.events.size() && c.events[i].conversationId != c.events[i+1].conversationId)
@@ -268,13 +269,18 @@ void Client::parseConversationState(MessageField conv)
 
     if (newValidEvts > 1) {
         //More than 1 new message -> show a generic notification
-        if (diffConv)
+        if (diffConv) {
+            qDebug() << "Notif many, diffConv";
             emit showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", "Many conversations", newValidEvts, c.id);
-        else
+        }
+        else {
+            qDebug() << "Notif many, NO diffConv";
             emit  showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
+        }
     }
-    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel == 30 && !c.events[validIdx].isOld) {
+    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel != QUIET && !c.events[validIdx].isOld) {
         //Only 1 new message -> show a specific notification
+        qDebug() << "Notif 1";
         emit showNotification(c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, 1, c.id);
     }
     else {
@@ -1164,7 +1170,7 @@ void Client::cookieUpdateSlot(QNetworkCookie cookie)
 
 void Client::catchNotificationForCover(int num) {
     //channel alway receives 1 message
-    emit showNotificationForCover(1);
+    emit showNotificationForCover(num);
 }
 
 void Client::notificationPushedSlot(QString convId) {

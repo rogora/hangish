@@ -210,7 +210,7 @@ void Channel::parseChannelData(QString sreply)
                         if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
                             rosterModel->addUnreadMsg(evt.conversationId);
                             //If notificationLevel == 10 the conversation has been silenced -> don't notify
-                            if (evt.notificationLevel==RING)
+                            if (evt.notificationLevel!=QUIET)
                                 if (evt.value.segments.size()==0)
                                     emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1,evt.conversationId);
                                 else
