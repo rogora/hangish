@@ -253,6 +253,11 @@ void Client::parseConversationState(MessageField conv)
         //skip empty messages (voice calls)
         if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) && !e.isOld) {
             conversationModel->addEventToConversation(c.id, e);
+            //I should put on top the conversation anyway
+            rosterModel->putOnTop(c.id);
+            //Is this unread? I can read the notificationLevel...
+            if (e.notificationLevel == RING)
+                rosterModel->addUnreadMsg(c.id);
             newValidEvts++;
             if (i+1 < c.events.size() && c.events[i].conversationId != c.events[i+1].conversationId)
                 diffConv = true;
@@ -264,13 +269,20 @@ void Client::parseConversationState(MessageField conv)
     if (newValidEvts > 1) {
         //More than 1 new message -> show a generic notification
         if (diffConv)
-            emit showNotification(QString(newValidEvts + "new messages"), "Restored channel", "You have new msgs", "Many conversations", newValidEvts, c.id);
+            emit showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", "Many conversations", newValidEvts, c.id);
         else
-            emit  showNotification(QString(newValidEvts + "new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
+            emit  showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
     }
-    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel == 30 && !c.events[validIdx].isOld)
+    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel == 30 && !c.events[validIdx].isOld) {
         //Only 1 new message -> show a specific notification
         emit showNotification(c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, 1, c.id);
+    }
+    else {
+        qDebug() << "Not notifying";
+        qDebug() << "New msgs: " << newValidEvts;
+        qDebug() << "Notif. level: " << c.events[validIdx].notificationLevel;
+        qDebug() << "IsOld: " << c.events[validIdx].isOld;
+    }
 }
 
 QList<Conversation> Client::parseConversations(const QString& conv)

@@ -428,7 +428,7 @@ void Channel::parseSid()
         qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
     //Now the reply should be std
-    if (!channelError) longPollRequest();
+    longPollRequest();
 }
 
 void Channel::slotError(QNetworkReply::NetworkError err)

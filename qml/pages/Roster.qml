@@ -29,6 +29,7 @@ import "../delegates"
 Page {
     id: page
     objectName: "roster"
+    allowedOrientations: Orientation.All
 
     onStatusChanged: {
         console.log(page.status)

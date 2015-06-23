@@ -30,6 +30,8 @@ Dialog {
     id: page
     objectName: "selectPicture"
     canAccept: selectedPath.length > 0
+    allowedOrientations: Orientation.All
+
 
     property string selectedPath: ""
     property int selectedRotation: 0

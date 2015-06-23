@@ -103,6 +103,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     QDateTime timestmp = QDateTime::fromMSecsSinceEpoch(ts/1000);
     //Sometimes events are received more than once, as example from channel and getlast... use timestamp as UID and discard
     if (timestmp <= lastParsedEvent) {
+        qDebug() << "This evt is old!";
+        qDebug() << timestmp.toString() << " - " << lastParsedEvent.toString();
         event.isOld = true;
     }
     else {

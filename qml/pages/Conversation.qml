@@ -29,6 +29,7 @@ import "../delegates"
 Page {
     id: page
     objectName: "conversation"
+    allowedOrientations: Orientation.All
 
     property string conversationId: ""
     property string conversationName: ""
@@ -69,10 +70,11 @@ Page {
             delegate: Message { }
             VerticalScrollDecorator {}
             footer: Row {
+                    width: parent.width
                     TextArea {
                         objectName: "sendTextArea"
                         id: sendBox
-                        width: 400
+                        width: parent.width - sendButton.width
                         focus: true
                         color: Theme.highlightColor
                         font.family: "cursive"

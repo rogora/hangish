@@ -32,38 +32,38 @@
 <context>
     <name>Conversation</name>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="57"/>
+        <location filename="../qml/pages/Conversation.qml" line="58"/>
         <source>Load more...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="79"/>
-        <location filename="../qml/pages/Conversation.qml" line="134"/>
+        <location filename="../qml/pages/Conversation.qml" line="81"/>
+        <location filename="../qml/pages/Conversation.qml" line="136"/>
         <source>Reply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="96"/>
+        <location filename="../qml/pages/Conversation.qml" line="98"/>
         <source>Can&apos;t send empty message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="103"/>
+        <location filename="../qml/pages/Conversation.qml" line="105"/>
         <source>Sending message...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="108"/>
+        <location filename="../qml/pages/Conversation.qml" line="110"/>
         <source>Sending image...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="130"/>
+        <location filename="../qml/pages/Conversation.qml" line="132"/>
         <source> is typing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="132"/>
+        <location filename="../qml/pages/Conversation.qml" line="134"/>
         <source> paused</source>
         <translation type="unfinished"></translation>
     </message>
@@ -97,7 +97,7 @@
 <context>
     <name>ImagePicker</name>
     <message>
-        <location filename="../qml/pages/ImagePicker.qml" line="40"/>
+        <location filename="../qml/pages/ImagePicker.qml" line="42"/>
         <source>Select picture</source>
         <translation type="unfinished"></translation>
     </message>
@@ -105,17 +105,17 @@
 <context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="45"/>
+        <location filename="../qml/pages/Roster.qml" line="46"/>
         <source>About Hangish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="49"/>
+        <location filename="../qml/pages/Roster.qml" line="50"/>
         <source>Log out and exit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="58"/>
+        <location filename="../qml/pages/Roster.qml" line="59"/>
         <source>Conversations</source>
         <translation type="unfinished"></translation>
     </message>

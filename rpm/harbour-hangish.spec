@@ -13,8 +13,8 @@ Name:       harbour-hangish
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Jolla Google Hangouts Client
-Version:    0.4
-Release:    1
+Version:    0.5
+Release:    0
 Group:      Qt/Qt
 License:    GPL3
 URL:        https://github.com/rogora/hangish

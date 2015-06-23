@@ -11,6 +11,7 @@
 * Thu Jun 4 2015 Daniele Rogora <daniele.rogora@gmail.com> 0.4.1
 - Implemented oauth2 authentication
 - Small fixes for UI
+- Fix for duplicate messages received
 - Can now exit from full screen image pinching to the minimum level
 
 
