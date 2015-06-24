@@ -27,14 +27,16 @@ import Sailfish.Silica 1.0
 
 DockedPanel {
     id: root
+    visible: false
 
     width: Screen.width - 2*Theme.paddingSmall
     height: content.height + 2*Theme.paddingSmall
 
-    dock: Dock.Top
+    dock: Dock.Bottom
 
     Rectangle {
         id: content
+        visible: false
         x: Theme.paddingSmall
         y: Theme.paddingSmall
         width: parent.width
@@ -57,6 +59,8 @@ DockedPanel {
         MouseArea {
             anchors.fill: parent
             onClicked: {
+                root.visible = false
+                content.visible = false
                 root.hide()
                 autoClose.stop()
             }
@@ -65,6 +69,8 @@ DockedPanel {
 
 
     function displayError(errorMsg) {
+        root.visible = true
+        content.visible = true
         infoLabel.text = errorMsg
         root.show()
         autoClose.start()
@@ -75,6 +81,8 @@ DockedPanel {
         interval: 3000
         running: false
         onTriggered: {
+            root.visible = false
+            content.visible = false
             root.hide()
             stop()
         }

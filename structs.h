@@ -113,6 +113,7 @@ struct Event {
     QDateTime timestamp;
     int notificationLevel;
     bool isOld;
+    bool isMine;
 };
 
 struct ContinuationToken {

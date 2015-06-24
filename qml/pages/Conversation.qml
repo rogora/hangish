@@ -48,6 +48,11 @@ Page {
         conversationModel.cid = cid;
         listView.positionViewAtEnd()
     }
+
+    function openText(text) {
+        listView.footerItem.openText(text)
+    }
+
     function openKeyboard() {
         listView.footerItem.openKeyboard()
     }
@@ -163,6 +168,9 @@ Page {
                         }
                     function openKeyboard() {
                         sendBox.forceActiveFocus()
+                    }
+                    function openText(text) {
+                        sendBox.text = text;
                     }
 
                 }

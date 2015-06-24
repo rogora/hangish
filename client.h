@@ -116,6 +116,7 @@ public:
     Q_INVOKABLE QString getLastIncomingConversationName();
     Q_INVOKABLE QString getConversationName(QString convId);
     Q_INVOKABLE void retrieveConversationLog(QString convId);
+    Q_INVOKABLE void deleteMessageWError(QString text);
 
 
 

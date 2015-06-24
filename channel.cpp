@@ -193,6 +193,10 @@ void Channel::parseChannelData(QString sreply)
                 qDebug() << "evt parsed";
                 //This is old, on the channel? Skip
                 if (!evt.isOld) {
+                    //I want to check whether I sent this message in order to keep the conversation view consistent
+                    if (evt.sender.chat_id == myself.chat_id) {
+                        evt.isMine = true;
+                    }
                     if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
                         qDebug() << "No segs! Skipping";
                         continue;

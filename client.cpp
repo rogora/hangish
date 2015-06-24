@@ -560,6 +560,7 @@ void Client::uploadImageReply()
 void Client::sendMessageReply() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
+    qDebug() << reply;
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
     qDebug() << "Got " << c.size() << "from" << reply->url();
@@ -570,11 +571,13 @@ void Client::sendMessageReply() {
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         qDebug() << "Message sent correctly";
         Event evt;
-        conversationModel->addSentMessage("convId", evt);
+        conversationModel->addSentMessage(reply, "convId", evt);
         emit messageSent();
     }
     else {
         qDebug() << "Problem sending msg";
+        Event evt;
+        conversationModel->addErrorMessage(reply, "convId", evt);
         emit messageNotSent();
     }
     delete reply;
@@ -674,7 +677,23 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
     body += QString::number(random);
     body += ", 2], null, null, null, []]";
     qDebug() << "gotH " << body;
+
+    Event outgoingEvt;
+    outgoingEvt.sender.chat_id = myself.chat_id;
+    outgoingEvt.sender.gaia_id = myself.gaia_id;
+    outgoingEvt.conversationId = conversationId;
+    outgoingEvt.isOld = false;
+    outgoingEvt.value.valid = true;
+    EventValueSegment evs;
+    evs.type = 0;
+    evs.value = segments;
+    outgoingEvt.value.segments.append(evs);
+
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
+
+    conversationModel->addOutgoingMessage(reply, conversationId, outgoingEvt);
+    qDebug() << reply;
+
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
 }
 
@@ -1388,4 +1407,9 @@ QString Client::getLastIncomingConversationName() {
     if (lastId.size()>1)
         return rosterModel->getConversationName(lastId);
     return "";
+}
+
+void Client::deleteMessageWError(QString text)
+{
+    conversationModel->deleteMsgWError(text);
 }

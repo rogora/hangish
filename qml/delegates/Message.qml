@@ -51,12 +51,19 @@ BackgroundItem {
             }
             Image {
                 id: hasReadImage
-
             }
 
         }
     }
-    onClicked: openFullImage(fullimage)
+    onClicked: {
+        if (timestamp != "Error, msg not sent!" && fullimage.length>3) {
+            openFullImage(fullimage)
+        }
+        else if (timestamp == "Error, msg not sent!") {
+            conversation.openText(msgtext)
+            Client.deleteMessageWError(msgtext);
+        }
+    }
 
     function openFullImage(url) {
         console.log(url)

@@ -32,38 +32,38 @@
 <context>
     <name>Conversation</name>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="58"/>
+        <location filename="../qml/pages/Conversation.qml" line="63"/>
         <source>Load more...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="81"/>
-        <location filename="../qml/pages/Conversation.qml" line="136"/>
+        <location filename="../qml/pages/Conversation.qml" line="86"/>
+        <location filename="../qml/pages/Conversation.qml" line="141"/>
         <source>Reply</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="98"/>
+        <location filename="../qml/pages/Conversation.qml" line="103"/>
         <source>Can&apos;t send empty message</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="105"/>
+        <location filename="../qml/pages/Conversation.qml" line="110"/>
         <source>Sending message...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="110"/>
+        <location filename="../qml/pages/Conversation.qml" line="115"/>
         <source>Sending image...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="132"/>
+        <location filename="../qml/pages/Conversation.qml" line="137"/>
         <source> is typing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="134"/>
+        <location filename="../qml/pages/Conversation.qml" line="139"/>
         <source> paused</source>
         <translation type="unfinished"></translation>
     </message>

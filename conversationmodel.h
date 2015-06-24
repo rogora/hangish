@@ -30,6 +30,7 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 class ConversationElement {
 public:
+    QNetworkReply *id;
     QString text;
     QString sender;
     QString timestamp;
@@ -40,7 +41,8 @@ public:
 
     QDateTime ts;
 
-    ConversationElement(QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts) {
+    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts) {
+        id = pId;
         text = pText;
         sender = pSender;
         senderId = pSenderId;
@@ -63,8 +65,9 @@ public:
     void updateReadState(ReadState rs);
     void addConversation(Conversation c);
     void addEventToConversation(QString convId, Event e, bool bottom=true);
-    void addSentMessage(QString convId, Event evt);
-    void addOutgoingMessage(QString convId, Event evt);
+    void addSentMessage(QNetworkReply *id, QString convId, Event evt);
+    void addErrorMessage(QNetworkReply *id, QString convId, Event evt);
+    void addOutgoingMessage(QNetworkReply *id, QString convId, Event evt);
     QDateTime getFirstEventTs(QString convId);
 
     QString id, name;
@@ -87,8 +90,9 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    void addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
+    void addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, bool isMine);
     void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
+    void deleteMsgWError(QString text);
 
 
 private:
@@ -103,6 +107,9 @@ signals:
 
 public slots:
     void conversationLoaded();
+
+private slots:
+    void deleteMsg(QNetworkReply *id);
 
 };
 

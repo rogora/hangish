@@ -34,14 +34,60 @@ void ConversationModel::addConversation(Conversation c)
     conversations.append(c);
 }
 
-void ConversationModel::addSentMessage(QString convId, Event evt)
+void ConversationModel::deleteMsg(QNetworkReply *id)
 {
-    qDebug() << "TODO: implement me!";
+    foreach (ConversationElement *ce, myList) {
+        if (ce->id == id) {
+            myList.removeOne(ce);
+        }
+    }
+    for (int i=0; i<myList.size(); i++) {
+        QModelIndex r1 = index(i);
+        emit dataChanged(r1, r1);
+    }
 }
 
-void ConversationModel::addOutgoingMessage(QString convId, Event evt)
+void ConversationModel::addErrorMessage(QNetworkReply *id, QString convId, Event evt)
 {
-    qDebug() << "TODO: implement outgoing message";
+    qDebug() << "Signaling the message as error!";
+    foreach (ConversationElement *ce, myList) {
+        if (ce->id == id) {
+            ce->timestamp = "Error, msg not sent!";
+        }
+    }
+    for (int i=0; i<myList.size(); i++) {
+        QModelIndex r1 = index(i);
+        emit dataChanged(r1, r1);
+    }
+
+    /*QSignalMapper *mapper = new QSignalMapper(this);
+    QTimer *t1 = new QTimer(this);
+    t1->setSingleShot(true);
+    connect(t1, SIGNAL(timeout()), mapper, SLOT(map()));
+    connect(mapper, SIGNAL(mapped(QNetworkReply*)), this, SLOT(deleteMsg(QNetworkReply*)));
+    mapper->setMapping(t1, id);
+    t1->start(5000);
+    */
+}
+
+void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event evt)
+{
+    qDebug() << "Signaling the message as sent!";
+    foreach (ConversationElement *ce, myList) {
+        if (ce->id == id) {
+            ce->timestamp = "Sent!";
+        }
+    }
+    for (int i=0; i<myList.size(); i++) {
+        QModelIndex r1 = index(i);
+        emit dataChanged(r1, r1);
+    }
+}
+
+void ConversationModel::addOutgoingMessage(QNetworkReply *id, QString convId, Event evt)
+{
+    qDebug() << "Adding outgoing message " << id;
+    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", false, evt.timestamp, true);
 }
 
 void ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
@@ -78,7 +124,7 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
 
         //Where to add this message? Bottom -> new msg / Top -> old msg
         if (bottom)
-            addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
+            addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.isMine);
         else
             prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
     }
@@ -217,27 +263,54 @@ void ConversationModel::loadConversation(QString cId)
                         break;
                     }
                 }
-                addConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp);
+                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, e.isMine);
             }
             break;
         }
     }
 }
 
-void ConversationModel::addConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
+void ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, bool isMine)
 {
+    //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
+    int i = 0;
+    if (id==NULL && isMine) {
+        foreach (ConversationElement *ce, myList) {
+            if (ce->text == text && ce->senderId == senderId) {
+                break;
+            }
+            i++;
+        }
+        beginRemoveRows(QModelIndex(), i,i);
+        myList.removeAt(i);
+        endRemoveRows();
+    }
+
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    myList.append(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
+    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
     endInsertRows();
 }
 
 void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
 {
     beginInsertRows(QModelIndex(), 0, 0);
-    myList.prepend(new ConversationElement(sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
+    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
     endInsertRows();
 }
 
+void ConversationModel::deleteMsgWError(QString text)
+{
+    int i = 0;
+    foreach (ConversationElement *ce, myList) {
+        if (ce->text == text && ce->timestamp == "Error, msg not sent!") {
+            break;
+        }
+        i++;
+    }
+    beginRemoveRows(QModelIndex(), i,i);
+    myList.removeAt(i);
+    endRemoveRows();
+}
 
 int ConversationModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
