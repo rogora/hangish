@@ -263,7 +263,7 @@ void ConversationModel::loadConversation(QString cId)
                         break;
                     }
                 }
-                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, e.isMine);
+                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, false);
             }
             break;
         }
