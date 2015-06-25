@@ -274,16 +274,20 @@ void ConversationModel::addConversationElement(QNetworkReply *id, QString sender
 {
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
+    bool found = false;
     if (id==NULL && isMine) {
         foreach (ConversationElement *ce, myList) {
             if (ce->text == text && ce->senderId == senderId) {
+                found = true;
                 break;
             }
             i++;
         }
-        beginRemoveRows(QModelIndex(), i,i);
-        myList.removeAt(i);
-        endRemoveRows();
+        if (found) {
+            beginRemoveRows(QModelIndex(), i,i);
+            myList.removeAt(i);
+            endRemoveRows();
+        }
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
@@ -301,15 +305,19 @@ void ConversationModel::prependConversationElement(QString sender, QString sende
 void ConversationModel::deleteMsgWError(QString text)
 {
     int i = 0;
+    bool found = false;
     foreach (ConversationElement *ce, myList) {
         if (ce->text == text && ce->timestamp == "Error, msg not sent!") {
+            found = true;
             break;
         }
         i++;
     }
-    beginRemoveRows(QModelIndex(), i,i);
-    myList.removeAt(i);
-    endRemoveRows();
+    if (found) {
+        beginRemoveRows(QModelIndex(), i,i);
+        myList.removeAt(i);
+        endRemoveRows();
+    }
 }
 
 int ConversationModel::rowCount(const QModelIndex &parent) const {
