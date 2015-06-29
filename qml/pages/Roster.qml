@@ -38,19 +38,28 @@ Page {
             console.log("Resetting conv")
             conversationModel.cid = ""
         }
-     }
+    }
 
-    SilicaListView {        
-            PullDownMenu {
-                MenuItem {
-                    text: qsTr("About Hangish")
-                    onClicked: pageStack.push(about)
-                }
-                MenuItem {
-                    text: qsTr("Log out and exit")
-                    onClicked: Client.deleteCookies()
-                }
+    RemorsePopup {
+        id: remorse
+    }
+
+    SilicaListView {
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("About Hangish")
+                onClicked: pageStack.push(about)
             }
+            MenuItem {
+                text: qsTr("Log out and exit")
+                onClicked: remorse.execute(qsTr("Deleting cookies"),
+                                           function()
+                                           {
+                                               Client.deleteCookies();
+                                           } );
+            }
+        }
+
 
         id: listView
         model: rosterModel
@@ -83,11 +92,11 @@ Page {
     }
 
     Connections {
-            target: listView.model
-            onDataChanged: {
-                //console.log("Changing data")
-            }
+        target: listView.model
+        onDataChanged: {
+            //console.log("Changing data")
         }
+    }
 
     Connections {
         target: Qt.application

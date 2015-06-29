@@ -32,7 +32,8 @@ SOURCES += src/Hangish.cpp \
     filemodel.cpp \
     messagefield.cpp \
     adaptor.cpp \
-    oauth2auth.cpp
+    oauth2auth.cpp \
+    imagehandler.cpp
 
 OTHER_FILES += \
     qml/cover/CoverPage.qml \
@@ -72,7 +73,8 @@ HEADERS += \
     filemodel.h \
     messagefield.h \
     adaptor.h \
-    oauth2auth.h
+    oauth2auth.h \
+    imagehandler.h
 
 RESOURCES += \
     harbour-hangish.qrc

@@ -166,6 +166,11 @@ Page {
                             onMessageSent: sendBox.setOnline()
                             onMessageNotSent: sendBox.setSendError()
                         }
+
+                    Connections
+                        {
+                            target: ImageHandler
+                            onSavedToGallery: ibanner.displayError(qsTr("Image saved to gallery!"))                        }
                     function openKeyboard() {
                         sendBox.forceActiveFocus()
                     }

@@ -32,7 +32,7 @@ Page {
     function loadImage(url) {
         imageView.y = 0
         imageView.x = 0
-        imageView.source = url;
+        imageView.source = ImageHandler.getImageAddr(url);
     }
 
     BusyIndicator {
@@ -48,7 +48,8 @@ Page {
         id: imageView
         fillMode: Image.PreserveAspectFit
         asynchronous: true
-        cache: true
+        //Since images are now cached on disk, we can avoid putting this in RAM
+        //cache: true
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width
         x: Theme.paddingSmall
@@ -120,6 +121,15 @@ Page {
 
             }
     }
+    Connections
+        {
+            target: ImageHandler
+            onImgReady: {
+                imageView.y = 0
+                imageView.x = 0
+                imageView.source = path
+            }
+        }
 
             //ScrollDecorator {}
 

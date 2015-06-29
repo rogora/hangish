@@ -67,6 +67,11 @@
         <source> paused</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="../qml/pages/Conversation.qml" line="173"/>
+        <source>Image saved to gallery!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CoverPage</name>
@@ -103,19 +108,32 @@
     </message>
 </context>
 <context>
+    <name>Message</name>
+    <message>
+        <location filename="../qml/delegates/Message.qml" line="12"/>
+        <source>Download to gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="46"/>
+        <location filename="../qml/pages/Roster.qml" line="50"/>
         <source>About Hangish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="50"/>
+        <location filename="../qml/pages/Roster.qml" line="54"/>
         <source>Log out and exit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="59"/>
+        <location filename="../qml/pages/Roster.qml" line="55"/>
+        <source>Deleting cookies</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/Roster.qml" line="68"/>
         <source>Conversations</source>
         <translation type="unfinished"></translation>
     </message>

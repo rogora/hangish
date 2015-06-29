@@ -655,6 +655,10 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 }
 
 void Client::sendChatMessage(QString segments, QString conversationId) {
+    //originalText is needed to push the outgoing event in the correct form
+    qDebug() << segments;
+    QString originalText = segments;
+
     rosterModel->putOnTop(conversationId);
 
     QString seg = "[[0, \"";
@@ -686,11 +690,10 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
     outgoingEvt.value.valid = true;
     EventValueSegment evs;
     evs.type = 0;
-    evs.value = segments;
+    evs.value = originalText;
     outgoingEvt.value.segments.append(evs);
 
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
-
     conversationModel->addOutgoingMessage(reply, conversationId, outgoingEvt);
     qDebug() << reply;
 
@@ -1385,6 +1388,11 @@ void Client::setAppPaused()
     channel->setAppPaused();
     //setPresence(true);
     appPaused = true;
+}
+
+OAuth2Auth *Client::getAuthenticator()
+{
+    return auth;
 }
 
 void Client::authFailedSlot(QString error)

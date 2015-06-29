@@ -20,7 +20,19 @@ BackgroundItem {
             width: Theme.iconSizeLarge
             height: width
             asynchronous: true
-            source: imagePath
+            cache: true
+            source: imagePath.substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath) : imagePath
+            Connections
+                {
+                    id: roster_conn
+                    target: ImageHandler
+                    onImgReady: {
+                        //if (path == imagePath) {
+                            console.log("Updating!")
+                            img.source = imagePath.substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath) : imagePath
+                        //}
+                    }
+                }
         }
 
         Label {
@@ -34,4 +46,5 @@ BackgroundItem {
             truncationMode: TruncationMode.Fade
         }
     }
+
 }

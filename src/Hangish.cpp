@@ -25,6 +25,7 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 #include <sailfishapp.h>
 #include <client.h>
+#include "imagehandler.h"
 #include "conversationmodel.h"
 #include "rostermodel.h"
 #include "contactsmodel.h"
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("Hangish");
     QCoreApplication::setApplicationName("Hangish");
-    QCoreApplication::setApplicationVersion("0.4.0");
+    QCoreApplication::setApplicationVersion("0.6.0");
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QScopedPointer<QQuickView> view(SailfishApp::createView());
@@ -44,12 +45,18 @@ int main(int argc, char *argv[])
     ContactsModel *contactsModel = new ContactsModel();
     FileModel *fileModel = new FileModel();
     Client *c = new Client(rosterModel, conversationModel, contactsModel);
+    ImageHandler *ih = new ImageHandler();
+    ih->setAuthenticator(c->getAuthenticator());
+    //Do this once when app is launching
+    ih->cleanCache();
 
     view->rootContext()->setContextProperty("conversationModel", conversationModel);
     view->rootContext()->setContextProperty("rosterModel", rosterModel);
     view->rootContext()->setContextProperty("contactsModel", contactsModel);
     view->rootContext()->setContextProperty("fileModel", fileModel);
     view->engine()->rootContext()->setContextProperty("Client", c);
+    view->engine()->rootContext()->setContextProperty("ImageHandler", ih);
+
 
     QDBusConnection system = QDBusConnection::systemBus();
         if (!system.isConnected())
