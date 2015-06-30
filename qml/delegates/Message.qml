@@ -37,7 +37,7 @@ BackgroundItem {
                 onLinkActivated: Qt.openUrlExternally(link)
             }
 
-            Image {
+            AnimatedImage {
                 id: imageView
                 source: previewimage != "" ? ImageHandler.getImageAddr(previewimage) : previewimage
                 fillMode: Image.PreserveAspectFit

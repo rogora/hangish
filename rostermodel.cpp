@@ -58,7 +58,7 @@ QVariant RosterModel::data(const QModelIndex &index, int role) const
         return QVariant::fromValue(conv->unread);
     else if (role == ImageRole) {
         if (conv->imagePaths.size()) // TODO once we should support multiple images
-            return conv->imagePaths[0];
+            return conv->imagePaths;
         else
             return "";
     }
@@ -86,7 +86,7 @@ void RosterModel::addConversationAbstract(Conversation pConv)
                 if (!p.user.photo.isEmpty()) {
                     QString image = p.user.photo;
                     if (!image.startsWith("https:")) image.prepend("https:");
-                    imagePaths << image;
+                        imagePaths << image;
                 }
                 else {
                     imagePaths << "qrc:///icons/unknown.png";

@@ -6,6 +6,8 @@ BackgroundItem {
 
     height: img.height
 
+    property int imageRotation: 0
+
     Row {
         height: parent.height
         anchors {
@@ -21,7 +23,21 @@ BackgroundItem {
             height: width
             asynchronous: true
             cache: true
-            source: imagePath.substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath) : imagePath
+            source: imagePath[imageRotation % imagePath.length].substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath[imageRotation% imagePath.length]) : imagePath[imageRotation% imagePath.length]
+
+            states: [
+                State {
+                    name: "fade";
+                    PropertyChanges { target: img; opacity: 0.1}
+                },
+                State {
+                    name: "show";
+                    PropertyChanges { target: img; opacity: 1}
+                }
+            ]
+            transitions: Transition {
+                    NumberAnimation { properties: "opacity"; easing.type: Easing.InOutQuad; duration: 500  }
+                }
             Connections
                 {
                     id: roster_conn
@@ -29,10 +45,53 @@ BackgroundItem {
                     onImgReady: {
                         //if (path == imagePath) {
                             console.log("Updating!")
-                            img.source = imagePath.substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath) : imagePath
+                            img.source = imagePath[imageRotation].substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath[imageRotation]) : imagePath[imageRotation]
                         //}
                     }
                 }
+            Connections {
+                target: Qt.application
+                onActiveChanged: {
+                    if(!Qt.application.active) {
+                        // Pauze the game here
+                        timer.stop()
+                    }
+                    else {
+                        timer.restart()
+                    }
+                }
+            }
+
+            Timer {
+                id: timer
+                interval: 10000
+                repeat: true
+                running: true
+
+                onTriggered:
+                {
+                    if (imagePath.length > 1) {
+                        img.state = "fade"
+                        timer2.start()
+                    }
+                }
+            }
+
+            Timer {
+                id: timer2
+                interval: 500
+                repeat: false
+                running: false
+
+                onTriggered:
+                {
+                    if (imagePath.length > 1) {
+                        imageRotation = (imageRotation + 1) % imagePath.length
+                        //img.source = imagePath[imageRotation].substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath[imageRotation]) : imagePath[imageRotation]
+                        img.state = "show"
+                    }
+                }
+            }
         }
 
         Label {

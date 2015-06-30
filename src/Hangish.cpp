@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("Hangish");
     QCoreApplication::setApplicationVersion("0.6.0");
 
+    qsrand(QTime::currentTime().msec());
+
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
     QScopedPointer<QQuickView> view(SailfishApp::createView());
     ConversationModel *conversationModel = new ConversationModel();
