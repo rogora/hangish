@@ -120,9 +120,7 @@ void RosterModel::addUnreadMsg(QString convId)
             c->unread += 1;
             //put the referenced conversation on top of the list
             if (i!=conversations.length()-1) {
-                qDebug() << "Moving";
                 conversations.move(i,conversations.length()-1);
-                qDebug() << "Moved";
             }
             break;
         }

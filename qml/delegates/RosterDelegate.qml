@@ -43,10 +43,10 @@ BackgroundItem {
                     id: roster_conn
                     target: ImageHandler
                     onImgReady: {
-                        //if (path == imagePath) {
+                        if (path == imagePath) {
                             console.log("Updating!")
                             img.source = imagePath[imageRotation].substr(0, 4) === "http" ? ImageHandler.getImageAddr(imagePath[imageRotation]) : imagePath[imageRotation]
-                        //}
+                        }
                     }
                 }
             Connections {

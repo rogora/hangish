@@ -40,16 +40,18 @@ QString ImageHandler::getImageAddr(QString imgUrl)
         imgname = imgname.left(imgname.size() - 4);
     QString path = QString(cachePath + imgname);
     QFile img(path);
-    qDebug() << "Looking up for " << imgname;
+    //qDebug() << "Looking up for " << imgname;
     if (img.exists()) {
+        qDebug() << "Img exists " << imgname;
         return path;
     }
     else {
-        if (lock.load()==1)
+        if (lock.load()==1) {
+            qDebug() << "Another download in progress, returning url";
             return imgUrl;
+        }
 
-        lock = 1;
-
+        lock.store(1);
         buffer.clear();
         qDebug() << "Ok, let's download this";
         QUrl url(imgUrl);
@@ -85,8 +87,8 @@ void ImageHandler::gotImage()
     img.write(buffer);
     img.close();
     qDebug() << "Created ";
-    lock = 0;
     emit imgReady(reply->url().toString());
+    lock.store(0);
 }
 
 void delay()

@@ -55,6 +55,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    QString syncAllNewEventsString;
     Notifier *notifier;
     bool needLogin;
     bool needSync;
@@ -131,7 +132,7 @@ public slots:
     void uploadImageReply();
     void uploadPerformedReply();
     void syncAllNewEventsReply();
-    //void syncAllNewEventsDataArrval();
+    void syncAllNewEventsDataArrval();
     void setActiveClientReply();
     void setTypingReply();
     void setPresenceReply();

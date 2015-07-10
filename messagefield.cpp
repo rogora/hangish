@@ -21,7 +21,11 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
         } else if (text.at(i) == ',') {
             nextMessageField.type_ = Empty;
-        } else if (text.at(i) == '"') {
+        } else if (text.size() > i+3 && text.at(i)=='n' && text.at(i+1)=='u' && text.at(i+2)=='l' && text.at(i+3)=='l') {
+            nextMessageField.type_ = Empty;
+            i += 3;
+        }
+        else if (text.at(i) == '"') {
             nextMessageField.type_ = String;
             nextMessageField.stringValue_ = parseString(text, i);
             // move the cursor to the comma
@@ -55,7 +59,7 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             if (text.at(i) == '{' || text.at(i) == ':' || text.at(i) == '}') continue;
             qWarning() << "Unknown field type????" << text.right(i);
             // in any case we do not want garbage in the list
-            start += text.right(i).size();
+            //start += text.right(i).size();
             continue;
         }
         results << nextMessageField;

@@ -233,7 +233,7 @@ void Client::parseConversationState(MessageField conv)
     //qDebug() << "CONV_STATE: ";// << conv;
 
     Conversation c = parseConversation(conv.list());
-    //qDebug() << c.id;
+    qDebug() << c.id;
     //qDebug() << c.events.size();
 
     //Now formalize what happened:
@@ -251,7 +251,7 @@ void Client::parseConversationState(MessageField conv)
 
     foreach (Event e, c.events) {
         //skip empty messages (voice calls)
-        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) && !e.isOld) {
+        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) /* && !e.isOld */) {
             qDebug() << "I have a valid msg here";
             conversationModel->addEventToConversation(c.id, e);
             //I should put on top the conversation anyway
@@ -278,7 +278,7 @@ void Client::parseConversationState(MessageField conv)
             emit  showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
         }
     }
-    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel != QUIET && !c.events[validIdx].isOld) {
+    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel != QUIET /*&& !c.events[validIdx].isOld */) {
         //Only 1 new message -> show a specific notification
         qDebug() << "Notif 1";
         emit showNotification(c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, 1, c.id);
@@ -822,8 +822,9 @@ void Client::syncAllNewEventsReply()
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         qDebug() << "Synced correctly";
+        syncAllNewEventsString += sreply;
         int idx = 0;
-        auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
+        auto parsedReply = MessageField::parseListRef(syncAllNewEventsString.leftRef(-1), idx);
         //Skip csanerp:         parsedReply[0]
         //Skip response header: parsedReply[1]
         //Skip sync_timestamp:  parsedReply[2]
@@ -834,20 +835,34 @@ void Client::syncAllNewEventsReply()
         }
         auto cstates = parsedReply[3].list();
         for (auto state : cstates) {
+            qDebug() << "Parsing cstate";
             parseConversationState(state);
         }
         needSync = false;
     }
     delete reply;
-
 }
 
-/*
+
 void Client::syncAllNewEventsDataArrval()
 {
+    //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Syncing correctly";
+        syncAllNewEventsString += sreply;
+    }
 }
-*/
+
 
 void Client::setPresence(bool goingOffline)
 {
@@ -1017,9 +1032,8 @@ void Client::syncAllNewEvents(QDateTime timestamp)
     body += ",[], null, [], 0, [], 1048576]";
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/syncallnewevents",body);
-    //I shouldn't need this
-    //QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(syncAllNewEventsDataArrval()));
-
+    syncAllNewEventsString = "";
+    QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(syncAllNewEventsDataArrval()));
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(syncAllNewEventsReply()));
 }
 

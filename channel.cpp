@@ -37,26 +37,29 @@ void Channel::checkChannel()
         qDebug() << "start new lpconn";
         channelError = true;
         emit(channelLost());
-        /*
-        if (LPrep != NULL) {
-            LPrep->close();
-            delete LPrep;
-        }
-        */
         QTimer::singleShot(500, this, SLOT(longPollRequest()));
     }
+}
+
+void Channel::checkChannelAndReconnect()
+{
+    qDebug() << "Checking chnl";
+    if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
+        qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
+        qDebug() << "start new lpconn";
+        channelError = true;
+        emit(channelLost());
+    }
+    QTimer::singleShot(500, this, SLOT(longPollRequest()));
 }
 
 void Channel::fastReconnect()
 {
     qDebug() << "fast reconnecting";
-    /*
-    if (LPrep != NULL) {
-        LPrep->close();
-        delete LPrep;
-    }
-    */
-    QTimer::singleShot(500, this, SLOT(longPollRequest()));
+
+    //I need to check whether the channel was lost as well; in case it was, first sync and then reconnect, otherwise simply reconnect
+    //QTimer::singleShot(500, this, SLOT(longPollRequest()));
+    checkChannelAndReconnect();
 }
 
 Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
@@ -342,8 +345,12 @@ void Channel::nr()
 
     //if I'm here it means the channel is working fine
     if (channelError) {
+        qDebug() << "Gonna emit channelRestored";
         emit(channelRestored(lastPushReceived.addMSecs(500)));
         channelError = false;
+    }
+    else {
+        qDebug() << "Channel had no error";
     }
     lastPushReceived = QDateTime::currentDateTime();
 

@@ -57,6 +57,7 @@ private:
     bool appPaused;
     QString lastIncomingConvId;
     void fetchNewSid();
+    void checkChannelAndReconnect();
 
 public:
     Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);
