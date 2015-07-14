@@ -8,7 +8,7 @@ import Sailfish.Silica 1.0
         menu: ContextMenu {
             //enabled: fullimage.length>3
             MenuItem {
-                text: qsTr("Rename conversation")
+                text: qsTr("Rename")
                 //enabled: fullimage.length>3
                 onClicked: {
                     convRenameInput.setConvId(id)
@@ -16,7 +16,7 @@ import Sailfish.Silica 1.0
                 }
             }
             MenuItem {
-                text: qsTr("Leave conversation")
+                text: qsTr("Archive/Leave")
                 //enabled: fullimage.length>3
                 onClicked: remorse.execute(qsTr("Leaving conversation"),
                                            function()
@@ -30,6 +30,13 @@ import Sailfish.Silica 1.0
                                                     Client.deleteConversation(id)
                                                }
                                            } );
+            }
+            MenuItem {
+                text: notifLevel == 10 ? qsTr("Reenable notifications") : qsTr("Silence")
+                //enabled: fullimage.length>3
+                onClicked: {
+                    console.log(notifLevel)
+                }
             }
         }
 

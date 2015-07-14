@@ -54,6 +54,19 @@ enum TypingStatus {
     STOPPED = 3
 };
 
+enum ConversationStatus {
+    UNKNOWN_CONVERSATION_STATUS = 0,
+    INVITED = 1,
+    ACTIVE = 2,
+    LEFT = 3
+};
+
+enum ConversationView {
+    UNKNOWN_CONVERSATION_VIEW   = 0,
+    INBOX_VIEW                  = 1,
+    ARCHIVED_VIEW               = 2
+};
+
 struct InitialData {
     QString self_entity;
     QString entities;
@@ -141,6 +154,9 @@ struct Conversation {
     QList<Event> events;
     QString last_ts;
     ConversationState state;
+    ConversationView view;
+    NotificationLevel notifLevel;
+    ConversationStatus status;
 };
 
 struct OutgoingImage {

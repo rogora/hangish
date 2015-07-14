@@ -165,8 +165,10 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
 
     //Membership change (users added/removed) is in 8
 
+    //Init isRenameEventField
+    event.isRenameEvent = false;
     //Rename data is in 9
-    auto renameData = eventFields[6].list();
+    auto renameData = eventFields[9].list();
     if (!renameData.isEmpty()) {
         event.isRenameEvent = true;
         //Should parse the new name here

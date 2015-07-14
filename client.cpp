@@ -54,13 +54,25 @@ void Client::parseSelfConversationState(QList<MessageField> stateFields, Convers
     res.lastReadTimestamp = QDateTime::fromMSecsSinceEpoch(ts.toLongLong() / 1000);
     //qDebug() << res.lastReadTimestamp.toString();
     //todo: parse this
-    QString status = stateFields[7].number();
-    //qDebug() << status;
-    QString notificationLevel = stateFields[8].number();
+
+    res.status = (ConversationStatus)stateFields[7].number().toInt();
+    //qDebug() << "STATUS " << status;
+    //UNKNOWN_CONVERSATION_STATUS = 0
+    //INVITED = 1
+    //ACTIVE = 2
+    //LEFT = 3
+
+    res.notifLevel = (NotificationLevel)stateFields[8].number().toInt();
     //qDebug() << notificationLevel;
+
     auto views = stateFields[9].list();
-    //qDebug() << views;
-    //TODO:: parse views
+    //qDebug() << "W size " << views.size();   SIZE IS ALWAYS 1
+    res.view = (ConversationView)views[0].number().toInt();
+    //UNKNOWN_CONVERSATION_VIEW = 0
+    //INBOX_VIEW = 1
+    //ARCHIVED_VIEW = 2
+
+
     auto inviters_ids = stateFields[10].list();
     QString inviter_id = inviters_ids[0].string();
     //qDebug() << inviter_id;

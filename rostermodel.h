@@ -34,13 +34,15 @@ public:
     QStringList imagePaths;
     int participantsNum;
     int unread;
+    int notificationLevel;
 
-    ConvAbstract(QString pconvId, QString pname, QStringList imgPaths, int ppNum, int pUnread) {
+    ConvAbstract(QString pconvId, QString pname, QStringList imgPaths, int ppNum, int pUnread, int pNotLevel) {
         convId = pconvId;
         name = pname;
         imagePaths = imgPaths;
         participantsNum = ppNum;
         unread = pUnread;
+        notificationLevel = pNotLevel;
     }
 };
 
@@ -57,7 +59,8 @@ public:
         PartnumRole,
         ConvIdRole,
         UnreadRole,
-        ImageRole
+        ImageRole,
+        NotificationLevelRole
     };
     void putOnTop(QString convId);
     explicit RosterModel(QObject *parent = 0);

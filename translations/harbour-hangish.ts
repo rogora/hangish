@@ -142,17 +142,27 @@
     <name>RosterDelegate</name>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="11"/>
-        <source>Rename conversation</source>
+        <source>Rename</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
-        <source>Leave conversation</source>
+        <source>Archive/Leave</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="21"/>
         <source>Leaving conversation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="35"/>
+        <source>Reenable notifications</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="35"/>
+        <source>Silence</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

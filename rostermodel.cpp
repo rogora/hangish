@@ -35,6 +35,7 @@ QHash<int, QByteArray> RosterModel::roleNames() const {
         roles.insert(PartnumRole, QByteArray("participantsNum"));
         roles.insert(UnreadRole, QByteArray("unread"));
         roles.insert(ImageRole, "imagePath");
+        roles.insert(NotificationLevelRole, "notifLevel");
         return roles;
 }
 
@@ -57,10 +58,16 @@ QVariant RosterModel::data(const QModelIndex &index, int role) const
     else if (role == UnreadRole)
         return QVariant::fromValue(conv->unread);
     else if (role == ImageRole) {
-        if (conv->imagePaths.size()) // TODO once we should support multiple images
+        if (conv->imagePaths.size()) { // TODO once we should support multiple images
             return conv->imagePaths;
-        else
+        }
+        else {
             return "";
+        }
+    }
+
+    else if (role == NotificationLevelRole) {
+            return QVariant::fromValue(conv->notificationLevel);
     }
 
     return QVariant();
@@ -74,6 +81,10 @@ void RosterModel::setMySelf(User pmyself)
 
 void RosterModel::addConversationAbstract(Conversation pConv)
 {
+    //Simply skip archived conversations for now, but only for the UI; they are correctly parsed
+    if (pConv.view == ARCHIVED_VIEW)
+        return;
+
     QString name = "";
     QStringList imagePaths;
     if (pConv.name.size() > 1) {
@@ -96,7 +107,7 @@ void RosterModel::addConversationAbstract(Conversation pConv)
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    conversations.append(new ConvAbstract(pConv.id, name, imagePaths, pConv.participants.size(), pConv.unread));
+    conversations.append(new ConvAbstract(pConv.id, name, imagePaths, pConv.participants.size(), pConv.unread, pConv.notifLevel));
     endInsertRows();
 }
 
