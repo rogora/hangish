@@ -31,6 +31,11 @@ Page {
     objectName: "roster"
     allowedOrientations: Orientation.All
 
+    function renameConv(cid, newName) {
+        console.log(newName)
+        Client.renameConversation(cid, newName)
+    }
+
     onStatusChanged: {
         console.log(page.status)
         if (page.status==2) {

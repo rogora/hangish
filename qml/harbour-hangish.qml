@@ -50,6 +50,10 @@ ApplicationWindow
     About {
         id: about
     }
+
+    ConvRenameInput {
+        id: convRenameInput
+    }
 }
 
 

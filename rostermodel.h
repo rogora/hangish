@@ -69,6 +69,8 @@ public:
     void addUnreadMsg(QString convId);
     bool hasUnreadMessages(QString convId);
     QString getConversationName(QString convId);
+    void deleteConversation(QString convId);
+    void renameConversation(QString convId, QString newName);
 
 private:
     QList<ConvAbstract *> conversations;

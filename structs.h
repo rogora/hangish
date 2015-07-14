@@ -114,6 +114,8 @@ struct Event {
     int notificationLevel;
     bool isOld;
     bool isMine;
+    bool isRenameEvent;
+    QString newName;
 };
 
 struct ContinuationToken {

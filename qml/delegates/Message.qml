@@ -65,7 +65,9 @@ BackgroundItem {
             {
                 target: ImageHandler
                 onImgReady: {
-                    imageView.source = previewimage != "" ? ImageHandler.getImageAddr(previewimage) : previewimage
+                    if (previewimage == path) {
+                        imageView.source = previewimage != "" ? ImageHandler.getImageAddr(previewimage) : previewimage
+                    }
                 }
             }
 

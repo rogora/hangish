@@ -40,9 +40,11 @@ QString ImageHandler::getImageAddr(QString imgUrl)
         imgname = imgname.left(imgname.size() - 4);
     QString path = QString(cachePath + imgname);
     QFile img(path);
-    //qDebug() << "Looking up for " << imgname;
     if (img.exists()) {
         qDebug() << "Img exists " << imgname;
+        //Open it in append mode to modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
+        //img.open(QIODevice::Append);
+        //img.close();
         return path;
     }
     else {

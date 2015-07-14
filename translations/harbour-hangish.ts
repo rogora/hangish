@@ -118,23 +118,41 @@
 <context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="50"/>
+        <location filename="../qml/pages/Roster.qml" line="55"/>
         <source>About Hangish</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="54"/>
+        <location filename="../qml/pages/Roster.qml" line="59"/>
         <source>Log out and exit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="55"/>
+        <location filename="../qml/pages/Roster.qml" line="60"/>
         <source>Deleting cookies</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="68"/>
+        <location filename="../qml/pages/Roster.qml" line="73"/>
         <source>Conversations</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>RosterDelegate</name>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="11"/>
+        <source>Rename conversation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
+        <source>Leave conversation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="21"/>
+        <source>Leaving conversation</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

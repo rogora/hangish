@@ -40,12 +40,12 @@ class Channel : public QObject
 {
     Q_OBJECT
     //Used to know wether the network has problems, so that the app doesn't spawn lots of unuseful connections
-    bool channelError;
+    bool channelError, fetchingSid;
     QNetworkReply *LPrep;
     User myself;
     ConversationModel *conversationModel;
     RosterModel *rosterModel;
-    QNetworkAccessManager *nam;
+    QNetworkAccessManager nam;
     QNetworkCookieJar cJar;
     QList<QNetworkCookie> session_cookies;
     QString sid, clid, ec, path, prop, header_client, email, gsessionid;
@@ -54,13 +54,18 @@ class Channel : public QObject
     int lastAs;
 
 private:
+    QTimer *checkChannelTimer;
+    bool channelEstablishmentOccurring;
+    int lastValidParcelId;
+    QDateTime lastValidParcelIdTS;
     bool appPaused;
     QString lastIncomingConvId;
     void fetchNewSid();
     void checkChannelAndReconnect();
+    void processCookies(QNetworkReply *reply);
 
 public:
-    Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);
+    Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);
     void listen();
     void parseChannelData(QString sreply);
     QDateTime getLastPushTs();
@@ -81,7 +86,6 @@ private slots:
 
 signals:
     void cookieUpdateNeeded(QNetworkCookie cookie);
-    void qnamUpdated(QNetworkAccessManager *qnam);
     void updateClientId(QString newID);
     void activeClientUpdate(int state);
     void updateWM(QString convId);
@@ -89,6 +93,7 @@ signals:
     void channelRestored(QDateTime lastRecv);
     void isTyping(QString convId, QString chatId, int type);
     void showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId);
+    void renameConversation(QString cid, QString newname);
 
 };
 

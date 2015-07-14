@@ -45,8 +45,7 @@ class Client : public QObject
 
     //Authenticator *auth;
     OAuth2Auth *auth;
-    QNetworkAccessManager *nam;
-    QNetworkCookieJar cJar;
+    QNetworkAccessManager nam;
     QList<QNetworkCookie> sessionCookies;
     InitialData iData;
     QString api_key, header_date, header_version, header_id, channel_path, clid, channel_ec_param, channel_prop_param, sync_timestamp;
@@ -55,6 +54,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    QTimer timeoutTimer;
     QString syncAllNewEventsString;
     Notifier *notifier;
     bool needLogin;
@@ -63,6 +63,8 @@ private:
     QDateTime needSyncTS;
     QDateTime lastSetActive;
     QList<OutgoingImage> outgoingImages;
+    QString conversationBeingRemoved;
+    QString convNameBeingSet;
 
     void sendImageMessage(QString convId, QString imgId, QString segments);
     void performImageUpload(QString url);
@@ -117,12 +119,16 @@ public:
     Q_INVOKABLE QString getLastIncomingConversationName();
     Q_INVOKABLE QString getConversationName(QString convId);
     Q_INVOKABLE void retrieveConversationLog(QString convId);
+    Q_INVOKABLE void renameConversation(QString convId, QString newName);
+    Q_INVOKABLE void leaveConversation(QString convId);
+    Q_INVOKABLE void deleteConversation(QString convId);
     Q_INVOKABLE void deleteMessageWError(QString text);
     OAuth2Auth *getAuthenticator();
 
 
 public slots:
     Q_INVOKABLE void updateWatermark(QString convId);
+    void slotError(QNetworkReply::NetworkError err);
     void notificationPushedSlot(QString convId);
     void authenticationDone();
     void initDone();
@@ -148,10 +154,14 @@ public slots:
     void updateClientId(QString newID);
     void setFocusReply();
     void cookieUpdateSlot(QNetworkCookie cookie);
-    void qnamUpdatedSlot(QNetworkAccessManager *qnam);
     void catchNotificationForCover(int num);
     void catchDeletedNotifications();
     void retrieveConversationLogReply();
+    void networkTimeout();
+    void renameConversationReply();
+    void leaveConversationReply();
+    void deleteConversationReply();
+    void renameConvSlot(QString convId, QString newname);
 
 signals:
     void notificationPushed(QString convId);

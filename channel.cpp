@@ -29,10 +29,34 @@ static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 
 static qint32 MAX_READ_BYTES = 1024 * 1024;
 static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
 
+void Channel::processCookies(QNetworkReply *reply)
+{
+    bool cookieUpdated = false;
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+        for (int i=0; i<session_cookies.size(); i++) {
+            if (session_cookies[i].name() == cookie.name()) {
+                session_cookies[i].setValue(cookie.value());
+                emit cookieUpdateNeeded(cookie);
+                qDebug() << "Updated cookie " << cookie.name();
+                cookieUpdated = true;
+            }
+        }
+    }
+
+    if (cookieUpdated) {
+        nam.setCookieJar(new QNetworkCookieJar(this));
+    }
+}
+
 void Channel::checkChannel()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
+        LPrep->abort();
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         channelError = true;
@@ -45,6 +69,7 @@ void Channel::checkChannelAndReconnect()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
+        LPrep->abort();
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         channelError = true;
@@ -62,13 +87,15 @@ void Channel::fastReconnect()
     checkChannelAndReconnect();
 }
 
-Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
+Channel::Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
 {
     LPrep = NULL;
     channelError = false;
+    fetchingSid = false;
+    channelEstablishmentOccurring = false;
     lastIncomingConvId = "";
+    lastValidParcelId = 4;
 
-    nam = n;
     myself = pms;
     conversationModel = cModel;
     rosterModel = rModel;
@@ -81,34 +108,16 @@ Channel::Channel(QNetworkAccessManager *n, QList<QNetworkCookie> cookies, QStrin
 
     //Init
     lastPushReceived = QDateTime::currentDateTime();
-
-    QTimer *timer = new QTimer(this);
-    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(checkChannel()));
-    timer->start(30000);
+    checkChannelTimer = new QTimer();
+    QObject::connect(checkChannelTimer, SIGNAL(timeout()), this, SLOT(checkChannel()));
+    checkChannelTimer->start(30000);
 }
 
 void Channel::nrf()
 {
+    channelEstablishmentOccurring = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //Eventually update cookies, may set S
-    bool cookieUpdated = false;
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-        for (int i=0; i<session_cookies.size(); i++) {
-            if (session_cookies[i].name() == cookie.name()) {
-                session_cookies[i].setValue(cookie.value());
-                emit cookieUpdateNeeded(cookie);
-                qDebug() << "Updated cookie " << cookie.name();
-                cookieUpdated = true;
-            }
-        }
-    }
-    if (cookieUpdated) {
-        nam = new QNetworkAccessManager();
-        emit qnamUpdated(nam);
-    }
+    processCookies(reply);
     qDebug() << "FINISHED called! " << channelError;
     QString srep = reply->readAll();
     qDebug() << srep;
@@ -117,8 +126,11 @@ void Channel::nrf()
         //fetchNewSid();
         return;
     }
+
+    checkChannelTimer->start(30000);
     //If there's a network problem don't do anything, the connection will be retried by checkChannelStatus
-    if (!channelError) longPollRequest();
+    if (!channelError)
+        longPollRequest();
 }
 
 void Channel::parseChannelData(QString sreply)
@@ -142,6 +154,14 @@ void Channel::parseChannelData(QString sreply)
             qDebug() << parsedReply.size();
             if (parsedReply.size()<2)
                 continue;
+            int parcelID = parsedReply[0].number().toInt();
+            if (parcelID > lastValidParcelId + 1) {
+                //we lost something, should check back
+                qDebug() << "We lost " << parcelID - lastValidParcelId << " parcels";
+                emit(channelRestored(lastValidParcelIdTS.addMSecs(50)));
+            }
+            lastValidParcelId = parcelID;
+            lastValidParcelIdTS = QDateTime::currentDateTime();
             auto content = parsedReply[1].list();
             //qDebug() << content[0].string();
             if (content.size() < 2) continue;
@@ -149,24 +169,13 @@ void Channel::parseChannelData(QString sreply)
             auto cContent = content[1].list();
             if (cContent.size() < 2) continue;
             cContent = cContent[1].list();
-            // TODO could there be multiple bfo ??
-        //    qDebug() << cContent[0].string().contains("bfo");
 
             if (cContent.size() < 1 || !cContent[0].string().contains("bfo")) {
                 continue;
-                /*
-                 * sreply.remove(0, idx+1);
-                if (sreply.isEmpty()) continue;
-                qDebug() << "Removing and reparsing";
-                parseChannelData(sreply);
-                continue;
-                */
             }
 
             // prepare the inner data to parse:
             qDebug() << cContent.size();
-            //for (int a=0; a<cContent.size(); a++)
-              //  qDebug() << cContent[a].string();
 
             auto stringData = cContent[1].string();
             stringData = Utils::cleanText(stringData);
@@ -197,6 +206,11 @@ void Channel::parseChannelData(QString sreply)
                 for (auto eventData : eventDataList) {
                     Event evt = Utils::parseEvent(eventData.list());
                     qDebug() << "evt parsed";
+                    if (evt.isRenameEvent) {
+                        qDebug() << "This is a rename event!";
+                        emit renameConversation(evt.conversationId, evt.newName);
+                    }
+
                     //This is old, on the channel? Skip
                     if (!evt.isOld) {
                         //I want to check whether I sent this message in order to keep the conversation view consistent
@@ -220,11 +234,12 @@ void Channel::parseChannelData(QString sreply)
                             if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
                                 rosterModel->addUnreadMsg(evt.conversationId);
                                 //If notificationLevel == 10 the conversation has been silenced -> don't notify
-                                if (evt.notificationLevel!=QUIET)
+                                if (evt.notificationLevel!=QUIET) {
                                     if (evt.value.segments.size()==0)
                                         emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1,evt.conversationId);
                                     else
                                         emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1,evt.conversationId);
+                                }
                             }
                             else {
                                 //Update watermark, since I've read the message; if notification level this should be the active client
@@ -296,26 +311,9 @@ void Channel::parseChannelData(QString sreply)
 
 void Channel::nr()
 {
+    channelEstablishmentOccurring = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //Eventually update cookies, may set S
-    bool cookieUpdated = false;
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-        for (int i=0; i<session_cookies.size(); i++) {
-            if (session_cookies[i].name() == cookie.name()) {
-                session_cookies[i].setValue(cookie.value());
-                emit cookieUpdateNeeded(cookie);
-                qDebug() << "Updated cookie " << cookie.name();
-                cookieUpdated = true;
-            }
-        }
-    }
-    if (cookieUpdated) {
-        nam = new QNetworkAccessManager();
-        emit qnamUpdated(nam);
-    }
+    processCookies(reply);
 
     QString sreply = reply->read(MAX_READ_BYTES);
     ////qDebug() << "Got reply for lp " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -346,13 +344,14 @@ void Channel::nr()
     //if I'm here it means the channel is working fine
     if (channelError) {
         qDebug() << "Gonna emit channelRestored";
-        emit(channelRestored(lastPushReceived.addMSecs(500)));
+        emit(channelRestored(lastPushReceived.addMSecs(50)));
         channelError = false;
     }
     else {
-        qDebug() << "Channel had no error";
     }
     lastPushReceived = QDateTime::currentDateTime();
+
+    checkChannelTimer->start(30000);
 
     parseChannelData(sreply);
     //if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200)
@@ -361,26 +360,10 @@ void Channel::nr()
 
 void Channel::parseSid()
 {
+    fetchingSid = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //Eventually update cookies, may set S
-    bool cookieUpdated = false;
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-        for (int i=0; i<session_cookies.size(); i++) {
-            if (session_cookies[i].name() == cookie.name()) {
-                session_cookies[i].setValue(cookie.value());
-                emit cookieUpdateNeeded(cookie);
-                qDebug() << "Updated cookie " << cookie.name();
-                cookieUpdated = true;
-            }
-        }
-    }
-    if (cookieUpdated) {
-        nam = new QNetworkAccessManager();
-        emit qnamUpdated(nam);
-    }
+    processCookies(reply);
+
     if (reply->error() == QNetworkReply::NoError) {
         QString rep = reply->readAll();
         qDebug() << "SID##" << rep;
@@ -442,25 +425,34 @@ void Channel::parseSid()
         qDebug() << rep;
         qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
+    reply->deleteLater();
+    checkChannelTimer->start(30000);
     //Now the reply should be std
     longPollRequest();
 }
 
 void Channel::slotError(QNetworkReply::NetworkError err)
 {
+    fetchingSid = false;
+    channelEstablishmentOccurring = false;
     channelError = true;
-    qDebug() << err;
-    qDebug() << "Error, retrying to activate channel";
+    qDebug() << "Error, retrying to activate channel: " << err;
 
     //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
-    if (err==8) {
-        nam = new QNetworkAccessManager();
-        emit qnamUpdated(nam);
+    //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
+    if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
+        //nam.deleteLater();
+        //nam = new QNetworkAccessManager();
+        //emit qnamUpdated(nam);
+        QNetworkSession session( nam.configuration() );
+        session.close();
+        session.open();
+
+        nam.setCookieJar(new QNetworkCookieJar(this));
+        emit cookieUpdateNeeded(QNetworkCookie());
     }
-
-    //longPollRequest();
-
-    /*
+    checkChannelTimer->start();
+/*
     //I may have to retry establishing a connection here, if timers (and only them) are suspended on deep-sleep
     //5 means canceled by user
     if (err != QNetworkReply::OperationCanceledError && err!=QNetworkReply::NetworkSessionFailedError)
@@ -474,12 +466,18 @@ void Channel::slotError(QNetworkReply::NetworkError err)
 
 void Channel::longPollRequest()
 {
+    //If LPrep != null I may have a timeout for QTNetworkManagerAccess, will be handled in slotError
     if (LPrep != NULL) {
-        LPrep->close();
-        delete LPrep;
-        LPrep = NULL;
+            LPrep->abort();
+            LPrep->deleteLater();
+            LPrep = NULL;
+        }
+    if (channelEstablishmentOccurring) {
+        qDebug() << "Another req is already active, returning";
+        return;
     }
-    //for (;;) {
+    channelEstablishmentOccurring = true;
+
     QString body = "?VER=8&RID=rpc&t=1&CI=0&clid=" + clid + "&prop=" + prop + "&gsessionid=" + gsessionid + "&SID=" + sid + "&ec="+ec;
     QNetworkRequest req(QUrl(QString("https://talkgadget.google.com" + path + "bind" + body)));
     req.setRawHeader("User-Agent", QVariant::fromValue(user_agent).toByteArray());
@@ -487,15 +485,18 @@ void Channel::longPollRequest()
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(session_cookies));
     qDebug() << "Making lp req";
-    LPrep = nam->get(req);
+    LPrep = nam.get(req);
     QObject::connect(LPrep, SIGNAL(readyRead()), this, SLOT(nr()));
     QObject::connect(LPrep, SIGNAL(finished()), this, SLOT(nrf()));
-    QObject::connect(LPrep,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
-   // }
+    QObject::connect(LPrep, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Channel::fetchNewSid()
 {
+    if (fetchingSid)
+        return;
+    fetchingSid = true;
+
     qDebug() << "fetch new sid";
     QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
     ////qDebug() << req.url().toString();
@@ -505,24 +506,20 @@ void Channel::fetchNewSid()
     foreach (QNetworkCookie cookie, session_cookies) {
             reqCookies.append(cookie);
     }
+    req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply *rep = nam->post(req, body.toByteArray());
+    QNetworkReply *rep = nam.post(req, body.toByteArray());
     QObject::connect(rep, SIGNAL(finished()), this, SLOT(parseSid()));
     ////qDebug() << "posted";
 }
 
 void Channel::listen()
 {
-    static int MAX_RETRIES = 1;
-    int retries = MAX_RETRIES;
     bool need_new_sid = true;
 
-    while (retries > 0) {
-        if (need_new_sid) {
-            fetchNewSid();
-            need_new_sid = false;
-        }
-        retries--;
+    if (need_new_sid) {
+        fetchNewSid();
+        need_new_sid = false;
     }
 }
 

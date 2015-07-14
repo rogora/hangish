@@ -18,6 +18,18 @@ TARGET = harbour-hangish
 
 CONFIG += sailfishapp c++11
 
+QMAKE_CFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CFLAGS_RELEASE += -O3
+QMAKE_CXXFLAGS_RELEASE += -O3
+
+QMAKE_CFLAGS -= -O2
+QMAKE_CFLAGS -= -O1
+QMAKE_CXXFLAGS -= -O2
+QMAKE_CXXFLAGS -= -O1
+QMAKE_CFLAGS += -O3
+QMAKE_CXXFLAGS += -O3
+
 system(qdbusxml2cpp harbour.hangish.xml -i notifier.h -a adaptor)
 
 SOURCES += src/Hangish.cpp \
@@ -52,7 +64,8 @@ OTHER_FILES += \
     rpm/harbour-hangish.yaml \
     qml/harbour-hangish.qml \
     qml/pages/About.qml \
-    rpm/harbour-hangish.changes
+    rpm/harbour-hangish.changes \
+    qml/pages/ConvRenameInput.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line

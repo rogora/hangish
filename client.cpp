@@ -34,6 +34,8 @@ static int SETACTIVECLIENT_LIMIT_SECS = 30;
 static QString endpoint = "https://clients6.google.com/chat/v1/";
 static QString ORIGIN_URL = "https://talkgadget.google.com";
 
+#define TIMEOUT_MS 10000
+
 QString Client::getSelfChatId()
 {
     return myself.chat_id;
@@ -319,6 +321,7 @@ QList<Conversation> Client::parseConversations(const QString& conv)
 
 void Client::postReply(QNetworkReply *reply)
 {
+    timeoutTimer.stop();
     if (reply->error() == QNetworkReply::NoError) {
         //qDebug() << "No errors on Post";
     }
@@ -348,6 +351,8 @@ User Client::parseMySelf(const QString& sreply) {
 
 void Client::networkReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -366,7 +371,7 @@ void Client::networkReply()
             QVariant possibleRedirectUrl =
                     reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
             followRedirection(possibleRedirectUrl.toUrl());
-            delete reply;
+            reply->deleteLater();
         }
         else {
             QString sreply = reply->readAll();
@@ -432,7 +437,7 @@ void Client::networkReply()
                 rosterModel->addConversationAbstract(c);
                 conversationModel->addConversation(c);
             }
-            delete reply;
+            reply->deleteLater();
             emit(initFinished());
         }
     }
@@ -440,7 +445,7 @@ void Client::networkReply()
         //failure
         //qDebug() << "Failure" << reply->errorString();
         emit authFailed("Login Failed " + reply->errorString());
-        delete reply;
+        reply->deleteLater();
     }
 }
 
@@ -464,6 +469,8 @@ QByteArray Client::getAuthHeader()
 
 void Client::uploadPerformedReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
@@ -498,7 +505,7 @@ void Client::uploadPerformedReply()
     else {
         qDebug() << "Problem uploading";
     }
-    delete reply;
+    reply->deleteLater();
 }
 
 void Client::performImageUpload(QString url)
@@ -523,13 +530,17 @@ void Client::performImageUpload(QString url)
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply * reply = nam->post(req, inFile.readAll());
+    QNetworkReply * reply = nam.post(req, inFile.readAll());
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(uploadPerformedReply()));
-
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
 }
 
 void Client::uploadImageReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     qDebug() << "DbG: " << reply;
 
@@ -554,10 +565,12 @@ void Client::uploadImageReply()
     else {
         qDebug() << "Problem uploading " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
-//    delete reply;
+    reply->deleteLater();
 }
 
 void Client::sendMessageReply() {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
     qDebug() << reply;
@@ -580,7 +593,7 @@ void Client::sendMessageReply() {
         conversationModel->addErrorMessage(reply, "convId", evt);
         emit messageNotSent();
     }
-    delete reply;
+    reply->deleteLater();
 }
 
 QNetworkReply *Client::sendRequest(QString function, QString json) {
@@ -605,8 +618,10 @@ QNetworkReply *Client::sendRequest(QString function, QString json) {
     QByteArray postData;
     //postData.append("{\"alt\": \"json\", \"key\": \"" + api_key + "\"}");
     postData.append(json);
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
     //qDebug() << "Sending request " << url;
-    return nam->post(req, postData);
+    return nam.post(req, postData);
     //qDebug() << "req sent " << postData;
 }
 
@@ -652,6 +667,7 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
     qDebug() << "gotH " << body;
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::sendChatMessage(QString segments, QString conversationId) {
@@ -695,9 +711,9 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
 
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
     conversationModel->addOutgoingMessage(reply, conversationId, outgoingEvt);
-    qDebug() << reply;
 
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::sendImage(QString segments, QString conversationId, QString filename)
@@ -802,13 +818,18 @@ void Client::sendImage(QString segments, QString conversationId, QString filenam
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply * reply = nam->post(req, doc.toJson());
+    QNetworkReply * reply = nam.post(req, doc.toJson());
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(uploadImageReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
     //Then send the message
 }
 
 void Client::syncAllNewEventsReply()
 {
+    timeoutTimer.stop();
+
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
@@ -830,7 +851,7 @@ void Client::syncAllNewEventsReply()
         //Skip sync_timestamp:  parsedReply[2]
         //Parse the actual data
         if (parsedReply.size() < 4) {
-            delete reply;
+            reply->deleteLater();
             return;
         }
         auto cstates = parsedReply[3].list();
@@ -840,12 +861,14 @@ void Client::syncAllNewEventsReply()
         }
         needSync = false;
     }
-    delete reply;
+    reply->deleteLater();
 }
 
 
 void Client::syncAllNewEventsDataArrval()
 {
+    timeoutTimer.stop();
+
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
@@ -882,6 +905,7 @@ void Client::setPresence(bool goingOffline)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("presence/setpresence",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(setPresenceReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::retrieveConversationLog(QString convId)
@@ -900,6 +924,133 @@ void Client::retrieveConversationLog(QString convId)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/getconversation",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(retrieveConversationLogReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+}
+
+
+void Client::leaveConversation(QString convId)
+{
+    qint64 time = QDateTime::currentMSecsSinceEpoch();
+    uint random = (uint)(time % qint64(4294967295u));
+
+    qDebug() << "Leaving conversation";
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", null, null. null,[[\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(random);
+    body += ",2]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/removeuser",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(leaveConversationReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+}
+
+void Client::leaveConversationReply() {
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Left correctly";
+        rosterModel->deleteConversation(conversationBeingRemoved);
+    }
+    else {
+        qDebug() << "Couldn't leave conversation";
+    }
+    reply->deleteLater();
+}
+
+void Client::deleteConversation(QString convId)
+{
+    qint64 time = QDateTime::currentMSecsSinceEpoch();
+
+    qDebug() << "Leaving conversation";
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(time);
+    body += ",null, [], ]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/deleteconversation",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(leaveConversationReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+}
+
+void Client::deleteConversationReply() {
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Deleted correctly";
+        rosterModel->deleteConversation(conversationBeingRemoved);
+    }
+    else {
+        qDebug() << "Couldn't delete conversation";
+    }
+    reply->deleteLater();
+}
+
+void Client::renameConversation(QString convId, QString newName)
+{
+    //Reuse the same variable, at any given time only one operation on conversations is active
+    conversationBeingRemoved = convId;
+    convNameBeingSet = newName;
+
+    qint64 time = QDateTime::currentMSecsSinceEpoch();
+    uint random = (uint)(time % qint64(4294967295u));
+
+    qDebug() << "Renaming conversation";
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", null, \"";
+    body += newName;
+    body += "\", null,[[\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(random);
+    body += ",1]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/renameconversation",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(renameConversationReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+}
+
+void Client::renameConversationReply() {
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Renamed correctly";
+        rosterModel->renameConversation(conversationBeingRemoved, convNameBeingSet);
+    }
+    else {
+        qDebug() << "Couldn't rename conversation";
+    }
+    reply->deleteLater();
 }
 
 void Client::parseConversationLog(MessageField conv)
@@ -927,6 +1078,8 @@ void Client::parseConversationLog(MessageField conv)
 
 void Client::retrieveConversationLogReply()
 {
+    timeoutTimer.stop();
+
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
@@ -948,27 +1101,33 @@ void Client::retrieveConversationLogReply()
         //Parse the actual data
         parseConversationLog(parsedReply[2]);
     }
-    delete reply;
+    reply->deleteLater();
 }
 
 void Client::setPresenceReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QString sreply = reply->readAll();
     qDebug() << "Set presence response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error setting presence! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
+    reply->deleteLater();
 }
 
 void Client::setFocusReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QString sreply = reply->readAll();
     qDebug() << "Set focus response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error setting focus! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
+    reply->deleteLater();
 }
 
 void Client::setFocus(QString convId, int status)
@@ -983,6 +1142,7 @@ void Client::setFocus(QString convId, int status)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/setfocus",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(setFocusReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::setTyping(QString convId, int status)
@@ -997,20 +1157,26 @@ void Client::setTyping(QString convId, int status)
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/settyping",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(setTypingReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::setTypingReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QString sreply = reply->readAll();
     qDebug() << "Set typing response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error setting typing status! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
+    reply->deleteLater();
 }
 
 void Client::setActiveClientReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QString sreply = reply->readAll();
     qDebug() << "Set active client response " << sreply;
@@ -1021,6 +1187,7 @@ void Client::setActiveClientReply()
         //I've just set this; I can assume I am the active client
         notifier->activeClientUpdate(IS_ACTIVE_CLIENT);
     }
+    reply->deleteLater();
 }
 
 void Client::syncAllNewEvents(QDateTime timestamp)
@@ -1055,10 +1222,13 @@ void Client::setActiveClient()
     qDebug() << body;
     QNetworkReply *reply = sendRequest("clients/setactiveclient",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(setActiveClientReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
 void Client::updateWatermarkReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
     QString sreply = reply->readAll();
@@ -1066,6 +1236,7 @@ void Client::updateWatermarkReply()
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error updating the wm! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
+    reply->deleteLater();
 }
 
 void Client::updateWatermark(QString convId)
@@ -1083,6 +1254,7 @@ void Client::updateWatermark(QString convId)
     body += "]";
     QNetworkReply *reply = sendRequest("conversations/updatewatermark",body);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(updateWatermarkReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 
     rosterModel->setReadConv(convId);
 }
@@ -1092,12 +1264,17 @@ void Client::followRedirection(QUrl url)
 {
     QNetworkRequest req( url );
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-    QNetworkReply * reply = nam->get(req);
+    QNetworkReply * reply = nam.get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(networkReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
 }
 
 void Client::pvtReply()
 {
+    timeoutTimer.stop();
+
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
@@ -1118,23 +1295,23 @@ void Client::pvtReply()
         if (!updated)
             sessionCookies.append(c);
         //END OF TODO
-
         QString rep = reply->readAll();
+        reply->close();
+
         int start = 0;
         auto parsedRep = MessageField::parseListRef(rep.leftRef(-1), start);
         QString pvtToken;
         if (parsedRep.size() > 1)
             pvtToken = parsedRep[1].string();
 
-        reply->close();
-        delete reply;
-        //Why is this causing a segfault? Anyway, QT should destroy this...
-        //nam->deleteLater();
-        nam = new QNetworkAccessManager();
-        if (c.size()>0)
+
+        if (c.size()>0) {
             auth->updateCookies(sessionCookies);
-        else
+        }
+        else {
+            nam.setCookieJar(new QNetworkCookieJar(this));
             initChat(pvtToken);
+        }
     }
     else {
         qDebug() << "Pvt req returned " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1151,9 +1328,8 @@ void Client::pvtReply()
             emit authFailed("Unknown Error " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toString());
         }
         reply->close();
-        delete reply;
     }
-
+    reply->deleteLater();
 }
 
 void Client::initChat(QString pvt)
@@ -1165,8 +1341,11 @@ void Client::initChat(QString pvt)
     QNetworkRequest req( url );
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    QNetworkReply * reply = nam->get(req);
+    QNetworkReply * reply = nam.get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(networkReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
 }
 
 void Client::getPVTToken()
@@ -1175,21 +1354,19 @@ void Client::getPVTToken()
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    QNetworkReply * reply = nam->get(req);
+    QNetworkReply * reply = nam.get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(pvtReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    if (!timeoutTimer.isActive())
+        timeoutTimer.start(TIMEOUT_MS);
 }
 
 void Client::authenticationDone()
 {
     sessionCookies = auth->getCookies();
     stuckWithNoNetwork = false;
+    nam.setCookieJar(new QNetworkCookieJar(this));
     getPVTToken();
-}
-
-void Client::qnamUpdatedSlot(QNetworkAccessManager *qnam)
-{
-    qDebug() << "CLT: upd nam";
-    nam = qnam;
 }
 
 void Client::cookieUpdateSlot(QNetworkCookie cookie)
@@ -1201,6 +1378,7 @@ void Client::cookieUpdateSlot(QNetworkCookie cookie)
             sessionCookies[i].setValue(cookie.value());
         }
     }
+    nam.setCookieJar(new QNetworkCookieJar(this));
     //auth->updateCookies(sessionCookies);
 }
 
@@ -1213,16 +1391,21 @@ void Client::notificationPushedSlot(QString convId) {
     emit notificationPushed(convId);
 }
 
+void Client::renameConvSlot(QString convId, QString newname)
+{
+    rosterModel->renameConversation(convId, newname);
+}
+
 void Client::initDone()
 {
-    channel = new Channel(nam, sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
+    channel = new Channel(sessionCookies, channel_path, header_id, channel_ec_param, channel_prop_param, myself, conversationModel, rosterModel);
     QObject::connect(channel, SIGNAL(channelLost()), this, SLOT(channelLostSlot()));
     QObject::connect(channel, SIGNAL(channelRestored(QDateTime)), this, SLOT(channelRestoredSlot(QDateTime)));
     QObject::connect(channel, SIGNAL(isTyping(QString,QString,int)), this, SLOT(isTypingSlot(QString,QString,int)));
     QObject::connect(channel, SIGNAL(updateWM(QString)), this, SLOT(updateWatermark(QString)));
     QObject::connect(channel, SIGNAL(updateClientId(QString)), this, SLOT(updateClientId(QString)));
     QObject::connect(channel, SIGNAL(cookieUpdateNeeded(QNetworkCookie)), this, SLOT(cookieUpdateSlot(QNetworkCookie)));
-    QObject::connect(channel, SIGNAL(qnamUpdated(QNetworkAccessManager*)), this, SLOT(qnamUpdatedSlot(QNetworkAccessManager*)));
+    QObject::connect(channel, SIGNAL(renameConversation(QString,QString)), this, SLOT(renameConvSlot(QString, QString)));
 
     notifier = new Notifier(this, contactsModel);
     QObject::connect(this, SIGNAL(showNotification(QString,QString,QString,QString,int,QString)), notifier, SLOT(showNotification(QString,QString,QString,QString,int,QString)));
@@ -1250,9 +1433,10 @@ void Client::loginNeededSlot()
 
 Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
 {
+    QObject::connect(&timeoutTimer, SIGNAL(timeout()), this, SLOT(networkTimeout()));
+
     needSync = false;
     needLogin = false;
-    nam = new QNetworkAccessManager();
     initCompleted = false;
     rosterModel = prosterModel;
     conversationModel = pconversationModel;
@@ -1271,8 +1455,6 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
 
     //QObject::connect(conversationModel, SIGNAL(conversationRequested(QString)), this, SLOT(loadConversationModel(QString)));
     QObject::connect(this, SIGNAL(conversationLoaded()), conversationModel, SLOT(conversationLoaded()));
-
-    nam->setCookieJar(&cJar);
 }
 
 
@@ -1434,4 +1616,31 @@ QString Client::getLastIncomingConversationName() {
 void Client::deleteMessageWError(QString text)
 {
     conversationModel->deleteMsgWError(text);
+}
+
+void Client::networkTimeout() {
+    qDebug() << "time out in Client";
+    timeoutTimer.stop();
+    slotError(QNetworkReply::NetworkSessionFailedError);
+}
+
+void Client::slotError(QNetworkReply::NetworkError err)
+{
+    //QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    qDebug() << "Error in client " << err;
+
+    //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
+    //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
+    if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
+        //nam.deleteLater();
+        //nam = new QNetworkAccessManager();
+        //emit qnamUpdated(nam);
+        QNetworkSession session( nam.configuration() );
+        //session.stop();
+        session.close();
+        session.open();
+        nam.setCookieJar(new QNetworkCookieJar(this));
+    }
+    //I may want to try to submit the original request again at some point, need further investigation
+    //reply->request()
 }

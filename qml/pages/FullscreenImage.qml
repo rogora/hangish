@@ -29,7 +29,10 @@ Page {
     objectName: "fsImage"
     allowedOrientations: Orientation.All
 
+    property string imagePath;
+
     function loadImage(url) {
+        imagePath = url
         imageView.y = 0
         imageView.x = 0
         imageView.source = ImageHandler.getImageAddr(url);
@@ -125,9 +128,11 @@ Page {
         {
             target: ImageHandler
             onImgReady: {
-                imageView.y = 0
-                imageView.x = 0
-                imageView.source = path
+                if (path == imagePath) {
+                    imageView.y = 0
+                    imageView.x = 0
+                    imageView.source = path
+                }
             }
         }
 

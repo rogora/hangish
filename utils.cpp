@@ -121,6 +121,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     }
 
     // skip 2 ..
+
+    //Chat message is in 6
     auto eventData = eventFields[6].list();
     if (eventData.isEmpty()) {
        event.value = {false, {}, {}};
@@ -159,6 +161,19 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
         }
 
         event.value.valid = true;
+    }
+
+    //Membership change (users added/removed) is in 8
+
+    //Rename data is in 9
+    auto renameData = eventFields[6].list();
+    if (!renameData.isEmpty()) {
+        event.isRenameEvent = true;
+        //Should parse the new name here
+        qDebug() << "Parsing rename info";
+        qDebug() << renameData.size();
+        qDebug() << renameData[0].string();
+        event.newName = renameData[0].string();
     }
     return event;
 }

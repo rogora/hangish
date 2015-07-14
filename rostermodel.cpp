@@ -32,7 +32,7 @@ QHash<int, QByteArray> RosterModel::roleNames() const {
     QHash<int, QByteArray> roles = QAbstractListModel::roleNames();
         roles.insert(ConvIdRole, QByteArray("id"));
         roles.insert(NameRole, QByteArray("name"));
-        roles.insert(PartnumRole, QByteArray("particpantsNum"));
+        roles.insert(PartnumRole, QByteArray("participantsNum"));
         roles.insert(UnreadRole, QByteArray("unread"));
         roles.insert(ImageRole, "imagePath");
         return roles;
@@ -106,7 +106,6 @@ bool RosterModel::conversationExists(QString convId)
         if (c->convId == convId)
             return true;
     }
-
     return false;
 }
 
@@ -193,5 +192,51 @@ QString RosterModel::getConversationName(QString convId) {
     foreach (ConvAbstract *ca, conversations) {
         if (ca->convId==convId)
             return ca->name;
+    }
+}
+
+void RosterModel::renameConversation(QString convId, QString newName)
+{
+    int i = 0;
+    bool found = false;
+    foreach (ConvAbstract *ca, conversations) {
+        if (ca->convId==convId) {
+            ca->name = newName;
+            found = true;
+            break;
+        }
+        i++;
+    }
+    if (found) {
+        qDebug() << "Found";
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
+        }
+    }
+}
+
+void RosterModel::deleteConversation(QString convId)
+{
+    qDebug() << "Del conv from list";
+    int i = 0;
+    bool found = false;
+    foreach (ConvAbstract *ca, conversations) {
+        if (ca->convId==convId) {
+            found = true;
+            break;
+        }
+        i++;
+    }
+    if (found) {
+        qDebug() << "Found";
+        beginRemoveRows(QModelIndex(), i, i);
+        conversations.removeAt(i);
+        endRemoveRows();
+        //TODO: check why this is the only (wrong) way to make it work!
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
+        }
     }
 }
