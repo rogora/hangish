@@ -218,7 +218,7 @@ void RosterModel::renameConversation(QString convId, QString newName)
 
 void RosterModel::deleteConversation(QString convId)
 {
-    qDebug() << "Del conv from list";
+    qDebug() << "Del conv from list " << convId;
     int i = 0;
     bool found = false;
     foreach (ConvAbstract *ca, conversations) {

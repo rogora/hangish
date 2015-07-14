@@ -930,6 +930,8 @@ void Client::retrieveConversationLog(QString convId)
 
 void Client::leaveConversation(QString convId)
 {
+    conversationBeingRemoved = convId;
+
     qint64 time = QDateTime::currentMSecsSinceEpoch();
     uint random = (uint)(time % qint64(4294967295u));
 
@@ -970,6 +972,8 @@ void Client::leaveConversationReply() {
 
 void Client::deleteConversation(QString convId)
 {
+    conversationBeingRemoved = convId;
+
     qint64 time = QDateTime::currentMSecsSinceEpoch();
 
     qDebug() << "Leaving conversation";
