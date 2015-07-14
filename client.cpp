@@ -982,7 +982,7 @@ void Client::deleteConversation(QString convId)
     body += ",null, [], ]";
     qDebug() << body;
     QNetworkReply *reply = sendRequest("conversations/deleteconversation",body);
-    QObject::connect(reply, SIGNAL(finished()), this, SLOT(leaveConversationReply()));
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(deleteConversationReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
 
