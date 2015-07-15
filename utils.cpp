@@ -114,7 +114,7 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
 
     event.timestamp = timestmp;
     auto self_state = eventFields[3].list();
-    // parseNotificationLevel():
+
     event.notificationLevel = 0;
     if (self_state.size() > 2) {
         event.notificationLevel = self_state[2].number().toInt();
@@ -177,6 +177,13 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
         qDebug() << renameData[0].string();
         event.newName = renameData[0].string();
     }
+
+    //NotificationLevel event in 14? DOESN'T SEEM SO... TODO: FIND NOTIFICATIONLEVEL updated event
+    //OK, maybe there's not a specific event for this, but the notification level for an event related to a specific conversation is considered
+
+    //qDebug() << eventFields[14].number();
+    //qDebug() << eventFields[14].list().size();
+
     return event;
 }
 

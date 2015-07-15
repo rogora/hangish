@@ -28,6 +28,21 @@ RosterModel::RosterModel(QObject *parent) :
 {
 }
 
+bool RosterModel::findIndex(QString convId, int &idx)
+{
+    int i = 0;
+    bool found = false;
+    foreach (ConvAbstract *ca, conversations) {
+        if (ca->convId==convId) {
+            found = true;
+            break;
+        }
+        i++;
+    }
+    idx = i;
+    return found;
+}
+
 QHash<int, QByteArray> RosterModel::roleNames() const {
     QHash<int, QByteArray> roles = QAbstractListModel::roleNames();
         roles.insert(ConvIdRole, QByteArray("id"));
@@ -122,25 +137,19 @@ bool RosterModel::conversationExists(QString convId)
 
 void RosterModel::addUnreadMsg(QString convId)
 {
-    int i = 0;
-    qDebug() << "adding unread msg " << convId;
-    foreach (ConvAbstract *c, conversations) {
-        if (c->convId == convId)
-        {
-            c->unread += 1;
-            //put the referenced conversation on top of the list
-            if (i!=conversations.length()-1) {
-                conversations.move(i,conversations.length()-1);
-            }
-            break;
+    int i;
+    bool found = findIndex(convId, i);
+    if (found) {
+        conversations[i]->unread += 1;
+        //put the referenced conversation on top of the list
+        if (i!=conversations.length()-1) {
+            conversations.move(i,conversations.length()-1);
         }
-        i++;
-    }
-
-    //TODO: check why this is the only (wrong) way to make it work!
-    for (int i=0; i<conversations.size(); i++) {
-        QModelIndex r1 = index(i);
-        emit dataChanged(r1, r1);
+        //TODO: check why this is the only (wrong) way to make it work!
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
+        }
     }
 }
 
@@ -156,46 +165,32 @@ bool RosterModel::hasUnreadMessages(QString convId)
 
 void RosterModel::putOnTop(QString convId)
 {
-    qDebug() << "Putting on top " << convId;
-    int i = 0;
-    foreach (ConvAbstract *c, conversations) {
-        if (c->convId == convId)
-        {
-            //put the referenced conversation on top of the list
-            if (i!=conversations.length()-1) {
-                qDebug() << "Moving";
-                conversations.move(i,conversations.length()-1);
-                qDebug() << "Moved";
-            }
-            break;
+    int i;
+    bool found = findIndex(convId, i);
+    if (found) {
+        if (i!=conversations.length()-1) {
+            qDebug() << "Moving";
+            conversations.move(i,conversations.length()-1);
+            qDebug() << "Moved";
         }
-        i++;
-    }
-
-    //TODO: check why this is the only (wrong) way to make it work!
-    for (int i=0; i<conversations.size(); i++) {
-        QModelIndex r1 = index(i);
-        emit dataChanged(r1, r1);
+        //TODO: check why this is the only (wrong) way to make it work!
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
+        }
     }
 }
 
 void RosterModel::setReadConv(QString convId)
 {
-    int i = 0;
-    qDebug() << "Setting as read " << convId;
-    foreach (ConvAbstract *c, conversations) {
-        if (c->convId == convId)
-        {
-            c->unread = 0;
-            break;
+    int i;
+    bool found = findIndex(convId, i);
+    if (found) {
+        conversations[i]->unread = 0;
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
         }
-        i++;
-    }
-
-    //TODO: check why this is the only (wrong) way to make it work!
-    for (int i=0; i<conversations.size(); i++) {
-        QModelIndex r1 = index(i);
-        emit dataChanged(r1, r1);
     }
 }
 
@@ -208,18 +203,11 @@ QString RosterModel::getConversationName(QString convId) {
 
 void RosterModel::renameConversation(QString convId, QString newName)
 {
-    int i = 0;
-    bool found = false;
-    foreach (ConvAbstract *ca, conversations) {
-        if (ca->convId==convId) {
-            ca->name = newName;
-            found = true;
-            break;
-        }
-        i++;
-    }
+    int i;
+    bool found = findIndex(convId, i);
     if (found) {
         qDebug() << "Found";
+        conversations[i]->name = newName;
         for (int i=0; i<conversations.size(); i++) {
             QModelIndex r1 = index(i);
             emit dataChanged(r1, r1);
@@ -230,21 +218,28 @@ void RosterModel::renameConversation(QString convId, QString newName)
 void RosterModel::deleteConversation(QString convId)
 {
     qDebug() << "Del conv from list " << convId;
-    int i = 0;
-    bool found = false;
-    foreach (ConvAbstract *ca, conversations) {
-        if (ca->convId==convId) {
-            found = true;
-            break;
-        }
-        i++;
-    }
+    int i;
+    bool found = findIndex(convId, i);
     if (found) {
         qDebug() << "Found";
         beginRemoveRows(QModelIndex(), i, i);
         conversations.removeAt(i);
         endRemoveRows();
         //TODO: check why this is the only (wrong) way to make it work!
+        for (int i=0; i<conversations.size(); i++) {
+            QModelIndex r1 = index(i);
+            emit dataChanged(r1, r1);
+        }
+    }
+}
+
+void RosterModel::updateNotificationLevel(QString convId, int newLevel)
+{
+    int i;
+    bool found = findIndex(convId, i);
+    if (found && conversations[i]->notificationLevel != newLevel) {
+        qDebug() << "Found, updating";
+        conversations[i]->notificationLevel = newLevel;
         for (int i=0; i<conversations.size(); i++) {
             QModelIndex r1 = index(i);
             emit dataChanged(r1, r1);

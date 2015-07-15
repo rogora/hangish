@@ -65,6 +65,7 @@ private:
     QList<OutgoingImage> outgoingImages;
     QString conversationBeingRemoved;
     QString convNameBeingSet;
+    int notificationLevelBeingSet;
 
     void sendImageMessage(QString convId, QString imgId, QString segments);
     void performImageUpload(QString url);
@@ -122,6 +123,7 @@ public:
     Q_INVOKABLE void renameConversation(QString convId, QString newName);
     Q_INVOKABLE void leaveConversation(QString convId);
     Q_INVOKABLE void deleteConversation(QString convId);
+    Q_INVOKABLE void changeNotificationsForConversation(QString convId, int level);
     Q_INVOKABLE void deleteMessageWError(QString text);
     OAuth2Auth *getAuthenticator();
 
@@ -161,6 +163,7 @@ public slots:
     void renameConversationReply();
     void leaveConversationReply();
     void deleteConversationReply();
+    void changeNotificationsForConversationReply();
     void renameConvSlot(QString convId, QString newname);
 
 signals:

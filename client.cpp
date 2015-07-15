@@ -63,7 +63,7 @@ void Client::parseSelfConversationState(QList<MessageField> stateFields, Convers
     //LEFT = 3
 
     res.notifLevel = (NotificationLevel)stateFields[8].number().toInt();
-    //qDebug() << notificationLevel;
+    qDebug() << res.notifLevel;
 
     auto views = stateFields[9].list();
     //qDebug() << "W size " << views.size();   SIZE IS ALWAYS 1
@@ -236,6 +236,11 @@ Conversation Client::parseConversation(QList<MessageField> conversation)
     auto details = conversation[2].list();
     for (auto event : details) {
         Event e = Utils::parseEvent(event.list());
+        if (e.notificationLevel != 0 && e.notificationLevel != res.notifLevel) {
+            qDebug() << "Setting notifLev to " << e.notificationLevel;
+            res.notifLevel = (NotificationLevel)e.notificationLevel;
+        }
+
         if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
             res.events.append(e);
     }
@@ -264,6 +269,8 @@ void Client::parseConversationState(MessageField conv)
     int i=0;
 
     foreach (Event e, c.events) {
+        //Eventually update the notificationLevel for this conversation
+        rosterModel->updateNotificationLevel(e.conversationId, e.notificationLevel);
         //skip empty messages (voice calls)
         if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) /* && !e.isOld */) {
             qDebug() << "I have a valid msg here";
@@ -1019,6 +1026,51 @@ void Client::deleteConversationReply() {
     }
     else {
         qDebug() << "Couldn't delete conversation";
+    }
+    reply->deleteLater();
+}
+
+
+void Client::changeNotificationsForConversation(QString convId, int level)
+{
+    //Reuse the same variable, at any given time only one operation on conversations is active
+    conversationBeingRemoved = convId;
+    notificationLevelBeingSet = level;
+
+    qDebug() << "Changing conversation notification level";
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", [\"";
+    body += convId;
+    body += "\"], ";
+    body += QString::number(level);
+    body += "]";
+    qDebug() << body;
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("conversations/setconversationnotificationlevel",body);
+    QObject::connect(reply, SIGNAL(finished()), this, SLOT(changeNotificationsForConversationReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+
+}
+
+void Client::changeNotificationsForConversationReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "from" << reply->url();
+    foreach(QNetworkCookie cookie, c) {
+        qDebug() << cookie.name();
+    }
+    QString sreply = reply->readAll();
+    qDebug() << "Response " << sreply;
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "Notif level changed correctly";
+        rosterModel->updateNotificationLevel(conversationBeingRemoved, notificationLevelBeingSet);
+    }
+    else {
+        qDebug() << "Couldn't change notification level";
     }
     reply->deleteLater();
 }

@@ -16,7 +16,7 @@ import Sailfish.Silica 1.0
                 }
             }
             MenuItem {
-                text: qsTr("Archive/Leave")
+                text: (participantsNum <= 2) ? qsTr("Archive") : qsTr("Leave group")
                 //enabled: fullimage.length>3
                 onClicked: remorse.execute(qsTr("Leaving conversation"),
                                            function()
@@ -32,10 +32,13 @@ import Sailfish.Silica 1.0
                                            } );
             }
             MenuItem {
-                text: notifLevel == 10 ? qsTr("Reenable notifications") : qsTr("Silence")
-                //enabled: fullimage.length>3
+                //10 means silenced, 30 means ring
+                text: (notifLevel == 10) ? qsTr("Reenable notifications") : qsTr("Silence")
                 onClicked: {
-                    console.log(notifLevel)
+                    if (notifLevel == 10)
+                        Client.changeNotificationsForConversation(id, 30)
+                    else
+                        Client.changeNotificationsForConversation(id, 10)
                 }
             }
         }
@@ -54,6 +57,7 @@ import Sailfish.Silica 1.0
 
             Image {
                 id: img
+                opacity: (notifLevel == 10) ? 0.5 : 1.0
                 width: Theme.iconSizeLarge
                 height: width
                 asynchronous: true
@@ -67,7 +71,7 @@ import Sailfish.Silica 1.0
                     },
                     State {
                         name: "show";
-                        PropertyChanges { target: img; opacity: 1}
+                        PropertyChanges { target: img; opacity: (notifLevel == 10) ? 0.5 : 1.0}
                     }
                 ]
                 transitions: Transition {

@@ -206,6 +206,10 @@ void Channel::parseChannelData(QString sreply)
                 for (auto eventData : eventDataList) {
                     Event evt = Utils::parseEvent(eventData.list());
                     qDebug() << "evt parsed";
+
+                    //Eventually update the notificationLevel for this conversation
+                    //rosterModel->updateNotificationLevel(evt.conversationId, evt.notificationLevel);
+
                     if (evt.isRenameEvent) {
                         qDebug() << "This is a rename event!";
                         emit renameConversation(evt.conversationId, evt.newName);
@@ -283,6 +287,16 @@ void Channel::parseChannelData(QString sreply)
             if (playloadList.size() < 6) continue; // TODO should we really continue?
             //notification level; wasn't this already in the event info?
             // playloadList[5]
+            if (playloadList[5].type() == MessageField::List) {
+                auto notifLevelList = playloadList[5].list();
+                if (notifLevelList.size() == 4) {
+                    NotifLevelUpdate evt;
+                    evt.convId = notifLevelList[0].list()[0].string();
+                    evt.newState = (NotificationLevel)notifLevelList[1].number().toInt();
+                    //NotificationLevel update
+                    rosterModel->updateNotificationLevel(evt.convId, evt.newState);
+                }
+            }
 
             // playloadList[6] would be reply to invite
             if (playloadList.size() < 8) continue; // TODO should we really continue?

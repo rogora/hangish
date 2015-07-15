@@ -147,7 +147,12 @@
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
-        <source>Archive/Leave</source>
+        <source>Archive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
+        <source>Leave group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -156,12 +161,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/delegates/RosterDelegate.qml" line="35"/>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="36"/>
         <source>Reenable notifications</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/delegates/RosterDelegate.qml" line="35"/>
+        <location filename="../qml/delegates/RosterDelegate.qml" line="36"/>
         <source>Silence</source>
         <translation type="unfinished"></translation>
     </message>

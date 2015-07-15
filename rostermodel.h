@@ -74,9 +74,11 @@ public:
     QString getConversationName(QString convId);
     void deleteConversation(QString convId);
     void renameConversation(QString convId, QString newName);
+    void updateNotificationLevel(QString convId, int newLevel);
 
 private:
     QList<ConvAbstract *> conversations;
+    bool findIndex(QString convId, int &idx);
 
 signals:
 

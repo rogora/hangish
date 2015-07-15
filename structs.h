@@ -86,6 +86,11 @@ struct ReadState {
     QString convId;
 };
 
+struct NotifLevelUpdate {
+    QString convId;
+    NotificationLevel newState;
+};
+
 
 struct User {
     QString chat_id;
