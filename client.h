@@ -54,6 +54,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    QSet<QNetworkReply *> pendingRequests;
     QTimer timeoutTimer;
     QString syncAllNewEventsString;
     Notifier *notifier;
@@ -61,7 +62,7 @@ private:
     bool needSync;
     bool stuckWithNoNetwork;
     QDateTime needSyncTS;
-    QDateTime lastSetActive;
+    QDateTime lastSetActive, lastSetPresence;
     QList<OutgoingImage> outgoingImages;
     QString conversationBeingRemoved;
     QString convNameBeingSet;
@@ -181,6 +182,7 @@ signals:
     void secondFactorNeeded();
     void showNotificationForCover(int num);
     void deletedNotifications();
+    void cancelAllActiveRequests();
 
 };
 

@@ -27,7 +27,7 @@ Dialog {
                 anchors.top: header.bottom
                 width: parent.width
 
-                placeholderText: label
+                placeholderText: qsTr("New name")
 
                 EnterKey.iconSource: "image://theme/icon-m-enter-accept"
                 EnterKey.onClicked: parent.accept()

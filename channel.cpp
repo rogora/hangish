@@ -117,6 +117,7 @@ void Channel::nrf()
 {
     channelEstablishmentOccurring = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    pendingRequests.remove(reply);
     processCookies(reply);
     qDebug() << "FINISHED called! " << channelError;
     QString srep = reply->readAll();
@@ -148,7 +149,7 @@ void Channel::parseChannelData(QString sreply)
         if (!completeParsedReply.size())
             continue;
         //In very rare cases, there is really a list in the parcel: e.g. not size[[c1]]size[[c2]], but size[[c1],[c2]]
-        //This case should be caought looping here
+        //This case should be caught looping here
         for (int listidx = 0; listidx < completeParsedReply.size(); listidx++) {
             auto parsedReply = completeParsedReply[listidx].list();
             qDebug() << parsedReply.size();
@@ -376,6 +377,7 @@ void Channel::parseSid()
 {
     fetchingSid = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    pendingRequests.remove(reply);
     processCookies(reply);
 
     if (reply->error() == QNetworkReply::NoError) {
@@ -458,9 +460,16 @@ void Channel::slotError(QNetworkReply::NetworkError err)
         //nam.deleteLater();
         //nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);
-        QNetworkSession session( nam.configuration() );
-        session.close();
-        session.open();
+        //QNetworkSession session( nam.configuration() );
+        //emit cancelAllActiveRequests();
+        //session.close();
+        //session.open();
+        QSetIterator<QNetworkReply *> itr(pendingRequests);
+        while (itr.hasNext()) {
+            qDebug() << "Aborting one";
+            itr.next()->abort();
+        }
+        pendingRequests.clear();
 
         nam.setCookieJar(new QNetworkCookieJar(this));
         emit cookieUpdateNeeded(QNetworkCookie());
@@ -492,7 +501,7 @@ void Channel::longPollRequest()
     }
     channelEstablishmentOccurring = true;
 
-    QString body = "?VER=8&RID=rpc&t=1&CI=0&clid=" + clid + "&prop=" + prop + "&gsessionid=" + gsessionid + "&SID=" + sid + "&ec="+ec;
+    QString body = "?VER=8&RID=rpc&ctype=hangouts&t=1&CI=0&clid=" + clid + "&prop=" + prop + "&gsessionid=" + gsessionid + "&SID=" + sid + "&ec="+ec;
     QNetworkRequest req(QUrl(QString("https://talkgadget.google.com" + path + "bind" + body)));
     req.setRawHeader("User-Agent", QVariant::fromValue(user_agent).toByteArray());
     req.setRawHeader("Connection", "Keep-Alive");
@@ -503,6 +512,8 @@ void Channel::longPollRequest()
     QObject::connect(LPrep, SIGNAL(readyRead()), this, SLOT(nr()));
     QObject::connect(LPrep, SIGNAL(finished()), this, SLOT(nrf()));
     QObject::connect(LPrep, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
+    //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), LPrep, SLOT(abort()));
+    pendingRequests.insert(LPrep);
 }
 
 void Channel::fetchNewSid()
@@ -514,7 +525,7 @@ void Channel::fetchNewSid()
     qDebug() << "fetch new sid";
     QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
     ////qDebug() << req.url().toString();
-    QVariant body = "VER=8&RID=81187&clid=" + clid + "&prop=" + prop + "&ec="+ec;
+    QVariant body = "ctype=hangouts&VER=8&RID=81187&clid=" + clid + "&prop=" + prop + "&ec="+ec;
     ////qDebug() << body.toString();
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, session_cookies) {
@@ -524,6 +535,8 @@ void Channel::fetchNewSid()
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
     QNetworkReply *rep = nam.post(req, body.toByteArray());
     QObject::connect(rep, SIGNAL(finished()), this, SLOT(parseSid()));
+    //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), rep, SLOT(abort()));
+    pendingRequests.insert(rep);
     ////qDebug() << "posted";
 }
 

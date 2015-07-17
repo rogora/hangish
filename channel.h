@@ -54,6 +54,7 @@ class Channel : public QObject
     int lastAs;
 
 private:
+    QSet<QNetworkReply *> pendingRequests;
     QTimer *checkChannelTimer;
     bool channelEstablishmentOccurring;
     int lastValidParcelId;
@@ -94,6 +95,7 @@ signals:
     void isTyping(QString convId, QString chatId, int type);
     void showNotification(QString preview, QString summary, QString body, QString sender, int num, QString convId);
     void renameConversation(QString cid, QString newname);
+    void cancelAllActiveRequests();
 
 };
 

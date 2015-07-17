@@ -96,27 +96,37 @@ void RosterModel::setMySelf(User pmyself)
 
 void RosterModel::addConversationAbstract(Conversation pConv)
 {
-    //Simply skip archived conversations for now, but only for the UI; they are correctly parsed
-    if (pConv.view == ARCHIVED_VIEW)
+    //Simply skip archived conversations, or left group conversations, for now, but only for the UI; they are correctly parsed
+    if (pConv.view == ARCHIVED_VIEW || pConv.status == LEFT)
         return;
 
     QString name = "";
     QStringList imagePaths;
-    if (pConv.name.size() > 1) {
+
+    foreach (Participant p, pConv.participants) {
+        if (p.user.chat_id!=myself.chat_id) {
+            if (!p.user.photo.isEmpty()) {
+                QString image = p.user.photo;
+                if (!image.startsWith("https:")) image.prepend("https:");
+                    imagePaths << image;
+            }
+            else {
+                imagePaths << "qrc:///icons/unknown.png";
+            }
+        }
+    }
+
+    if (pConv.name.size() > 0) {
         name = pConv.name;
     } else {
         foreach (Participant p, pConv.participants) {
             if (p.user.chat_id!=myself.chat_id) {
-                if (pConv.participants.last().user.chat_id != p.user.chat_id && pConv.participants.last().user.chat_id != myself.chat_id)  name += QString(p.user.display_name + ", ");
-                else name += QString(p.user.display_name + " ");
-                if (!p.user.photo.isEmpty()) {
-                    QString image = p.user.photo;
-                    if (!image.startsWith("https:")) image.prepend("https:");
-                        imagePaths << image;
-                }
-                else {
-                    imagePaths << "qrc:///icons/unknown.png";
-                }
+                if ((pConv.participants.last().user.chat_id != p.user.chat_id && pConv.participants.last().user.chat_id != myself.chat_id) ||
+                        ((pConv.participants.last().user.chat_id == myself.chat_id) && pConv.participants[pConv.participants.size() - 2].user.chat_id != p.user.chat_id)
+                        )
+                    name += QString(p.user.display_name + ", ");
+                else
+                    name += QString(p.user.display_name + " ");
             }
         }
     }
@@ -207,12 +217,28 @@ void RosterModel::renameConversation(QString convId, QString newName)
     bool found = findIndex(convId, i);
     if (found) {
         qDebug() << "Found";
-        conversations[i]->name = newName;
+        if (newName.size() > 0) {
+            conversations[i]->name = newName;
+        } else {
+            conversations[i]->name = "No name - restart hangish to get participants";
+            /* TODO: retrieve contacts names to restore previous name
+            foreach (Participant p, conversations[i]->participants) {
+                if (p.user.chat_id!=myself.chat_id) {
+                    if (conversations[i]->participants.last().user.chat_id != p.user.chat_id && conversations[i]->participants.last().user.chat_id != myself.chat_id)
+                        conversations[i]-> += QString(p.user.display_name + ", ");
+                    else
+                        conversations[i]-> += QString(p.user.display_name + " ");
+                }
+            }
+            */
+        }
+
         for (int i=0; i<conversations.size(); i++) {
             QModelIndex r1 = index(i);
             emit dataChanged(r1, r1);
         }
     }
+
 }
 
 void RosterModel::deleteConversation(QString convId)

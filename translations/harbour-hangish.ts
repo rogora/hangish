@@ -30,6 +30,14 @@
     </message>
 </context>
 <context>
+    <name>ConvRenameInput</name>
+    <message>
+        <location filename="../qml/pages/ConvRenameInput.qml" line="30"/>
+        <source>New name</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Conversation</name>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="63"/>

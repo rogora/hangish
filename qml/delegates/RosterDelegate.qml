@@ -9,7 +9,7 @@ import Sailfish.Silica 1.0
             //enabled: fullimage.length>3
             MenuItem {
                 text: qsTr("Rename")
-                //enabled: fullimage.length>3
+                enabled: participantsNum > 2
                 onClicked: {
                     convRenameInput.setConvId(id)
                     pageStack.push(convRenameInput)
