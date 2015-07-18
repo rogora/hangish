@@ -3,7 +3,7 @@
         <file alias="harbour-hangish_ds.png">resources/icons/harbour-hangish_ds.png</file>
         <file alias="harbour-hangish.png">resources/icons/harbour-hangish.png</file>
         <file alias="send.png">resources/icons/send.png</file>
-	<file alias="unknown.png">resources/icons/unknown.png</file>
+        <file alias="unknown.png">resources/icons/unknown.png</file>
+        <file alias="hangish-notif-icon.png">resources/icons/hangish-notif-icon.png</file>
     </qresource>
 </RCC>
-

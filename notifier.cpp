@@ -77,17 +77,13 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     //Check notification aspect
     Notification *n = new Notification(myParent);
 
-    /*
-     * Temporarily disabled; how does it work exactly?
-    if (lastId > 0)
-        n->setReplacesId(lastId);
-    */
-    n->setCategory("im.received");
+    n->setCategory("x-nemo.messaging.im");
+    //I may want to personalize the notification, need to create and publish a custom hangish.ini in /usr/share/ngfd/events.d/
     n->setHintValue("x-nemo-feedback", "chat");
     n->setHintValue("x-nemo-priority", 100);
-    n->setHintValue("x-nemo-preview-icon", "icon-s-status-chat");
-    n->setHintValue("lowPowerModeIconId", "icon-m-low-power-mode-chat");
-    n->setHintValue("statusAreaIconId", "icon-s-status-notifier-chat");
+    n->setHintValue("x-nemo-preview-icon", "harbour-hangish");
+    //n->setHintValue("lowPowerModeIconId", "hangish-notif-icon");
+    //n->setHintValue("statusAreaIconId", "hangish-notif-icon");
     n->setItemCount(1);
     n->setBody(body);
     n->setPreviewBody(preview);

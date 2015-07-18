@@ -41,10 +41,10 @@ QString ImageHandler::getImageAddr(QString imgUrl)
     QString path = QString(cachePath + imgname);
     QFile img(path);
     if (img.exists()) {
-        qDebug() << "Img exists " << imgname;
-        //Open it in append mode to modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
-        //img.open(QIODevice::Append);
-        //img.close();
+        //qDebug() << "Img exists " << imgname;
+        //Touch to modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
+        //Hope this is ok for Jolla QA
+        system(QString("touch " + path).toStdString().c_str());
         return path;
     }
     else {
@@ -134,6 +134,7 @@ void ImageHandler::cleanCache()
     {
         qDebug() << dirFile;
         fileInfo.setFile(dir.absolutePath() + '/' + dirFile);
+        fileInfo.refresh();
         QDateTime created = fileInfo.lastRead();
         qDebug() << created.toString();
         if (created.addDays(7) < now)
