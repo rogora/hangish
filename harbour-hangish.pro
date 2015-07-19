@@ -12,6 +12,7 @@
 # The name of your application
 QT += dbus
 include(notifications.pri)
+include(translations/translations.pri)
 #include(keepalive.pri)
 
 TARGET = harbour-hangish
@@ -70,7 +71,7 @@ OTHER_FILES += \
 # to disable building translations every time, comment out the
 # following CONFIG line
 CONFIG += sailfishapp_i18n
-#TRANSLATIONS += translations/Hangish-de.ts
+#TRANSLATIONS += translations/harbour-hangish-it.ts
 
 HEADERS += \
     #authenticator.h \

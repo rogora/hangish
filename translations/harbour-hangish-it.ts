@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="it_IT">
 <context>
     <name>About</name>
     <message>
         <location filename="../qml/pages/About.qml" line="11"/>
         <source>About Hangish</source>
-        <translation type="unfinished"></translation>
+        <translation>Informazioni su Hangish</translation>
     </message>
     <message>
         <location filename="../qml/pages/About.qml" line="34"/>
         <source>A client for Google Hangouts</source>
-        <translation type="unfinished"></translation>
+        <translation>Un client per Google Hangouts</translation>
     </message>
     <message>
         <location filename="../qml/pages/About.qml" line="58"/>
         <source>Hangish is open source software licensed under the terms of </source>
-        <translation type="unfinished"></translation>
+        <translation>Hangish è un software open source licenziato sotto i termini della</translation>
     </message>
     <message>
         <location filename="../qml/pages/About.qml" line="59"/>
         <source>the GNU General Public License.</source>
-        <translation type="unfinished"></translation>
+        <translation> GNU General Public License.</translation>
     </message>
     <message>
         <location filename="../qml/pages/About.qml" line="76"/>
         <source>Donate</source>
-        <translation type="unfinished"></translation>
+        <translation>Dona</translation>
     </message>
 </context>
 <context>
@@ -34,7 +34,7 @@
     <message>
         <location filename="../qml/pages/ConvRenameInput.qml" line="30"/>
         <source>New name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuovo nome</translation>
     </message>
 </context>
 <context>
@@ -42,7 +42,7 @@
     <message>
         <location filename="../qml/pages/Conversation.qml" line="63"/>
         <source>Load more...</source>
-        <translation type="unfinished"></translation>
+        <translation>Carica di più...</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="86"/>
@@ -50,42 +50,42 @@
         <location filename="../qml/pages/Conversation.qml" line="129"/>
         <location filename="../qml/pages/Conversation.qml" line="141"/>
         <source>Reply</source>
-        <translation type="unfinished"></translation>
+        <translation>Rispondi</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="103"/>
         <source>Can&apos;t send empty message</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossibile inviare un messaggio vuoto</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="110"/>
         <source>Sending message...</source>
-        <translation type="unfinished"></translation>
+        <translation>Invio messaggio...</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="115"/>
         <source>Sending image...</source>
-        <translation type="unfinished"></translation>
+        <translation>Invio immagine...</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="121"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Non in linea</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="137"/>
         <source> is typing</source>
-        <translation type="unfinished"></translation>
+        <translation> sta scrivendo</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="139"/>
         <source> paused</source>
-        <translation type="unfinished"></translation>
+        <translation> si è fermato</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="173"/>
         <source>Image saved to gallery!</source>
-        <translation type="unfinished"></translation>
+        <translation>Immagine salvata nella galleria!</translation>
     </message>
 </context>
 <context>
@@ -93,7 +93,7 @@
     <message>
         <location filename="../qml/cover/CoverPage.qml" line="67"/>
         <source> is typing</source>
-        <translation type="unfinished"></translation>
+        <translation> sta scrivendo</translation>
     </message>
 </context>
 <context>
@@ -101,17 +101,17 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="49"/>
         <source>Login Failed </source>
-        <translation type="unfinished"></translation>
+        <translation>Autenticazione fallia</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="77"/>
         <source>Logging in</source>
-        <translation type="unfinished"></translation>
+        <translation>Autenticazione</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="95"/>
         <source>Delete authentication cookie</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancella il cookie di autenticazione</translation>
     </message>
 </context>
 <context>
@@ -119,7 +119,7 @@
     <message>
         <location filename="../qml/pages/ImagePicker.qml" line="42"/>
         <source>Select picture</source>
-        <translation type="unfinished"></translation>
+        <translation>Scegli l&apos;immagine</translation>
     </message>
 </context>
 <context>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../qml/delegates/Message.qml" line="12"/>
         <source>Download to gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>Scarica nella galleria</translation>
     </message>
 </context>
 <context>
@@ -135,22 +135,22 @@
     <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
         <source>About Hangish</source>
-        <translation type="unfinished"></translation>
+        <translation>Informazioni su Hangish</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="59"/>
         <source>Log out and exit</source>
-        <translation type="unfinished"></translation>
+        <translation>Disconnetti ed esci</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="60"/>
         <source>Deleting cookies</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancellazione dei cookie</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="73"/>
         <source>Conversations</source>
-        <translation type="unfinished"></translation>
+        <translation>Conversazioni</translation>
     </message>
 </context>
 <context>
@@ -158,32 +158,32 @@
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="11"/>
         <source>Rename</source>
-        <translation type="unfinished"></translation>
+        <translation>Rinomina</translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
         <source>Archive</source>
-        <translation type="unfinished"></translation>
+        <translation>Archivia</translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="19"/>
         <source>Leave group</source>
-        <translation type="unfinished"></translation>
+        <translation>Lascia gruppo</translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="21"/>
         <source>Leaving conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Uscita dalla conversazione</translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="36"/>
         <source>Reenable notifications</source>
-        <translation type="unfinished"></translation>
+        <translation>Riabilita notifiche</translation>
     </message>
     <message>
         <location filename="../qml/delegates/RosterDelegate.qml" line="36"/>
         <source>Silence</source>
-        <translation type="unfinished"></translation>
+        <translation>Silenzia</translation>
     </message>
 </context>
 </TS>

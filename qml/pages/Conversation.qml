@@ -118,15 +118,15 @@ Page {
                         }
                         function setOffline() {
                             sendButton.enabled = false
-                            sendBox.placeholderText = "Offline"
+                            sendBox.placeholderText = qsTr("Offline")
                         }
                         function setOnline() {
                             sendButton.enabled = true
-                            sendBox.placeholderText = "Reply"
+                            sendBox.placeholderText = qsTr("Reply")
                         }
                         function setSendError() {
                             ibanner.displayError("Error sending msg")
-                            sendBox.placeholderText = "Reply"
+                            sendBox.placeholderText = qsTr("Reply")
                         }
                         function setIsTyping(id, convId, status) {
                             console.log("is typing")

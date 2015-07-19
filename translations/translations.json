@@ -1,0 +1,19 @@
+{
+  "default" : "en_US",
+  "items" : [
+    {
+      "name" : "Italiano",
+      "code" : "it_IT",
+      "authors" : [
+        "Daniele Rogora <daniele.rogora@gmail.com>"
+      ]
+    },
+    {
+      "name" : "English",
+      "code" : "en_US",
+      "authors" : [
+        "Daniele Rogora <daniele.rogora@gmail.com>"
+      ]
+    }
+  ]
+}
