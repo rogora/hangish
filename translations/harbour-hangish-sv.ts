@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="sv">
+<TS version="2.1" language="sv_SV">
 <context>
     <name>About</name>
     <message>
@@ -46,6 +46,8 @@
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="86"/>
+        <location filename="../qml/pages/Conversation.qml" line="125"/>
+        <location filename="../qml/pages/Conversation.qml" line="129"/>
         <location filename="../qml/pages/Conversation.qml" line="141"/>
         <source>Reply</source>
         <translation>Svara</translation>
@@ -64,6 +66,11 @@
         <location filename="../qml/pages/Conversation.qml" line="115"/>
         <source>Sending image...</source>
         <translation>Skickar bild...</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/Conversation.qml" line="121"/>
+        <source>Offline</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="137"/>

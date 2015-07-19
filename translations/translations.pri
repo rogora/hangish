@@ -1,6 +1,7 @@
 TRANSLATIONS += \
         translations/harbour-hangish-it.ts \
-        translations/harbour-hangish-en.ts
+        translations/harbour-hangish-en.ts \
+        translations/harbour-hangish-sv.ts
 
 OTHER_FILES += translations/translations.json
 
