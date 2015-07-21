@@ -87,7 +87,7 @@ void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event 
 void ConversationModel::addOutgoingMessage(QNetworkReply *id, QString convId, Event evt)
 {
     qDebug() << "Adding outgoing message " << id;
-    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", false, evt.timestamp, true);
+    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", false, evt.timestamp, 0, true);
 }
 
 void ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
@@ -124,9 +124,9 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
 
         //Where to add this message? Bottom -> new msg / Top -> old msg
         if (bottom)
-            addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.isMine);
+            addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type, e.isMine);
         else
-            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp);
+            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type);
     }
 }
 
@@ -263,14 +263,14 @@ void ConversationModel::loadConversation(QString cId)
                         break;
                     }
                 }
-                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, false);
+                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, e.type, false);
             }
             break;
         }
     }
 }
 
-void ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, bool isMine)
+void ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine)
 {
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
@@ -291,14 +291,14 @@ void ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
+    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts, type));
     endInsertRows();
 }
 
-void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts)
+void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type)
 {
     beginInsertRows(QModelIndex(), 0, 0);
-    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts));
+    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts, type));
     endInsertRows();
 }
 
@@ -329,8 +329,15 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const {
     ConversationElement * fobj = myList.at(index.row());
     if (role == SenderRole)
         return QVariant::fromValue(fobj->sender.toHtmlEscaped());
-    else if (role == TextRole)
-        return QVariant::fromValue(fobj->text.toHtmlEscaped());
+    else if (role == TextRole) {
+        //Escape the string only if it is a text message
+        if (fobj->type == 0) {
+            return QVariant::fromValue(fobj->text.toHtmlEscaped());
+        }
+        else {
+            return QVariant::fromValue(fobj->text);
+        }
+    }
     else if (role == SenderIdRole)
         return QVariant::fromValue(fobj->senderId);
     else if (role == TimestampRole)

@@ -126,6 +126,7 @@ struct EventValue {
 
 struct Event {
     QString conversationId;
+    int type;
     EventValue value;
     Identity sender;
     QDateTime timestamp;

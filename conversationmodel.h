@@ -37,11 +37,12 @@ public:
     QString senderId;
     QString fullimageUrl;
     QString previewImageUrl;
+    int type;
     bool read;
 
     QDateTime ts;
 
-    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts) {
+    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts, int pType) {
         id = pId;
         text = pText;
         sender = pSender;
@@ -51,6 +52,7 @@ public:
         previewImageUrl = pPrevImageUrl;
         read = pRead;
         ts = pts;
+        type = pType;
     }
 };
 
@@ -90,8 +92,8 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    void addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, bool isMine);
-    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts);
+    void addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine);
+    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type);
     void deleteMsgWError(QString text);
 
 
