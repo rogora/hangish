@@ -139,20 +139,20 @@ void Channel::parseChannelData(QString sreply)
     int idx=0;
     for (;;) {
         idx = sreply.indexOf('[', idx); // at the beginning there is a length, which we ignore.
-        qDebug() << idx;
+        //qDebug() << idx;
         // ignore empty messages
         if (idx == -1) return;
-        qDebug() << "##" << sreply.right(sreply.size()-idx);
+        //qDebug() << "##" << sreply.right(sreply.size()-idx);
         auto completeParsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
-        qDebug() << idx;
-        qDebug() << completeParsedReply.size();
+        //qDebug() << idx;
+        //qDebug() << completeParsedReply.size();
         if (!completeParsedReply.size())
             continue;
         //In very rare cases, there is really a list in the parcel: e.g. not size[[c1]]size[[c2]], but size[[c1],[c2]]
         //This case should be caught looping here
         for (int listidx = 0; listidx < completeParsedReply.size(); listidx++) {
             auto parsedReply = completeParsedReply[listidx].list();
-            qDebug() << parsedReply.size();
+            //qDebug() << parsedReply.size();
             if (parsedReply.size()<2)
                 continue;
             int parcelID = parsedReply[0].number().toInt();
@@ -176,7 +176,7 @@ void Channel::parseChannelData(QString sreply)
             }
 
             // prepare the inner data to parse:
-            qDebug() << cContent.size();
+            //qDebug() << cContent.size();
 
             auto stringData = cContent[1].string();
             stringData = Utils::cleanText(stringData);
@@ -184,7 +184,7 @@ void Channel::parseChannelData(QString sreply)
             // we can now parse the inner data:
             int idx2 = 0;
             auto parsedInner = MessageField::parseListRef(stringData.leftRef(-1), idx2);
-            qDebug() << idx2;
+            //qDebug() << idx2;
             if (parsedInner.size()<2)
                 continue;
             // TODO can there be multiple cbu in one reply?
@@ -194,7 +194,7 @@ void Channel::parseChannelData(QString sreply)
             if (!playloadList.size()) continue; // TODO is that senseful ??
             playloadList = playloadList[0].list();
             if (!playloadList.size() || !playloadList[0].list().size()) continue; // TODO is that senseful ??
-            qDebug() << playloadList.size();
+            //qDebug() << playloadList.size();
             int as = playloadList[0].list()[0].number().toInt();
             emit activeClientUpdate(as);
             if (playloadList.size() < 2)
@@ -202,7 +202,7 @@ void Channel::parseChannelData(QString sreply)
             if (playloadList[2].type() == MessageField::List) {
                 // parse events
                 auto eventDataList = playloadList[2].list();
-                qDebug() << eventDataList.size();
+                //qDebug() << eventDataList.size();
 
                 for (auto eventData : eventDataList) {
                     Event evt = Utils::parseEvent(eventData.list());
@@ -233,9 +233,9 @@ void Channel::parseChannelData(QString sreply)
                         if (evt.sender.chat_id != myself.chat_id) {
                             qDebug() << "Going to notify";
                             //Signal new event only if the actual conversation isn't already visible to the user
-                            qDebug() << conversationModel->getCid();
-                            qDebug() << evt.conversationId;
-                            qDebug() << evt.notificationLevel;
+                            //qDebug() << conversationModel->getCid();
+                            //qDebug() << evt.conversationId;
+                            //qDebug() << evt.notificationLevel;
                             if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
                                 rosterModel->addUnreadMsg(evt.conversationId);
                                 //If notificationLevel == 10 the conversation has been silenced -> don't notify
@@ -414,10 +414,8 @@ void Channel::parseSid()
         QString stringData = rowData[1].string();
         QStringList temp = stringData.split("/");
         if (temp.size() < 2) {
-            qDebug() << "temp size is " << temp.size();
             qDebug() << stringData;
         }
-        qDebug() << temp.at(0);
         email = temp.at(0);
 
         if (!email.contains(QChar('@')))
@@ -425,7 +423,6 @@ void Channel::parseSid()
             //TODO: Try to go on with the old header_client, need some tests
             return;
 
-        qDebug() << temp.at(1);
         header_client = temp.at(1);
         emit updateClientId(header_client);
 
@@ -433,8 +430,6 @@ void Channel::parseSid()
             return;
         auto row4Data = parsedData[4].list()[1].list()[1].list()[1].list();
         gsessionid = row4Data[1].string();
-        qDebug() << gsessionid;
-
     }
     else {
         QString rep = reply->readAll();
@@ -524,9 +519,7 @@ void Channel::fetchNewSid()
 
     qDebug() << "fetch new sid";
     QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
-    ////qDebug() << req.url().toString();
     QVariant body = "ctype=hangouts&VER=8&RID=81187&clid=" + clid + "&prop=" + prop + "&ec="+ec;
-    ////qDebug() << body.toString();
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, session_cookies) {
             reqCookies.append(cookie);
@@ -537,7 +530,6 @@ void Channel::fetchNewSid()
     QObject::connect(rep, SIGNAL(finished()), this, SLOT(parseSid()));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), rep, SLOT(abort()));
     pendingRequests.insert(rep);
-    ////qDebug() << "posted";
 }
 
 void Channel::listen()

@@ -33,7 +33,7 @@ Utils::Utils()
 
 QString Utils::cleanText(QString text, QString newLineReplacer)
 {
-    QString result;
+    QString result="";
     int size = text.size();
     for (int i = 0; i < size; ++i) {
         if (text.at(i) == '\\' && i+1 < size) {
@@ -173,8 +173,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
         event.isRenameEvent = true;
         //Should parse the new name here
         qDebug() << "Parsing rename info";
-        qDebug() << renameData.size();
-        qDebug() << renameData[0].string();
+        //qDebug() << renameData.size();
+        //qDebug() << renameData[0].string();
         event.newName = renameData[0].string();
     }
 

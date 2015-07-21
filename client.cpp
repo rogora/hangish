@@ -201,11 +201,55 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
 
     //skip 4 fields
     auto participants = abstractFields[12].list();
-    // UNUSED: auto participants_data = abstract[13].list();
-    // parseParticipants()
+    bool parseFallbackNames = false;
     for (auto p : participants) {
         Identity id = Utils::parseIdentity(p.list());
-        res.participants.append({getUserById(id.chat_id), {}});
+        User tmp = getUserById(id.chat_id);
+
+        if ((tmp.chat_id == myself.chat_id) || (tmp.display_name != "User not found")) {
+            res.participants.append({tmp, {}});
+        }
+        else {
+            if (tmp.chat_id != myself.chat_id) {
+                qDebug() << "Have a UNF here " << tmp.chat_id;
+                parseFallbackNames = true;
+            }
+        }
+    }
+    //If I couldn't find a participant, use its fallback name - DISABLED, seems not to work
+    //if (parseFallbackNames) {
+    if (0) {
+        auto participants_data = abstractFields[13].list();
+        for (auto plist : participants_data) {
+            auto list = plist.list();
+            if (list.size() < 2)
+                continue;
+
+            QString fallback_name = list[1].string();
+            auto idlist = list[0].list();
+            if (idlist.size() >= 2) {
+                //If I already had the contact in the previous block, update its name
+                QString gid = idlist[0].string();
+                QString cid = idlist[1].string();
+
+                if (cid == myself.chat_id)
+                    continue;
+
+                qDebug() << cid << "; " << fallback_name;
+                int i = 0;
+                for (i=0; i<res.participants.size(); i++) {
+                    if (res.participants[i].user.chat_id == cid && res.participants[i].user.gaia_id == gid) {
+                        res.participants[i].user.display_name = fallback_name;
+                    }
+                }
+            }
+            else {
+                //If I don't have cid/gid, just add it to the list
+                User tmp;
+                tmp.display_name = fallback_name;
+                res.participants.append({tmp, {}});
+            }
+        }
     }
 
     //Merge read states with participants
@@ -238,7 +282,7 @@ Conversation Client::parseConversation(QList<MessageField> conversation)
     for (auto event : details) {
         Event e = Utils::parseEvent(event.list());
         if (e.notificationLevel != 0 && e.notificationLevel != res.notifLevel) {
-            qDebug() << "Setting notifLev to " << e.notificationLevel;
+            //qDebug() << "Setting notifLev to " << e.notificationLevel;
             res.notifLevel = (NotificationLevel)e.notificationLevel;
         }
 
@@ -398,6 +442,7 @@ void Client::networkReply()
         }
         else {
             QString sreply = reply->readAll();
+            //qDebug() << sreply;
 
             //API KEY
             QStringRef dsData = Utils::extractArrayForDS(sreply, 7);

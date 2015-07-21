@@ -1,3 +1,25 @@
+/*
+
+Hanghish
+Copyright (C) 2015 Daniele Rogora
+
+This file is part of Hangish.
+
+Hangish is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Hangish is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with hangish.  If not, see <http://www.gnu.org/licenses/>
+
+*/
+
 #include "oauth2auth.h"
 #include <QtWidgets/QApplication>
 #include <QProcess>
@@ -13,7 +35,7 @@ OAuth2Auth::OAuth2Auth()
 {
     homeDir  = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     homePath = homeDir + "/oauth2.json";
-    qDebug() << "Making dir " << homeDir;
+    //qDebug() << "Making dir " << homeDir;
     QDir().mkpath(homeDir);
 }
 
@@ -27,17 +49,17 @@ bool OAuth2Auth::getSavedToken()
     cookieFile.close();
     QJsonDocument doc = QJsonDocument::fromJson(val.toUtf8());
     QJsonObject obj = doc.object();
-    foreach (QString s, obj.keys())
-    {
-        qDebug() << s;
-    }
+    //foreach (QString s, obj.keys())
+    //{
+    //    qDebug() << s;
+    //}
     rtoken = obj["refresh_token"].toString();
     //REFRESH TOKEN
     //fetchCookies(obj["access_token"].toString(), obj["refresh_token"].toString());
     QString r = QString("refresh_token=" + obj["refresh_token"].toString() + "&client_id="+CLIENT_ID);
     r+=QString("&client_secret="+CLIENT_SECRET);
     r+="&grant_type=refresh_token";
-    qDebug() << r;
+    //qDebug() << r;
     QByteArray reqString(r.toUtf8());
     QNetworkRequest req( QUrl( QString("https://accounts.google.com/o/oauth2/token") ) );
     req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -50,21 +72,14 @@ void OAuth2Auth::fetchCookiesReply()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    //qDebug() << "Got " << c.size() << "from" << reply->url();
+    //foreach(QNetworkCookie cookie, c) {
+    //    qDebug() << cookie.name();
+    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
         QString response = reply->readAll();
-        qDebug() << response;
-
-        /*
-        //MAKE REQ
-        QNetworkRequest req( QUrl("https://accounts.google.com/MergeSession") );
-        QNetworkReply *reply = nam.get(req);
-        QObject::connect(reply, SIGNAL(finished()), this, SLOT(fetchCookiesReply2()));
-        */
+        //qDebug() << response;
 
         //MAKE REQ
         QNetworkRequest req2( QUrl("https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth="+response) );
@@ -83,14 +98,14 @@ void OAuth2Auth::fetchCookiesReply2()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    //qDebug() << "Got " << c.size() << "from" << reply->url();
+    //foreach(QNetworkCookie cookie, c) {
+    //    qDebug() << cookie.name();
+    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
-        QString response = reply->readAll();
-        qDebug() << response;
+        //QString response = reply->readAll();
+        //qDebug() << response;
     }
     else {
         emit authFailed("Error 2");
@@ -102,19 +117,19 @@ void OAuth2Auth::fetchCookiesReply3()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
+    //qDebug() << "Got " << c.size() << "from" << reply->url();
     foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
+        //qDebug() << cookie.name();
         sessionCookies.append(cookie);
     }
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
         QString response = reply->readAll();
-        qDebug() << response;
+        //qDebug() << response;
         emit gotCookies();
     }
     else {
-        qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        //qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         emit authFailed("Error 3");
     }
 }
@@ -155,20 +170,20 @@ void OAuth2Auth::authReply()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
+    //qDebug() << "Got " << c.size() << "from" << reply->url();
     QString response = reply->readAll();
-    qDebug() << response;
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    //qDebug() << response;
+    //foreach(QNetworkCookie cookie, c) {
+    //    qDebug() << cookie.name();
+    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         //GET REFRESH TOKEN
         QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
         QJsonObject obj = doc.object();
-        foreach (QString s, obj.keys())
-        {
-            qDebug() << s;
-        }
+        //foreach (QString s, obj.keys())
+        //{
+        //    qDebug() << s;
+        //}
         if (rtoken.length() > 0)
             obj.insert("refresh_token", rtoken);
         QJsonDocument doc2(obj);

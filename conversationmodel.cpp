@@ -328,9 +328,9 @@ int ConversationModel::rowCount(const QModelIndex &parent) const {
 QVariant ConversationModel::data(const QModelIndex &index, int role) const {
     ConversationElement * fobj = myList.at(index.row());
     if (role == SenderRole)
-        return QVariant::fromValue(fobj->sender);
+        return QVariant::fromValue(fobj->sender.toHtmlEscaped());
     else if (role == TextRole)
-        return QVariant::fromValue(fobj->text);
+        return QVariant::fromValue(fobj->text.toHtmlEscaped());
     else if (role == SenderIdRole)
         return QVariant::fromValue(fobj->senderId);
     else if (role == TimestampRole)

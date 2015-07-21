@@ -1,3 +1,25 @@
+/*
+
+Hanghish
+Copyright (C) 2015 Daniele Rogora
+
+This file is part of Hangish.
+
+Hangish is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Hangish is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with hangish.  If not, see <http://www.gnu.org/licenses/>
+
+*/
+
 #include "imagehandler.h"
 
 QString galleryPath;
@@ -19,11 +41,7 @@ ImageHandler::ImageHandler(QObject *parent) :
 {
     lock = 0;
     galleryPath = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation) + "/";
-    qDebug() << "Gallery path " << galleryPath;
-
     cachePath = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/";
-    qDebug() << "Cache path " << cachePath;
-
     nam = new QNetworkAccessManager();
 }
 
@@ -60,7 +78,7 @@ QString ImageHandler::getImageAddr(QString imgUrl)
         QNetworkRequest req(url);
         req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(auth->getCookies()));
         QNetworkReply *reply = nam->get(req);
-        qDebug() << "Getting " << req.url().toString();
+        //qDebug() << "Getting " << req.url().toString();
         QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(dataAvail()));
         QObject::connect(reply, SIGNAL(finished()), this, SLOT(gotImage()));
         return "";
@@ -88,7 +106,7 @@ void ImageHandler::gotImage()
     img.open(QIODevice::WriteOnly);
     img.write(buffer);
     img.close();
-    qDebug() << "Created ";
+    //qDebug() << "Created ";
     emit imgReady(reply->url().toString());
     lock.store(0);
 }
@@ -102,17 +120,16 @@ void delay()
 
 bool ImageHandler::saveImageToGallery(QString imgUrl)
 {
-    qDebug() << "Saving";
+    //qDebug() << "Saving";
     QString savedAddr;
 
     do {
         savedAddr = getImageAddr(imgUrl);
-        qDebug() << "Looping here " << savedAddr;
         delay();
     } while (savedAddr=="" || savedAddr.startsWith("https://"));
 
     QString fileName = imgUrl.right(imgUrl.size() - imgUrl.lastIndexOf('/')-1);
-    qDebug() << fileName;
+    //qDebug() << fileName;
     if (fileName.endsWith(".jpg"))
         fileName = fileName.left(fileName.size() - 4);
 
@@ -122,6 +139,7 @@ bool ImageHandler::saveImageToGallery(QString imgUrl)
 
 void ImageHandler::cleanCache()
 {
+    qDebug() << "Cleaning images cache";
     //Delete all the files that have not been accessed in the last 7 days
     QDateTime now = QDateTime::currentDateTime();
 
@@ -132,11 +150,11 @@ void ImageHandler::cleanCache()
 
     foreach(QString dirFile, dir.entryList())
     {
-        qDebug() << dirFile;
+        //qDebug() << dirFile;
         fileInfo.setFile(dir.absolutePath() + '/' + dirFile);
         fileInfo.refresh();
         QDateTime created = fileInfo.lastRead();
-        qDebug() << created.toString();
+        //qDebug() << created.toString();
         if (created.addDays(7) < now)
             dir.remove(dirFile);
     }
