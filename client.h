@@ -54,6 +54,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    bool connectedToInternet;
     QSet<QNetworkReply *> pendingRequests;
     QTimer timeoutTimer;
     QString syncAllNewEventsString;

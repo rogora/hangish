@@ -275,6 +275,15 @@ void ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
     bool found = false;
+
+    //Don't add duplicates, messages in outgoing/error/sent states have a different timestamp, so they shouldn't be affected
+    foreach (ConversationElement *ce, myList) {
+        if (ce->timestamp == timestamp) {
+            //This must be a duplicate, skip it
+            return;
+        }
+    }
+
     if (id==NULL && isMine) {
         foreach (ConversationElement *ce, myList) {
             if (ce->text == text && ce->senderId == senderId) {

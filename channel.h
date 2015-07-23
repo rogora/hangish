@@ -57,6 +57,7 @@ private:
     QSet<QNetworkReply *> pendingRequests;
     QTimer *checkChannelTimer;
     bool channelEstablishmentOccurring;
+    bool isOnline;
     int lastValidParcelId;
     QDateTime lastValidParcelIdTS;
     bool appPaused;
@@ -74,6 +75,7 @@ public:
     void setAppPaused();
     void setAppOpened();
     QString getLastIncomingConversation();
+    void setStatus(bool online);
 
 public slots:
     void checkChannel();

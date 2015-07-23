@@ -69,12 +69,10 @@ CoverBackground {
                     label.text = ""
             }
             onShowNotificationForCover: {
-                    console.log("caught shn from cover")
                     unreadNum = unreadNum + num
                     unreadlbl.text = unreadNum
             }
             onDeletedNotifications: {
-                console.log("caught delete from cover")
                 unreadNum = 0
                 unreadlbl.text = ""
             }

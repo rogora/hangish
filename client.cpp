@@ -352,8 +352,6 @@ void Client::parseConversationState(MessageField conv)
     else {
         qDebug() << "Not notifying";
         qDebug() << "New msgs: " << newValidEvts;
-        qDebug() << "Notif. level: " << c.events[validIdx].notificationLevel;
-        qDebug() << "IsOld: " << c.events[validIdx].isOld;
     }
 }
 
@@ -713,6 +711,9 @@ QString Client::getRequestHeader()
 
 void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 {
+    if (!connectedToInternet)
+        return;
+
     rosterModel->putOnTop(convId);
 
     QString seg = "[[0, \"";
@@ -745,6 +746,9 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
 }
 
 void Client::sendChatMessage(QString segments, QString conversationId) {
+    if (!connectedToInternet)
+        return;
+
     //originalText is needed to push the outgoing event in the correct form
     qDebug() << segments;
     QString originalText = segments;
@@ -967,6 +971,9 @@ void Client::syncAllNewEventsDataArrval()
 
 void Client::setPresence(bool goingOffline)
 {
+    if (!connectedToInternet)
+        return;
+
     //TODO: find the right value for the last parameter, 40 is active desktop
     //... other values fail to set presence as online
 
@@ -992,6 +999,9 @@ void Client::setPresence(bool goingOffline)
 
 void Client::retrieveConversationLog(QString convId)
 {
+    if (!connectedToInternet)
+        return;
+
     qDebug() << "Retr history";
     int maxEvents = 20;
     QString body = "[";
@@ -1012,6 +1022,9 @@ void Client::retrieveConversationLog(QString convId)
 
 void Client::leaveConversation(QString convId)
 {
+    if (!connectedToInternet)
+        return;
+
     conversationBeingRemoved = convId;
 
     qint64 time = QDateTime::currentMSecsSinceEpoch();
@@ -1054,6 +1067,9 @@ void Client::leaveConversationReply() {
 
 void Client::deleteConversation(QString convId)
 {
+    if (!connectedToInternet)
+        return;
+
     conversationBeingRemoved = convId;
 
     qint64 time = QDateTime::currentMSecsSinceEpoch();
@@ -1096,6 +1112,9 @@ void Client::deleteConversationReply() {
 
 void Client::changeNotificationsForConversation(QString convId, int level)
 {
+    if (!connectedToInternet)
+        return;
+
     //Reuse the same variable, at any given time only one operation on conversations is active
     conversationBeingRemoved = convId;
     notificationLevelBeingSet = level;
@@ -1140,6 +1159,9 @@ void Client::changeNotificationsForConversationReply()
 
 void Client::renameConversation(QString convId, QString newName)
 {
+    if (!connectedToInternet)
+        return;
+
     //Reuse the same variable, at any given time only one operation on conversations is active
     conversationBeingRemoved = convId;
     convNameBeingSet = newName;
@@ -1268,6 +1290,9 @@ void Client::setFocusReply()
 
 void Client::setFocus(QString convId, int status)
 {
+    if (!connectedToInternet)
+        return;
+
     QString body = "[";
     body += getRequestHeader();
     body += ", [\"";
@@ -1283,6 +1308,9 @@ void Client::setFocus(QString convId, int status)
 
 void Client::setTyping(QString convId, int status)
 {
+    if (!connectedToInternet)
+        return;
+
     QString body = "[";
     body += getRequestHeader();
     body += ", [\"";
@@ -1332,6 +1360,9 @@ void Client::setActiveClientReply()
 
 void Client::syncAllNewEvents(QDateTime timestamp)
 {
+    if (!connectedToInternet)
+        return;
+
     QString body = "[";
     body += getRequestHeader();
     body += ", ";
@@ -1346,6 +1377,9 @@ void Client::syncAllNewEvents(QDateTime timestamp)
 
 void Client::setActiveClient()
 {
+    if (!connectedToInternet)
+        return;
+
     QDateTime now = QDateTime::currentDateTime();
     if (lastSetActive.addSecs(SETACTIVECLIENT_LIMIT_SECS) > now)
         return;
@@ -1382,6 +1416,9 @@ void Client::updateWatermarkReply()
 
 void Client::updateWatermark(QString convId)
 {
+    if (!connectedToInternet)
+        return;
+
     qDebug() << "Updating wm";
     //If there are no unread messages we can avoid generating data traffic
     if (!rosterModel->hasUnreadMessages(convId))
@@ -1584,6 +1621,7 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
 {
     QObject::connect(&timeoutTimer, SIGNAL(timeout()), this, SLOT(networkTimeout()));
 
+    connectedToInternet = true;
     needSync = false;
     needLogin = false;
     initCompleted = false;
@@ -1674,7 +1712,15 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
             getPVTToken();
             return;
         }
+        channel->setStatus(true);
         channel->fastReconnect();
+        connectedToInternet = true;
+    }
+    else {
+        //I'm not connected
+        channel->setStatus(false);
+        connectedToInternet = false;
+        emit(channelLost());
     }
 }
 
@@ -1785,7 +1831,6 @@ void Client::slotError(QNetworkReply::NetworkError err)
         //nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);
         //QNetworkSession session( nam.configuration() );
-        //session.stop();
         qDebug() << "Aborting all " << pendingRequests.size();
         //emit cancelAllActiveRequests();
         QSetIterator<QNetworkReply *> itr(pendingRequests);

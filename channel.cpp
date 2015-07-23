@@ -56,11 +56,14 @@ void Channel::checkChannel()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        LPrep->abort();
+        if (LPrep != NULL)
+            LPrep->abort();
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
+        if (isOnline && channelError == false)
+            emit(channelLost());
+
         channelError = true;
-        emit(channelLost());
         QTimer::singleShot(500, this, SLOT(longPollRequest()));
     }
 }
@@ -69,11 +72,14 @@ void Channel::checkChannelAndReconnect()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        LPrep->abort();
+        if (LPrep != NULL)
+            LPrep->abort();
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
+        if (isOnline && channelError == false)
+            emit(channelLost());
+
         channelError = true;
-        emit(channelLost());
     }
     QTimer::singleShot(500, this, SLOT(longPollRequest()));
 }
@@ -87,6 +93,10 @@ void Channel::fastReconnect()
     checkChannelAndReconnect();
 }
 
+void Channel::setStatus(bool online) {
+    isOnline = online;
+}
+
 Channel::Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
 {
     LPrep = NULL;
@@ -95,6 +105,7 @@ Channel::Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QS
     channelEstablishmentOccurring = false;
     lastIncomingConvId = "";
     lastValidParcelId = 4;
+    isOnline = true;
 
     myself = pms;
     conversationModel = cModel;
@@ -228,14 +239,12 @@ void Channel::parseChannelData(QString sreply)
                         }
 
                         conversationModel->addEventToConversation(evt.conversationId, evt);
+                        rosterModel->putOnTop(evt.conversationId);
                         qDebug() << "Added";
                         lastIncomingConvId = evt.conversationId;
                         if (evt.sender.chat_id != myself.chat_id) {
                             qDebug() << "Going to notify";
                             //Signal new event only if the actual conversation isn't already visible to the user
-                            //qDebug() << conversationModel->getCid();
-                            //qDebug() << evt.conversationId;
-                            //qDebug() << evt.notificationLevel;
                             if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
                                 rosterModel->addUnreadMsg(evt.conversationId);
                                 //If notificationLevel == 10 the conversation has been silenced -> don't notify
@@ -457,7 +466,6 @@ void Channel::slotError(QNetworkReply::NetworkError err)
         //emit qnamUpdated(nam);
         //QNetworkSession session( nam.configuration() );
         //emit cancelAllActiveRequests();
-        //session.close();
         //session.open();
         QSetIterator<QNetworkReply *> itr(pendingRequests);
         while (itr.hasNext()) {
@@ -492,6 +500,10 @@ void Channel::longPollRequest()
         }
     if (channelEstablishmentOccurring) {
         qDebug() << "Another req is already active, returning";
+        return;
+    }
+    if (!isOnline) {
+        qDebug() << "Not online";
         return;
     }
     channelEstablishmentOccurring = true;

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     //Do this once when app is launching
     ih->cleanCache();
 
+
     QTranslator translator;
         translator.load("translations_" + QLocale::system().name(),
                         "/usr/share/harbour-hangish/translations");
