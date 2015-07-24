@@ -54,6 +54,7 @@ class Client : public QObject
     QNetworkCookie pvt;
 
 private:
+    User getEntityById(QString cid);
     bool connectedToInternet;
     QSet<QNetworkReply *> pendingRequests;
     QTimer timeoutTimer;

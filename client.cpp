@@ -177,6 +177,55 @@ QString Client::getConversationName(QString convId)
     return rosterModel->getConversationName(convId);
 }
 
+User Client::getEntityById(QString cid) {
+    User foo;
+    foo.chat_id = cid;
+    foo.display_name = "User not found 2";
+    foo.first_name = "Unknown";
+    if (!connectedToInternet) {
+        contactsModel->addContact(foo);
+        return foo;
+    }
+
+    QString body = "[";
+    body += getRequestHeader();
+    body += ", null, [[\"";
+    body += cid;
+    body += "\"]]]";
+    qDebug() << body;
+    QNetworkReply *reply = sendRequest("contacts/getentitybyid",body);
+    QEventLoop loop;
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+
+    timeoutTimer.stop();
+    QString sreply = reply->readAll();
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        int idx = 0;
+        auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
+        if (parsedReply.size() < 3) {
+            reply->deleteLater();
+            contactsModel->addContact(foo);
+            return foo;
+        }
+        auto entities = parsedReply[2].list();
+        for (auto entity: entities) {
+            User tmp = parseEntity(entity.list());
+            //Some users may have no info like display_name or whatsoever... Probably these have deleted their g+ account
+            if (tmp.display_name == "")
+                tmp.display_name = "Unknown";
+            if (tmp.first_name == "")
+                tmp.first_name = "Unknown";
+            contactsModel->addContact(tmp);
+            reply->deleteLater();
+            return tmp;
+        }
+    }
+    contactsModel->addContact(foo);
+    reply->deleteLater();
+    return foo;
+}
+
 void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conversation &res)
 {
     //First we have ID -- ignore
@@ -201,7 +250,6 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
 
     //skip 4 fields
     auto participants = abstractFields[12].list();
-    bool parseFallbackNames = false;
     for (auto p : participants) {
         Identity id = Utils::parseIdentity(p.list());
         User tmp = getUserById(id.chat_id);
@@ -212,42 +260,9 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
         else {
             if (tmp.chat_id != myself.chat_id) {
                 qDebug() << "Have a UNF here " << tmp.chat_id;
-                parseFallbackNames = true;
-            }
-        }
-    }
-    //If I couldn't find a participant, use its fallback name - DISABLED, seems not to work
-    //if (parseFallbackNames) {
-    if (0) {
-        auto participants_data = abstractFields[13].list();
-        for (auto plist : participants_data) {
-            auto list = plist.list();
-            if (list.size() < 2)
-                continue;
-
-            QString fallback_name = list[1].string();
-            auto idlist = list[0].list();
-            if (idlist.size() >= 2) {
-                //If I already had the contact in the previous block, update its name
-                QString gid = idlist[0].string();
-                QString cid = idlist[1].string();
-
-                if (cid == myself.chat_id)
-                    continue;
-
-                qDebug() << cid << "; " << fallback_name;
-                int i = 0;
-                for (i=0; i<res.participants.size(); i++) {
-                    if (res.participants[i].user.chat_id == cid && res.participants[i].user.gaia_id == gid) {
-                        res.participants[i].user.display_name = fallback_name;
-                    }
-                }
-            }
-            else {
-                //If I don't have cid/gid, just add it to the list
-                User tmp;
-                tmp.display_name = fallback_name;
-                res.participants.append({tmp, {}});
+                User parsedUser = getEntityById(tmp.chat_id);
+                //Put it anyway, as a reminder that we should update it
+                res.participants.append({parsedUser, {}});
             }
         }
     }
