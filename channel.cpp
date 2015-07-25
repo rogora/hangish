@@ -48,7 +48,7 @@ void Channel::processCookies(QNetworkReply *reply)
     }
 
     if (cookieUpdated) {
-        nam.setCookieJar(new QNetworkCookieJar(this));
+        nam->setCookieJar(new QNetworkCookieJar(this));
     }
 }
 
@@ -56,8 +56,10 @@ void Channel::checkChannel()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        if (LPrep != NULL)
+        /* Deleted along with its QNAM
+         * if (LPrep != NULL)
             LPrep->abort();
+        */
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         if (isOnline && channelError == false)
@@ -72,8 +74,10 @@ void Channel::checkChannelAndReconnect()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        if (LPrep != NULL)
+        /* Deleted along with its QNAM
+            if (LPrep != NULL)
             LPrep->abort();
+        */
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         if (isOnline && channelError == false)
@@ -99,6 +103,8 @@ void Channel::setStatus(bool online) {
 
 Channel::Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel)
 {
+    nam = new QNetworkAccessManager();
+
     LPrep = NULL;
     channelError = false;
     fetchingSid = false;
@@ -128,7 +134,6 @@ void Channel::nrf()
 {
     channelEstablishmentOccurring = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
     processCookies(reply);
     qDebug() << "FINISHED called! " << channelError;
     QString srep = reply->readAll();
@@ -227,42 +232,36 @@ void Channel::parseChannelData(QString sreply)
                         emit renameConversation(evt.conversationId, evt.newName);
                     }
 
-                    //This is old, on the channel? Skip
-                    if (!evt.isOld) {
-                        //I want to check whether I sent this message in order to keep the conversation view consistent
-                        if (evt.sender.chat_id == myself.chat_id) {
-                            evt.isMine = true;
-                        }
-                        if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
-                            qDebug() << "No segs! Skipping";
-                            continue;
-                        }
-
-                        conversationModel->addEventToConversation(evt.conversationId, evt);
-                        rosterModel->putOnTop(evt.conversationId);
-                        qDebug() << "Added";
-                        lastIncomingConvId = evt.conversationId;
-                        if (evt.sender.chat_id != myself.chat_id) {
-                            qDebug() << "Going to notify";
-                            //Signal new event only if the actual conversation isn't already visible to the user
-                            if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
-                                rosterModel->addUnreadMsg(evt.conversationId);
-                                //If notificationLevel == 10 the conversation has been silenced -> don't notify
-                                if (evt.notificationLevel!=QUIET) {
-                                    if (evt.value.segments.size()==0)
-                                        emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1,evt.conversationId);
-                                    else
-                                        emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1,evt.conversationId);
-                                }
-                            }
-                            else {
-                                //Update watermark, since I've read the message; if notification level this should be the active client
-                                emit updateWM(evt.conversationId);
-                            }
-                        }
+                    //I want to check whether I sent this message in order to keep the conversation view consistent
+                    if (evt.sender.chat_id == myself.chat_id) {
+                        evt.isMine = true;
                     }
-                    else {
-                        qDebug() << "Invalid evt received";
+                    if (evt.value.segments.size() == 0 && evt.value.attachments.size()==0) {
+                        qDebug() << "No segs! Skipping";
+                        continue;
+                    }
+
+                    conversationModel->addEventToConversation(evt.conversationId, evt);
+                    rosterModel->putOnTop(evt.conversationId);
+                    qDebug() << "Added";
+                    lastIncomingConvId = evt.conversationId;
+                    if (evt.sender.chat_id != myself.chat_id) {
+                        qDebug() << "Going to notify";
+                        //Signal new event only if the actual conversation isn't already visible to the user
+                        if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
+                            rosterModel->addUnreadMsg(evt.conversationId);
+                            //If notificationLevel == 10 the conversation has been silenced -> don't notify
+                            if (evt.notificationLevel!=QUIET) {
+                                if (evt.value.segments.size()==0)
+                                    emit showNotification("", evt.sender.chat_id, "", evt.sender.chat_id,1,evt.conversationId);
+                                else
+                                    emit showNotification(evt.value.segments[0].value, evt.sender.chat_id, evt.value.segments[0].value, evt.sender.chat_id,1,evt.conversationId);
+                            }
+                        }
+                        else {
+                            //Update watermark, since I've read the message; if notification level this should be the active client
+                            emit updateWM(evt.conversationId);
+                        }
                     }
                 }
             }
@@ -386,7 +385,6 @@ void Channel::parseSid()
 {
     fetchingSid = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
     processCookies(reply);
 
     if (reply->error() == QNetworkReply::NoError) {
@@ -461,20 +459,14 @@ void Channel::slotError(QNetworkReply::NetworkError err)
     //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
     //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
     if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
-        //nam.deleteLater();
-        //nam = new QNetworkAccessManager();
+        nam->deleteLater();
+        nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);
-        //QNetworkSession session( nam.configuration() );
+        //QNetworkSession session( nam->configuration() );
         //emit cancelAllActiveRequests();
         //session.open();
-        QSetIterator<QNetworkReply *> itr(pendingRequests);
-        while (itr.hasNext()) {
-            qDebug() << "Aborting one";
-            itr.next()->abort();
-        }
-        pendingRequests.clear();
 
-        nam.setCookieJar(new QNetworkCookieJar(this));
+        nam->setCookieJar(new QNetworkCookieJar(this));
         emit cookieUpdateNeeded(QNetworkCookie());
     }
     checkChannelTimer->start();
@@ -492,12 +484,15 @@ void Channel::slotError(QNetworkReply::NetworkError err)
 
 void Channel::longPollRequest()
 {
+    /*
+     * May be deleted along with its QNAM
     //If LPrep != null I may have a timeout for QTNetworkManagerAccess, will be handled in slotError
     if (LPrep != NULL) {
             LPrep->abort();
             LPrep->deleteLater();
             LPrep = NULL;
         }
+    */
     if (channelEstablishmentOccurring) {
         qDebug() << "Another req is already active, returning";
         return;
@@ -515,12 +510,11 @@ void Channel::longPollRequest()
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(session_cookies));
     qDebug() << "Making lp req";
-    LPrep = nam.get(req);
+    LPrep = nam->get(req);
     QObject::connect(LPrep, SIGNAL(readyRead()), this, SLOT(nr()));
     QObject::connect(LPrep, SIGNAL(finished()), this, SLOT(nrf()));
     QObject::connect(LPrep, SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), LPrep, SLOT(abort()));
-    pendingRequests.insert(LPrep);
 }
 
 void Channel::fetchNewSid()
@@ -538,10 +532,9 @@ void Channel::fetchNewSid()
     }
     req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply *rep = nam.post(req, body.toByteArray());
+    QNetworkReply *rep = nam->post(req, body.toByteArray());
     QObject::connect(rep, SIGNAL(finished()), this, SLOT(parseSid()));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), rep, SLOT(abort()));
-    pendingRequests.insert(rep);
 }
 
 void Channel::listen()

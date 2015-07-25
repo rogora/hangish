@@ -159,6 +159,8 @@ QString ConversationModel::getSenderName(QString chatId, QList<Participant> part
     foreach (Participant p, participants)
         if (p.user.chat_id == chatId)
             return p.user.first_name;
+    //If this sender left the conversation, I should still return something
+    return "Unknown";
 }
 
 void ConversationModel::updateReadState(ReadState rs)

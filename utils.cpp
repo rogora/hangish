@@ -25,8 +25,6 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 
 #include "messagefield.h"
 
-QDateTime lastParsedEvent=QDateTime::fromMSecsSinceEpoch(0);
-
 Utils::Utils()
 {
 }
@@ -101,16 +99,6 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     qulonglong tsll = tss.toULongLong();
     qint64 ts = (qint64)tsll;
     QDateTime timestmp = QDateTime::fromMSecsSinceEpoch(ts/1000);
-    //Sometimes events are received more than once, as example from channel and getlast... use timestamp as UID and discard
-    if (timestmp <= lastParsedEvent) {
-        //qDebug() << "This evt is old!";
-        //qDebug() << timestmp.toString() << " - " << lastParsedEvent.toString();
-        event.isOld = true;
-    }
-    else {
-        event.isOld = false;
-        lastParsedEvent = timestmp;
-    }
 
     event.timestamp = timestmp;
     auto self_state = eventFields[3].list();
@@ -173,16 +161,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
     if (!renameData.isEmpty()) {
         event.isRenameEvent = true;
         //Should parse the new name here
-        qDebug() << "Parsing rename info";
-        //qDebug() << renameData.size();
-        //qDebug() << renameData[0].string();
         event.newName = renameData[0].string();
     }
-
-
-    //qDebug() << eventFields[14].number();
-    //qDebug() << eventFields[14].list().size();
-
     return event;
 }
 

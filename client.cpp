@@ -1722,20 +1722,28 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
     // a == Connected -> connectivity change
     // a == Powered -> toggled wifi
 
-    if (a=="Connected" && b.variant().toBool()==true) {
-        if (stuckWithNoNetwork) {
-            getPVTToken();
-            return;
+    if (a=="Connected") {
+        if (b.variant().toBool()==true) {
+            if (stuckWithNoNetwork) {
+                getPVTToken();
+                return;
+            }
+            channel->setStatus(true);
+            channel->fastReconnect();
+            connectedToInternet = true;
         }
-        channel->setStatus(true);
-        channel->fastReconnect();
-        connectedToInternet = true;
-    }
-    else {
-        //I'm not connected
-        channel->setStatus(false);
-        connectedToInternet = false;
-        emit(channelLost());
+        else {
+            QNetworkSession session(nam.configuration());
+            if (session.state()==QNetworkSession::Connected) {
+                //This may happen when switching from wlan to cellular, or viceversa
+                qDebug() << "State is connected, ignoring";
+                return;
+            }
+            //I'm not connected
+            channel->setStatus(false);
+            connectedToInternet = false;
+            emit(channelLost());
+        }
     }
 }
 

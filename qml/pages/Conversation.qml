@@ -75,10 +75,11 @@ Page {
             delegate: Message { }
             VerticalScrollDecorator {}
             footer: Row {
-                    width: parent.width
+                    width: page.width
                     TextArea {
                         objectName: "sendTextArea"
                         id: sendBox
+                        anchors.bottom: parent.bottom
                         width: parent.width - sendButton.width
                         focus: true
                         color: Theme.highlightColor
@@ -141,12 +142,15 @@ Page {
                                     sendBox.placeholderText = qsTr("Reply")
                             }
                         }
-
-
                     }
                     IconButton {
                         id: sendButton
                         width: 140
+                        //This is commented out because:
+                        // - it allows (as desired) the button to stick to the bottom
+                        // - BUT the button is drawn too low, slightly below the sendBox, making the page ugly
+
+                        //anchors.top: parent.bottom
                         //text: "send"
                         icon.source: "image://theme/icon-l-right"
                         onClicked: sendBox.sendMessage()

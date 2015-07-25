@@ -45,7 +45,7 @@ class Channel : public QObject
     User myself;
     ConversationModel *conversationModel;
     RosterModel *rosterModel;
-    QNetworkAccessManager nam;
+    QNetworkAccessManager *nam;
     QNetworkCookieJar cJar;
     QList<QNetworkCookie> session_cookies;
     QString sid, clid, ec, path, prop, header_client, email, gsessionid;
@@ -54,7 +54,6 @@ class Channel : public QObject
     int lastAs;
 
 private:
-    QSet<QNetworkReply *> pendingRequests;
     QTimer *checkChannelTimer;
     bool channelEstablishmentOccurring;
     bool isOnline;

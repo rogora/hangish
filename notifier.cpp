@@ -58,12 +58,11 @@ void Notifier::notificationPushedIntf(const QString &convId)
 
 void Notifier::closeAllNotifications()
 {
-    qDebug() << activeNotifications.size();
     foreach (Notification *n, activeNotifications) {
         n->close();
-        activeNotifications.removeOne(n);
         delete n;
     }
+    activeNotifications.clear();
     emit deletedNotifications();
 }
 

@@ -131,7 +131,6 @@ struct Event {
     Identity sender;
     QDateTime timestamp;
     int notificationLevel;
-    bool isOld;
     bool isMine;
     bool isRenameEvent;
     QString newName;

@@ -45,45 +45,45 @@
         <translation>Load more...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="86"/>
-        <location filename="../qml/pages/Conversation.qml" line="125"/>
-        <location filename="../qml/pages/Conversation.qml" line="129"/>
-        <location filename="../qml/pages/Conversation.qml" line="141"/>
+        <location filename="../qml/pages/Conversation.qml" line="87"/>
+        <location filename="../qml/pages/Conversation.qml" line="126"/>
+        <location filename="../qml/pages/Conversation.qml" line="130"/>
+        <location filename="../qml/pages/Conversation.qml" line="142"/>
         <source>Reply</source>
         <translation>Reply</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="103"/>
+        <location filename="../qml/pages/Conversation.qml" line="104"/>
         <source>Can&apos;t send empty message</source>
         <translation>Can&apos;t send empty message</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="110"/>
+        <location filename="../qml/pages/Conversation.qml" line="111"/>
         <source>Sending message...</source>
         <translation>Sending message...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="115"/>
+        <location filename="../qml/pages/Conversation.qml" line="116"/>
         <source>Sending image...</source>
         <translation>Sending image...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="121"/>
+        <location filename="../qml/pages/Conversation.qml" line="122"/>
         <source>Offline</source>
         <translation>Offline</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="137"/>
+        <location filename="../qml/pages/Conversation.qml" line="138"/>
         <source> is typing</source>
         <translation> is typing</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="139"/>
+        <location filename="../qml/pages/Conversation.qml" line="140"/>
         <source> paused</source>
         <translation> paused</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="173"/>
+        <location filename="../qml/pages/Conversation.qml" line="177"/>
         <source>Image saved to gallery!</source>
         <translation>Image saved to gallery!</translation>
     </message>
