@@ -53,7 +53,7 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("About Hangish")
-                onClicked: pageStack.push(about)
+                onClicked: pageStack.push(about) //Client.testFunction()
             }
             MenuItem {
                 text: qsTr("Log out and exit")
@@ -106,22 +106,21 @@ Page {
     Connections {
         target: Qt.application
         onActiveChanged: {
-            if(!Qt.application.active) {
-                // Pauze the game here
-                console.log("app paused")
-                if (conversationModel.cid != "")
-                    Client.setFocus(conversationModel.cid, 2)
-                Client.setAppPaused()
-            }
-            else {
-                console.log("app opened")
-                if (conversationModel.cid != "")
-                    Client.setFocus(conversationModel.cid, 1)
-                Client.setAppOpened()
+                if(Qt.application.state !== Qt.ApplicationActive) {
+                    // Pauze the game here
+                    console.log("app paused")
+                    if (conversationModel.cid != "")
+                        Client.setFocus(conversationModel.cid, 2)
+                    Client.setAppPaused()
+                }
+                else {
+                    console.log("app opened")
+                    if (conversationModel.cid != "")
+                        Client.setFocus(conversationModel.cid, 1)
+                    Client.setAppOpened()
+                }
             }
         }
-    }
-
 }
 
 

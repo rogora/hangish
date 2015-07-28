@@ -45,7 +45,7 @@ class Client : public QObject
 
     //Authenticator *auth;
     OAuth2Auth *auth;
-    QNetworkAccessManager nam;
+    QNetworkAccessManager *nam;
     QList<QNetworkCookie> sessionCookies;
     InitialData iData;
     QString api_key, header_date, header_version, header_id, channel_path, clid, channel_ec_param, channel_prop_param, sync_timestamp;
@@ -128,6 +128,7 @@ public:
     Q_INVOKABLE void deleteConversation(QString convId);
     Q_INVOKABLE void changeNotificationsForConversation(QString convId, int level);
     Q_INVOKABLE void deleteMessageWError(QString text);
+    Q_INVOKABLE void testFunction();
     OAuth2Auth *getAuthenticator();
 
 

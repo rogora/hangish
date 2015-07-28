@@ -73,20 +73,20 @@ int main(int argc, char *argv[])
             return 1;
          }
         system.connect("net.connman",
-                          "/net/connman/technology/wifi",
-                          "net.connman.Technology",
+                          "/",
+                          "net.connman.Manager",
                           "PropertyChanged",
                           c,
                           SLOT(connectivityChanged(QString,QDBusVariant))
                           );
-        system.connect("net.connman",
+        /*system.connect("net.connman",
                           "/net/connman/technology/cellular",
                           "net.connman.Technology",
                           "PropertyChanged",
                           c,
                           SLOT(connectivityChanged(QString,QDBusVariant))
                           );
-
+*/
     view->setSource(SailfishApp::pathTo("qml/harbour-hangish.qml"));
     view->showFullScreen();
     app->exec();

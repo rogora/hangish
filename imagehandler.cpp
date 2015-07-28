@@ -21,6 +21,7 @@ along with hangish.  If not, see <http://www.gnu.org/licenses/>
 */
 
 #include "imagehandler.h"
+#include <utime.h>
 
 QString galleryPath;
 QString cachePath;
@@ -60,9 +61,9 @@ QString ImageHandler::getImageAddr(QString imgUrl)
     QFile img(path);
     if (img.exists()) {
         //qDebug() << "Img exists " << imgname;
-        //Touch to modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
+        //Modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
         //Hope this is ok for Jolla QA
-        system(QString("touch " + path).toStdString().c_str());
+        utime(QString(path).toStdString().c_str(), 0);
         return path;
     }
     else {

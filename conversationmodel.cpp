@@ -59,15 +59,6 @@ void ConversationModel::addErrorMessage(QNetworkReply *id, QString convId, Event
         QModelIndex r1 = index(i);
         emit dataChanged(r1, r1);
     }
-
-    /*QSignalMapper *mapper = new QSignalMapper(this);
-    QTimer *t1 = new QTimer(this);
-    t1->setSingleShot(true);
-    connect(t1, SIGNAL(timeout()), mapper, SLOT(map()));
-    connect(mapper, SIGNAL(mapped(QNetworkReply*)), this, SLOT(deleteMsg(QNetworkReply*)));
-    mapper->setMapping(t1, id);
-    t1->start(5000);
-    */
 }
 
 void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event evt)

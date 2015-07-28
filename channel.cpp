@@ -56,10 +56,9 @@ void Channel::checkChannel()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        /* Deleted along with its QNAM
-         * if (LPrep != NULL)
+        if (LPrep != NULL)
             LPrep->abort();
-        */
+
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         if (isOnline && channelError == false)
@@ -74,10 +73,8 @@ void Channel::checkChannelAndReconnect()
 {
     qDebug() << "Checking chnl";
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
-        /* Deleted along with its QNAM
-            if (LPrep != NULL)
+        if (LPrep != NULL)
             LPrep->abort();
-        */
         qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         if (isOnline && channelError == false)
@@ -135,7 +132,8 @@ void Channel::nrf()
     channelEstablishmentOccurring = false;
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     processCookies(reply);
-    qDebug() << "FINISHED called! " << channelError;
+    qDebug() << reply->isReadable();
+    qDebug() << "FINISHED called! " << channelError << "; " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     QString srep = reply->readAll();
     qDebug() << srep;
     if (srep.contains("Unknown SID")) {
@@ -146,8 +144,9 @@ void Channel::nrf()
 
     checkChannelTimer->start(30000);
     //If there's a network problem don't do anything, the connection will be retried by checkChannelStatus
-    if (!channelError)
-        longPollRequest();
+    if (!channelError) {
+            longPollRequest();
+    }
 }
 
 void Channel::parseChannelData(QString sreply)
@@ -444,6 +443,7 @@ void Channel::parseSid()
         qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
     reply->deleteLater();
+
     checkChannelTimer->start(30000);
     //Now the reply should be std
     longPollRequest();
@@ -460,6 +460,7 @@ void Channel::slotError(QNetworkReply::NetworkError err)
     //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
     if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
         nam->deleteLater();
+        LPrep = NULL;
         nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);
         //QNetworkSession session( nam->configuration() );
@@ -484,15 +485,12 @@ void Channel::slotError(QNetworkReply::NetworkError err)
 
 void Channel::longPollRequest()
 {
-    /*
-     * May be deleted along with its QNAM
     //If LPrep != null I may have a timeout for QTNetworkManagerAccess, will be handled in slotError
     if (LPrep != NULL) {
             LPrep->abort();
             LPrep->deleteLater();
             LPrep = NULL;
         }
-    */
     if (channelEstablishmentOccurring) {
         qDebug() << "Another req is already active, returning";
         return;

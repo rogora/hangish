@@ -88,6 +88,7 @@ import Sailfish.Silica 1.0
                             }
                         }
                     }
+
                 Connections {
                     target: Qt.application
                     onActiveChanged: {

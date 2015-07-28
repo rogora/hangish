@@ -179,9 +179,12 @@ QString Client::getConversationName(QString convId)
 
 User Client::getEntityById(QString cid) {
     User foo;
-    foo.chat_id = cid;
+    foo.chat_id = foo.gaia_id = cid;
     foo.display_name = "User not found 2";
     foo.first_name = "Unknown";
+    foo.email = "foo@foo.foo";
+    foo.alreadyParsed = true;
+    foo.photo = "";
     if (!connectedToInternet) {
         contactsModel->addContact(foo);
         return foo;
@@ -194,30 +197,45 @@ User Client::getEntityById(QString cid) {
     body += "\"]]]";
     qDebug() << body;
     QNetworkReply *reply = sendRequest("contacts/getentitybyid",body);
+
+    //Sync on te request
     QEventLoop loop;
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
 
+    qDebug() << "Got reply!";
+
     timeoutTimer.stop();
     QString sreply = reply->readAll();
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
+        qDebug() << "200";
         int idx = 0;
         auto parsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
         if (parsedReply.size() < 3) {
+            qDebug() << "Too short";
             reply->deleteLater();
             contactsModel->addContact(foo);
             return foo;
         }
         auto entities = parsedReply[2].list();
-        for (auto entity: entities) {
-            User tmp = parseEntity(entity.list());
+        if (entities.size() != 1) {
+            qDebug() << "Something went wrong, have " << entities.size();
+        }
+        else {
+            qDebug() << "Parsing";
+            auto entity = entities[0].list();
+            User tmp = parseEntity(entity);
+            qDebug() << "Parsed";
             //Some users may have no info like display_name or whatsoever... Probably these have deleted their g+ account
             if (tmp.display_name == "")
                 tmp.display_name = "Unknown";
             if (tmp.first_name == "")
                 tmp.first_name = "Unknown";
+            qDebug() << "Corrected";
             contactsModel->addContact(tmp);
+            qDebug() << "Added";
             reply->deleteLater();
+            qDebug() << "DeletedLater";
             return tmp;
         }
     }
@@ -262,7 +280,9 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
                 qDebug() << "Have a UNF here " << tmp.chat_id;
                 User parsedUser = getEntityById(tmp.chat_id);
                 //Put it anyway, as a reminder that we should update it
+                qDebug() << "Returned";
                 res.participants.append({parsedUser, {}});
+                qDebug() << "Appended";
             }
         }
     }
@@ -332,7 +352,7 @@ void Client::parseConversationState(MessageField conv)
         //Eventually update the notificationLevel for this conversation
         rosterModel->updateNotificationLevel(e.conversationId, e.notificationLevel);
         //skip empty messages (voice calls)
-        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0) /* && !e.isOld */) {
+        if ((e.value.segments.size() > 0 || e.value.attachments.size()>0)) {
             qDebug() << "I have a valid msg here";
             conversationModel->addEventToConversation(c.id, e);
             //I should put on top the conversation anyway
@@ -359,9 +379,8 @@ void Client::parseConversationState(MessageField conv)
             emit  showNotification(QString(QString::number(newValidEvts) + " new messages"), "Restored channel", "You have new msgs", rosterModel->getConversationName(c.events[0].conversationId), newValidEvts, c.id);
         }
     }
-    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel != QUIET /*&& !c.events[validIdx].isOld */) {
+    else if (newValidEvts == 1 && c.events[validIdx].notificationLevel != QUIET) {
         //Only 1 new message -> show a specific notification
-        qDebug() << "Notif 1";
         emit showNotification(c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, c.events[validIdx].value.segments[validIdx].value, c.events[validIdx].sender.chat_id, 1, c.id);
     }
     else {
@@ -398,7 +417,6 @@ QList<Conversation> Client::parseConversations(const QString& conv)
 
 void Client::postReply(QNetworkReply *reply)
 {
-    pendingRequests.remove(reply);
     timeoutTimer.stop();
     if (reply->error() == QNetworkReply::NoError) {
         //qDebug() << "No errors on Post";
@@ -432,7 +450,6 @@ void Client::networkReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -553,7 +570,6 @@ void Client::uploadPerformedReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -612,11 +628,10 @@ void Client::performImageUpload(QString url)
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply * reply = nam.post(req, inFile.readAll());
+    QNetworkReply * reply = nam->post(req, inFile.readAll());
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(uploadPerformedReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
-    pendingRequests.insert(reply);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
 }
@@ -626,7 +641,6 @@ void Client::uploadImageReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -706,7 +720,7 @@ QNetworkReply *Client::sendRequest(QString function, QString json) {
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
     //qDebug() << "Sending request " << url;
-    return nam.post(req, postData);
+    return nam->post(req, postData);
     //qDebug() << "req sent " << postData;
 }
 
@@ -756,6 +770,7 @@ void Client::sendImageMessage(QString convId, QString imgId, QString segments)
     //Eventually body += ", 2, [1]], ["chatId",null,null,null,null,[]], null, null, []]";
     qDebug() << "gotH " << body;
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
+    pendingRequests.insert(reply);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
 }
@@ -795,7 +810,6 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
     outgoingEvt.sender.chat_id = myself.chat_id;
     outgoingEvt.sender.gaia_id = myself.gaia_id;
     outgoingEvt.conversationId = conversationId;
-    outgoingEvt.isOld = false;
     outgoingEvt.value.valid = true;
     EventValueSegment evs;
     evs.type = 0;
@@ -804,6 +818,7 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
 
     QNetworkReply *reply = sendRequest("conversations/sendchatmessage",body);
     conversationModel->addOutgoingMessage(reply, conversationId, outgoingEvt);
+    pendingRequests.insert(reply);
 
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(sendMessageReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
@@ -911,11 +926,10 @@ void Client::sendImage(QString segments, QString conversationId, QString filenam
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    QNetworkReply * reply = nam.post(req, doc.toJson());
+    QNetworkReply * reply = nam->post(req, doc.toJson());
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(uploadImageReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
-    pendingRequests.insert(reply);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
     //Then send the message
@@ -927,7 +941,6 @@ void Client::syncAllNewEventsReply()
 
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -967,7 +980,6 @@ void Client::syncAllNewEventsDataArrval()
 
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -1250,7 +1262,6 @@ void Client::retrieveConversationLogReply()
 
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
@@ -1278,7 +1289,6 @@ void Client::setPresenceReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QString sreply = reply->readAll();
     qDebug() << "Set presence response " << sreply;
@@ -1293,7 +1303,6 @@ void Client::setFocusReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QString sreply = reply->readAll();
     qDebug() << "Set focus response " << sreply;
@@ -1344,7 +1353,6 @@ void Client::setTypingReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QString sreply = reply->readAll();
     qDebug() << "Set typing response " << sreply;
@@ -1359,7 +1367,6 @@ void Client::setActiveClientReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QString sreply = reply->readAll();
     qDebug() << "Set active client response " << sreply;
@@ -1419,7 +1426,6 @@ void Client::updateWatermarkReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     QString sreply = reply->readAll();
     qDebug() << "Update watermark response " << sreply;
@@ -1457,11 +1463,10 @@ void Client::followRedirection(QUrl url)
 {
     QNetworkRequest req( url );
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-    QNetworkReply * reply = nam.get(req);
+    QNetworkReply * reply = nam->get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(networkReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
-    pendingRequests.insert(reply);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
 }
@@ -1471,7 +1476,6 @@ void Client::pvtReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-    pendingRequests.remove(reply);
 
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
@@ -1506,7 +1510,7 @@ void Client::pvtReply()
             auth->updateCookies(sessionCookies);
         }
         else {
-            nam.setCookieJar(new QNetworkCookieJar(this));
+            nam->setCookieJar(new QNetworkCookieJar(this));
             initChat(pvtToken);
         }
     }
@@ -1538,11 +1542,10 @@ void Client::initChat(QString pvt)
     QNetworkRequest req( url );
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    QNetworkReply * reply = nam.get(req);
+    QNetworkReply * reply = nam->get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(networkReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
-    pendingRequests.insert(reply);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
 }
@@ -1553,11 +1556,10 @@ void Client::getPVTToken()
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    QNetworkReply * reply = nam.get(req);
+    QNetworkReply * reply = nam->get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(pvtReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
-    pendingRequests.insert(reply);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
 }
@@ -1566,7 +1568,7 @@ void Client::authenticationDone()
 {
     sessionCookies = auth->getCookies();
     stuckWithNoNetwork = false;
-    nam.setCookieJar(new QNetworkCookieJar(this));
+    nam->setCookieJar(new QNetworkCookieJar(this));
     getPVTToken();
 }
 
@@ -1579,7 +1581,7 @@ void Client::cookieUpdateSlot(QNetworkCookie cookie)
             sessionCookies[i].setValue(cookie.value());
         }
     }
-    nam.setCookieJar(new QNetworkCookieJar(this));
+    nam->setCookieJar(new QNetworkCookieJar(this));
     //auth->updateCookies(sessionCookies);
 }
 
@@ -1634,6 +1636,7 @@ void Client::loginNeededSlot()
 
 Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel)
 {
+    nam = new QNetworkAccessManager();
     QObject::connect(&timeoutTimer, SIGNAL(timeout()), this, SLOT(networkTimeout()));
 
     connectedToInternet = true;
@@ -1722,8 +1725,8 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
     // a == Connected -> connectivity change
     // a == Powered -> toggled wifi
 
-    if (a=="Connected") {
-        if (b.variant().toBool()==true) {
+    if (a=="State") {
+        if (b.variant().toString()=="online") {
             if (stuckWithNoNetwork) {
                 getPVTToken();
                 return;
@@ -1732,13 +1735,7 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
             channel->fastReconnect();
             connectedToInternet = true;
         }
-        else {
-            QNetworkSession session(nam.configuration());
-            if (session.state()==QNetworkSession::Connected) {
-                //This may happen when switching from wlan to cellular, or viceversa
-                qDebug() << "State is connected, ignoring";
-                return;
-            }
+        else if (b.variant().toString()=="idle"){
             //I'm not connected
             channel->setStatus(false);
             connectedToInternet = false;
@@ -1759,7 +1756,7 @@ void Client::forceChannelCheckAndRestore()
     QDateTime last = channel->getLastPushTs();
     QDateTime now = QDateTime::currentDateTime();
     //Checking for 17 secs in order to avoid rounding problems and small delays
-    if (last.addSecs(17) < now) {
+    if (last.addSecs(31) < now) {
         qDebug() << "Reactivating";
         forceChannelRestore();
     }
@@ -1767,6 +1764,9 @@ void Client::forceChannelCheckAndRestore()
 
 void Client::setAppOpened()
 {
+    if (!appPaused)
+        return;
+
     if (needLogin)
         emit(loginNeeded());
 
@@ -1799,6 +1799,10 @@ void Client::setAppPaused()
 {
     if (!initCompleted)
         return;
+
+    if (appPaused)
+        return;
+
     channel->setAppPaused();
     //setPresence(true);
     appPaused = true;
@@ -1850,22 +1854,28 @@ void Client::slotError(QNetworkReply::NetworkError err)
     //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
     //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
     if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
-        //nam.deleteLater();
-        //nam = new QNetworkAccessManager();
+        nam->deleteLater();
+        nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);
-        //QNetworkSession session( nam.configuration() );
+        //QNetworkSession session( nam->configuration() );
         qDebug() << "Aborting all " << pendingRequests.size();
         //emit cancelAllActiveRequests();
         QSetIterator<QNetworkReply *> itr(pendingRequests);
         while (itr.hasNext()) {
             qDebug() << "Aborting one";
-            itr.next()->abort();
+            Event evt;
+            conversationModel->addErrorMessage(itr.next(), "convId", evt);
         }
         pendingRequests.clear();
         //session.close();
         //session.open();
-        //nam.setCookieJar(new QNetworkCookieJar(this));
+        //nam->setCookieJar(new QNetworkCookieJar(this));
     }
     //I may want to try to submit the original request again at some point, need further investigation
     //reply->request()
+}
+
+
+void Client::testFunction() {
+    //A debuggin slot
 }

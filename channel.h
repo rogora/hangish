@@ -57,7 +57,8 @@ private:
     QTimer *checkChannelTimer;
     bool channelEstablishmentOccurring;
     bool isOnline;
-    int lastValidParcelId;
+    int lastValidParcelId;    
+    QDateTime lastLongPollReq;
     QDateTime lastValidParcelIdTS;
     bool appPaused;
     QString lastIncomingConvId;

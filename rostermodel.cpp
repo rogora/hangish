@@ -153,11 +153,13 @@ void RosterModel::addUnreadMsg(QString convId)
         conversations[i]->unread += 1;
         //put the referenced conversation on top of the list
         if (i!=conversations.length()-1) {
+            beginResetModel();
             conversations.move(i,conversations.length()-1);
+            endResetModel();
         }
-        //TODO: check why this is the only (wrong) way to make it work!
-        for (int i=0; i<conversations.size(); i++) {
-            QModelIndex r1 = index(i);
+        else {
+            //No need to reset model
+            QModelIndex r1 = index(conversations.length() - 1 - i);
             emit dataChanged(r1, r1);
         }
     }
@@ -171,23 +173,19 @@ bool RosterModel::hasUnreadMessages(QString convId)
             return (c->unread > 0);
         }
      }
+    return false;
 }
 
 void RosterModel::putOnTop(QString convId)
 {
     int i;
     bool found = findIndex(convId, i);
-    if (found) {
-        if (i!=conversations.length()-1) {
-            qDebug() << "Moving";
-            conversations.move(i,conversations.length()-1);
-            qDebug() << "Moved";
-        }
-        //TODO: check why this is the only (wrong) way to make it work!
-        for (int i=0; i<conversations.size(); i++) {
-            QModelIndex r1 = index(i);
-            emit dataChanged(r1, r1);
-        }
+    if (found && i!=conversations.length()-1) {
+        beginResetModel();
+        qDebug() << "Moving";
+        conversations.move(i,conversations.length()-1);
+        qDebug() << "Moved";
+        endResetModel();
     }
 }
 
@@ -197,10 +195,8 @@ void RosterModel::setReadConv(QString convId)
     bool found = findIndex(convId, i);
     if (found) {
         conversations[i]->unread = 0;
-        for (int i=0; i<conversations.size(); i++) {
-            QModelIndex r1 = index(i);
-            emit dataChanged(r1, r1);
-        }
+        QModelIndex r1 = index(conversations.length() - 1 - i);
+        emit dataChanged(r1, r1);
     }
 }
 
@@ -209,6 +205,7 @@ QString RosterModel::getConversationName(QString convId) {
         if (ca->convId==convId)
             return ca->name;
     }
+    return "Conv not found";
 }
 
 void RosterModel::renameConversation(QString convId, QString newName)
@@ -233,8 +230,15 @@ void RosterModel::renameConversation(QString convId, QString newName)
             */
         }
 
-        for (int i=0; i<conversations.size(); i++) {
-            QModelIndex r1 = index(i);
+        //put the referenced conversation on top of the list
+        if (i!=conversations.length()-1) {
+            beginResetModel();
+            conversations.move(i,conversations.length()-1);
+            endResetModel();
+        }
+        else {
+            //No need to reset model
+            QModelIndex r1 = index(conversations.length() - 1 - i);
             emit dataChanged(r1, r1);
         }
     }
@@ -266,9 +270,7 @@ void RosterModel::updateNotificationLevel(QString convId, int newLevel)
     if (found && conversations[i]->notificationLevel != newLevel) {
         qDebug() << "Found, updating";
         conversations[i]->notificationLevel = newLevel;
-        for (int i=0; i<conversations.size(); i++) {
-            QModelIndex r1 = index(i);
-            emit dataChanged(r1, r1);
-        }
+        QModelIndex r1 = index(conversations.length() - 1 - i);
+        emit dataChanged(r1, r1);
     }
 }
