@@ -81,7 +81,7 @@ void ConversationModel::addOutgoingMessage(QNetworkReply *id, QString convId, Ev
     addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", false, evt.timestamp, 0, true);
 }
 
-void ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
+bool ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
 {
     int i=0;
     for (i=0; i<conversations.size(); i++)
@@ -114,11 +114,13 @@ void ConversationModel::addEventToConversation(QString convId, Event e, bool bot
             ts_string = e.timestamp.time().toString();
 
         //Where to add this message? Bottom -> new msg / Top -> old msg
+        //If it is added to the bottom, I also wanna know whether it's a duplicate
         if (bottom)
-            addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type, e.isMine);
+            return addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type, e.isMine);
         else
             prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type);
     }
+    return true;
 }
 
 QHash<int, QByteArray> ConversationModel::roleNames() const {
@@ -263,7 +265,7 @@ void ConversationModel::loadConversation(QString cId)
     }
 }
 
-void ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine)
+bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine)
 {
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
@@ -273,7 +275,7 @@ void ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     foreach (ConversationElement *ce, myList) {
         if (ce->timestamp == timestamp) {
             //This must be a duplicate, skip it
-            return;
+            return false;
         }
     }
 
@@ -295,6 +297,7 @@ void ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts, type));
     endInsertRows();
+    return true;
 }
 
 void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type)

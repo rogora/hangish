@@ -354,11 +354,11 @@ void Client::parseConversationState(MessageField conv)
         //skip empty messages (voice calls)
         if ((e.value.segments.size() > 0 || e.value.attachments.size()>0)) {
             qDebug() << "I have a valid msg here";
-            conversationModel->addEventToConversation(c.id, e);
+            bool added = conversationModel->addEventToConversation(c.id, e);
             //I should put on top the conversation anyway
             rosterModel->putOnTop(c.id);
             //If I'm not the active client these messages have already been read probably
-            if (!notifier->isAnotherClientActive())
+            if (added && !notifier->isAnotherClientActive())
                 rosterModel->addUnreadMsg(c.id);
             newValidEvts++;
             if (i+1 < c.events.size() && c.events[i].conversationId != c.events[i+1].conversationId)
@@ -1719,11 +1719,13 @@ void Client::channelRestoredSlot(QDateTime lastRec)
 void Client::connectivityChanged(QString a, QDBusVariant b)
 {
     qDebug() << "Conn changed " << a;
-    qDebug() << b.variant();
+    qDebug() << b.variant().toString();
     //Here I know the channel is going to die, so I can speed up things
 
     // a == Connected -> connectivity change
     // a == Powered -> toggled wifi
+
+    //Ignore "ready": may be sent when connection is online
 
     if (a=="State") {
         if (b.variant().toString()=="online") {
@@ -1735,7 +1737,7 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
             channel->fastReconnect();
             connectedToInternet = true;
         }
-        else if (b.variant().toString()=="idle"){
+        else if (b.variant().toString()=="idle" || b.variant().toString()=="offline"){
             //I'm not connected
             channel->setStatus(false);
             connectedToInternet = false;

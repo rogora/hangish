@@ -66,7 +66,7 @@ class ConversationModel : public QAbstractListModel
 public:
     void updateReadState(ReadState rs);
     void addConversation(Conversation c);
-    void addEventToConversation(QString convId, Event e, bool bottom=true);
+    bool addEventToConversation(QString convId, Event e, bool bottom=true);
     void addSentMessage(QNetworkReply *id, QString convId, Event evt);
     void addErrorMessage(QNetworkReply *id, QString convId, Event evt);
     void addOutgoingMessage(QNetworkReply *id, QString convId, Event evt);
@@ -92,7 +92,7 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    void addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine);
+    bool addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine);
     void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type);
     void deleteMsgWError(QString text);
 

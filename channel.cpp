@@ -240,11 +240,11 @@ void Channel::parseChannelData(QString sreply)
                         continue;
                     }
 
-                    conversationModel->addEventToConversation(evt.conversationId, evt);
+                    bool added = conversationModel->addEventToConversation(evt.conversationId, evt);
                     rosterModel->putOnTop(evt.conversationId);
                     qDebug() << "Added";
                     lastIncomingConvId = evt.conversationId;
-                    if (evt.sender.chat_id != myself.chat_id) {
+                    if (added && evt.sender.chat_id != myself.chat_id) {
                         qDebug() << "Going to notify";
                         //Signal new event only if the actual conversation isn't already visible to the user
                         if (appPaused || (conversationModel->getCid() != evt.conversationId)) {
