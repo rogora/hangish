@@ -126,9 +126,14 @@ Page {
                             sendBox.placeholderText = qsTr("Reply")
                         }
                         function setSendError() {
-                            ibanner.displayError("Error sending msg")
+                            ibanner.displayError(qsTr("Error sending msg"))
                             sendBox.placeholderText = qsTr("Reply")
                         }
+                        function setUploadError() {
+                            ibanner.displayError(qsTr("Error uploading image"))
+                            sendBox.placeholderText = qsTr("Reply")
+                        }
+
                         function setIsTyping(id, convId, status) {
                             console.log("is typing")
                             console.log(id)
@@ -169,6 +174,7 @@ Page {
                             onIsTyping: sendBox.setIsTyping(uname, convid, status)
                             onMessageSent: sendBox.setOnline()
                             onMessageNotSent: sendBox.setSendError()
+                            onImageUploadFailed: sendBox.setUploadError()
                         }
 
                     Connections

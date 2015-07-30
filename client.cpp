@@ -35,6 +35,7 @@ static QString endpoint = "https://clients6.google.com/chat/v1/";
 static QString ORIGIN_URL = "https://talkgadget.google.com";
 
 #define TIMEOUT_MS 10000
+#define TIMEOUT_MS_UPLOAD 100000
 
 QString Client::getSelfChatId()
 {
@@ -90,26 +91,39 @@ void Client::parseSelfConversationState(QList<MessageField> stateFields, Convers
 
 User Client::parseEntity(QList<MessageField> entity)
 {
-//    qDebug() << "Parsing single entity " << entity.size();
     User res;
-    auto ids = entity[8].list();
-    res.chat_id = ids[0].string();
-    res.gaia_id = ids[1].string();
+    if (entity.size() >= 10) {
+        auto ids = entity[8].list();
+        res.chat_id = ids[0].string();
+        res.gaia_id = ids[1].string();
 
-    auto properties = entity[9].list();
-    res.display_name = properties[1].string();
-    res.first_name = properties[2].string();
-    res.photo = properties[3].string();
-    auto emails = properties[4].list();
-    if (emails.size() >= 1)
-        res.email = emails[0].string();
+        auto properties = entity[9].list();
+        if (properties.size() >= 5) {
+            res.display_name = properties[1].string();
+            res.first_name = properties[2].string();
+            res.photo = properties[3].string();
+            auto emails = properties[4].list();
+            if (emails.size() >= 1)
+                res.email = emails[0].string();
+        }
+        else {
+            qDebug() << "Parsing single entity properties error " << properties.size();
+            res.display_name = res.first_name = res.email = "Not found";
+            res.photo = "";
+        }
 
-    /*
-    qDebug() << "ID: " << res.chat_id;
-    qDebug() << "DNAME: " << res.display_name;
-    qDebug() << "FNAME: " << res.first_name;
-    qDebug() << "EMAIL: " << res.email;
-    */
+        /*
+        qDebug() << "ID: " << res.chat_id;
+        qDebug() << "DNAME: " << res.display_name;
+        qDebug() << "FNAME: " << res.first_name;
+        qDebug() << "EMAIL: " << res.email;
+        */
+    }
+    else {
+        qDebug() << "Parsing single entity error " << entity.size();
+        res.chat_id = res.gaia_id = res.display_name = res.first_name = res.email = "NF";
+        res.photo = "";
+    }
     return res;
 }
 
@@ -130,11 +144,16 @@ QList<User> Client::parseGroup(QList<MessageField> group)
 {
 //    qDebug() << "Parsinggroup ";// << input;
     QList<User> res;
-    auto groupEntities = group[2].list();
-    for (auto entity : groupEntities) {
-        User tmpUser = parseEntity(entity.list()[0].list());
-        if (!getUserById(tmpUser.chat_id).alreadyParsed)
-            res.append(tmpUser);
+    if (group.size() >= 3) {
+        auto groupEntities = group[2].list();
+        for (auto entity : groupEntities) {
+            auto eentity = entity.list();
+            if (eentity.size()) {
+                User tmpUser = parseEntity(eentity[0].list());
+                if (!getUserById(tmpUser.chat_id).alreadyParsed)
+                    res.append(tmpUser);
+            }
+        }
     }
     return res;
 }
@@ -146,12 +165,13 @@ QList<User> Client::parseUsers(const QString& userString)
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
     //qDebug() << parsedData.size();
-
-    auto entities = parsedData[2].list();
-    res.append(parseClientEntities(entities));
-    //Now we have groups; what are these?
-    for (int i = 4; i < parsedData.size(); ++i) {
-        res.append(parseGroup(parsedData[i].list()));
+    if (parsedData.size() >= 3) {
+        auto entities = parsedData[2].list();
+        res.append(parseClientEntities(entities));
+        //Now we have groups; what are these?
+        for (int i = 4; i < parsedData.size(); ++i) {
+            res.append(parseGroup(parsedData[i].list()));
+        }
     }
     return res;
 }
@@ -223,6 +243,7 @@ User Client::getEntityById(QString cid) {
         }
         else {
             qDebug() << "Parsing";
+            qDebug() << sreply;
             auto entity = entities[0].list();
             User tmp = parseEntity(entity);
             qDebug() << "Parsed";
@@ -249,23 +270,32 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
     //First we have ID -- ignore
 
     //Then type
+    if (abstractFields.size() < 2)
+        return;
     QString type = abstractFields[1].number();
     //qDebug() << "TYPE: " << type;
     //Name (optional) -- need to see what happens when it is set
+    if (abstractFields.size() < 3)
+        return;
     res.name = abstractFields[2].string();
     //qDebug() << "Name: " << res.name;
 
     // parse the state
+    if (abstractFields.size() < 4)
+        return;
     auto conversationState = abstractFields[3].list();
     parseSelfConversationState(conversationState, res);
 
-
+    if (abstractFields.size() < 8)
+        return;
     //Now I have read_state
     QList<ReadState> readStates;
     for (auto rs : abstractFields[7].list()) {
         readStates << Utils::parseReadState(rs);
     }
 
+    if (abstractFields.size() < 13)
+        return;
     //skip 4 fields
     auto participants = abstractFields[12].list();
     for (auto p : participants) {
@@ -306,13 +336,22 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
 Conversation Client::parseConversation(QList<MessageField> conversation)
 {
     Conversation res;
-    res.id = conversation[0].list()[0].string();
+    if (!conversation.size())
+        return res;
+    QList<MessageField> cconversation = conversation[0].list();
+    if (!cconversation.size())
+        return res;
+    res.id = cconversation[0].string();
 
 
     // Abstract
+    if (conversation.size() < 2)
+        return res;
     auto abstract = conversation[1].list();
     parseConversationAbstract(abstract, res);
     // Events
+    if (conversation.size() < 3)
+        return res;
     auto details = conversation[2].list();
     for (auto event : details) {
         Event e = Utils::parseEvent(event.list());
@@ -396,9 +435,11 @@ QList<Conversation> Client::parseConversations(const QString& conv)
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
     //Skip 3 fields
-    auto conversations = parsedData[3].list();
-    for (auto conversation : conversations) {
-        res.append(parseConversation(conversation.list()));
+    if (parsedData.size() >= 4) {
+        auto conversations = parsedData[3].list();
+        for (auto conversation : conversations) {
+            res.append(parseConversation(conversation.list()));
+        }
     }
 
     /*
@@ -430,18 +471,18 @@ User Client::parseMySelf(const QString& sreply) {
     auto parsedData = MessageField::parseListRef(dsData, idx);
     User res;
     //And then parse a common user
+    if (parsedData.size() >= 3) {
+        auto entity = parsedData[2].list();
 
-    auto entity = parsedData[2].list();
+        res = parseEntity(entity);
 
-    res = parseEntity(entity);
-
-    /*
-    qDebug() << res.chat_id;
-    qDebug() << res.display_name;
-    qDebug() << res.first_name;
-    qDebug() << res.photo;
-    */
-
+        /*
+        qDebug() << res.chat_id;
+        qDebug() << res.display_name;
+        qDebug() << res.first_name;
+        qDebug() << res.photo;
+        */
+    }
     return res;
 }
 
@@ -629,11 +670,12 @@ void Client::performImageUpload(QString url)
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
     QNetworkReply * reply = nam->post(req, inFile.readAll());
+    imageBeingUploaded = reply;
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(uploadPerformedReply()));
     QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(slotError(QNetworkReply::NetworkError)));
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
     if (!timeoutTimer.isActive())
-        timeoutTimer.start(TIMEOUT_MS);
+        timeoutTimer.start(TIMEOUT_MS_UPLOAD);
 }
 
 void Client::uploadImageReply()
@@ -932,7 +974,6 @@ void Client::sendImage(QString segments, QString conversationId, QString filenam
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), reply, SLOT(abort()));
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
-    //Then send the message
 }
 
 void Client::syncAllNewEventsReply()
@@ -1850,8 +1891,13 @@ void Client::networkTimeout() {
 
 void Client::slotError(QNetworkReply::NetworkError err)
 {
-    //QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     qDebug() << "Error in client " << err;
+
+    if (reply == imageBeingUploaded) {
+        qDebug() << "Image upload failed";
+        emit imageUploadFailed();
+    }
 
     //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
     //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps

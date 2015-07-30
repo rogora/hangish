@@ -66,6 +66,7 @@ private:
     QDateTime needSyncTS;
     QDateTime lastSetActive, lastSetPresence;
     QList<OutgoingImage> outgoingImages;
+    QNetworkReply *imageBeingUploaded;
     QString conversationBeingRemoved;
     QString convNameBeingSet;
     int notificationLevelBeingSet;
@@ -171,6 +172,7 @@ public slots:
     void renameConvSlot(QString convId, QString newname);
 
 signals:
+    void imageUploadFailed();
     void notificationPushed(QString convId);
     void loginNeeded();
     void messageSent();

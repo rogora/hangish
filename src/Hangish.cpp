@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("Hangish");
     QCoreApplication::setApplicationName("Hangish");
-    QCoreApplication::setApplicationVersion("0.7.0");
+    QCoreApplication::setApplicationVersion("0.7.1");
 
     qsrand(QTime::currentTime().msec());
 

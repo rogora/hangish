@@ -281,7 +281,7 @@ bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender
 
     if (id==NULL && isMine) {
         foreach (ConversationElement *ce, myList) {
-            if (ce->text == text && ce->senderId == senderId) {
+            if (ce->text == text && ce->senderId == senderId && ce->previewImageUrl == previewimageUrl && ce->fullimageUrl == fullimageUrl) {
                 found = true;
                 break;
             }

@@ -48,7 +48,8 @@
         <location filename="../qml/pages/Conversation.qml" line="87"/>
         <location filename="../qml/pages/Conversation.qml" line="126"/>
         <location filename="../qml/pages/Conversation.qml" line="130"/>
-        <location filename="../qml/pages/Conversation.qml" line="142"/>
+        <location filename="../qml/pages/Conversation.qml" line="134"/>
+        <location filename="../qml/pages/Conversation.qml" line="147"/>
         <source>Reply</source>
         <translation>Rispondi</translation>
     </message>
@@ -73,17 +74,27 @@
         <translation>Non in linea</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="138"/>
+        <location filename="../qml/pages/Conversation.qml" line="129"/>
+        <source>Error sending msg</source>
+        <translation>Errore nell'invio</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/Conversation.qml" line="133"/>
+        <source>Error uploading image</source>
+        <translation>Errore nel caricamento dell'immagine</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/Conversation.qml" line="143"/>
         <source> is typing</source>
         <translation> sta scrivendo</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="140"/>
+        <location filename="../qml/pages/Conversation.qml" line="145"/>
         <source> paused</source>
         <translation> si è fermato</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="177"/>
+        <location filename="../qml/pages/Conversation.qml" line="183"/>
         <source>Image saved to gallery!</source>
         <translation>Immagine salvata nella galleria!</translation>
     </message>
