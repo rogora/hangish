@@ -94,9 +94,13 @@ User Client::parseEntity(QList<MessageField> entity)
     User res;
     if (entity.size() >= 10) {
         auto ids = entity[8].list();
-        res.chat_id = ids[0].string();
-        res.gaia_id = ids[1].string();
-
+        if (ids.size() >= 2) {
+            res.chat_id = ids[0].string();
+            res.gaia_id = ids[1].string();
+        }
+        else {
+            res.chat_id = "NF";
+        }
         auto properties = entity[9].list();
         if (properties.size() >= 5) {
             res.display_name = properties[1].string();
@@ -247,6 +251,9 @@ User Client::getEntityById(QString cid) {
             auto entity = entities[0].list();
             User tmp = parseEntity(entity);
             qDebug() << "Parsed";
+            if (tmp.chat_id == "NF") {
+                tmp.chat_id = tmp.gaia_id = cid;
+            }
             //Some users may have no info like display_name or whatsoever... Probably these have deleted their g+ account
             if (tmp.display_name == "")
                 tmp.display_name = "Unknown";

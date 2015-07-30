@@ -76,12 +76,12 @@
     <message>
         <location filename="../qml/pages/Conversation.qml" line="129"/>
         <source>Error sending msg</source>
-        <translation>Errore nell'invio</translation>
+        <translation>Errore nell&apos;invio</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="133"/>
         <source>Error uploading image</source>
-        <translation>Errore nel caricamento dell'immagine</translation>
+        <translation>Errore nel caricamento dell&apos;immagine</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="143"/>

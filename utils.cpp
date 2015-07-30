@@ -84,6 +84,8 @@ int Utils::findPositionFromComma(QString input, int startPos, int commaCount)
 
 Identity Utils::parseIdentity(const QList<MessageField> &ids)
 {
+    if (ids.size() < 2)
+        return {"Error", "Error"};
     return {ids[0].string(), ids[1].string()};
 }
 
