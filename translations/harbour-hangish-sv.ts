@@ -71,7 +71,7 @@
     <message>
         <location filename="../qml/pages/Conversation.qml" line="122"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Ej ansluten</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="129"/>
