@@ -51,6 +51,10 @@ ApplicationWindow
         id: about
     }
 
+    Contacts {
+        id: contacts
+    }
+
     ConvRenameInput {
         id: convRenameInput
     }

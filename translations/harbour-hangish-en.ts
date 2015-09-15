@@ -30,6 +30,27 @@
     </message>
 </context>
 <context>
+    <name>ContactEntry</name>
+    <message>
+        <location filename="../qml/delegates/ContactEntry.qml" line="10"/>
+        <source>Open conversation</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Contacts</name>
+    <message>
+        <location filename="../qml/pages/Contacts.qml" line="37"/>
+        <source>By phone contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/Contacts.qml" line="47"/>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ConvRenameInput</name>
     <message>
         <location filename="../qml/pages/ConvRenameInput.qml" line="30"/>
@@ -46,55 +67,55 @@
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="87"/>
-        <location filename="../qml/pages/Conversation.qml" line="126"/>
-        <location filename="../qml/pages/Conversation.qml" line="130"/>
-        <location filename="../qml/pages/Conversation.qml" line="134"/>
-        <location filename="../qml/pages/Conversation.qml" line="147"/>
+        <location filename="../qml/pages/Conversation.qml" line="137"/>
+        <location filename="../qml/pages/Conversation.qml" line="141"/>
+        <location filename="../qml/pages/Conversation.qml" line="145"/>
+        <location filename="../qml/pages/Conversation.qml" line="158"/>
         <source>Reply</source>
         <translation>Reply</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="104"/>
+        <location filename="../qml/pages/Conversation.qml" line="114"/>
         <source>Can&apos;t send empty message</source>
         <translation>Can&apos;t send empty message</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="111"/>
+        <location filename="../qml/pages/Conversation.qml" line="122"/>
         <source>Sending message...</source>
         <translation>Sending message...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="116"/>
+        <location filename="../qml/pages/Conversation.qml" line="127"/>
         <source>Sending image...</source>
         <translation>Sending image...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="122"/>
+        <location filename="../qml/pages/Conversation.qml" line="133"/>
         <source>Offline</source>
         <translation>Offline</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="129"/>
+        <location filename="../qml/pages/Conversation.qml" line="140"/>
         <source>Error sending msg</source>
         <translation>Error sending msg</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="133"/>
+        <location filename="../qml/pages/Conversation.qml" line="144"/>
         <source>Error uploading image</source>
         <translation>Error uploading image</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="143"/>
+        <location filename="../qml/pages/Conversation.qml" line="154"/>
         <source> is typing</source>
         <translation> is typing</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="145"/>
+        <location filename="../qml/pages/Conversation.qml" line="156"/>
         <source> paused</source>
         <translation> paused</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Conversation.qml" line="183"/>
+        <location filename="../qml/pages/Conversation.qml" line="194"/>
         <source>Image saved to gallery!</source>
         <translation>Image saved to gallery!</translation>
     </message>
@@ -144,6 +165,11 @@
 <context>
     <name>Roster</name>
     <message>
+        <location filename="../qml/pages/Roster.qml" line="67"/>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
         <source>About Hangish</source>
         <translation>About Hangish</translation>
@@ -159,7 +185,7 @@
         <translation>Deleting cookies</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="73"/>
+        <location filename="../qml/pages/Roster.qml" line="77"/>
         <source>Conversations</source>
         <translation>Conversations</translation>
     </message>

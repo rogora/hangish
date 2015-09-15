@@ -28,9 +28,41 @@ ContactsModel::ContactsModel(QObject *parent) :
 {
 }
 
+QHash<int, QByteArray> ContactsModel::roleNames() const {
+    QHash<int, QByteArray> roles = QAbstractListModel::roleNames();
+        roles.insert(NameRole, QByteArray("display_name"));
+        roles.insert(FirstNameRole, QByteArray("first_name"));
+        roles.insert(GaiaIdRole, QByteArray("gaia_id"));
+        roles.insert(ChatIdRole, "chat_id");
+        roles.insert(ImageRole, "image");
+        roles.insert(EmailRole, "email");
+        return roles;
+}
+
+void ContactsModel::searchPhoneContacts()
+{
+    QtContacts::QContactManager *manager = new QtContacts::QContactManager();
+    QList<QtContacts::QContact> results = manager->contacts();
+    qDebug() << results.size();
+    foreach (QtContacts::QContact c, results) {
+        QtContacts::QContactPhoneNumber no = c.detail<QtContacts::QContactPhoneNumber>();
+        QtContacts::QContactName name = c.detail<QtContacts::QContactName>();
+        qDebug() << name.firstName() << " " << name.lastName() << ": " << no.number();
+/*        foreach (QtContacts::QContactDetail d, details) {
+            qDebug() << "New detail";
+            qDebug() << d.value(QtContacts::QContactDetail::TypeName).toString();
+        }
+        */
+    }
+}
+
 void ContactsModel::addContact(User pContact)
 {
+    if (!pContact.photo.startsWith("https:")) pContact.photo.prepend("https:");
+
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
     contacts.append(pContact);
+    endInsertRows();
 }
 
 QString ContactsModel::getContactFName(QString cid)
@@ -57,6 +89,27 @@ int ContactsModel::rowCount(const QModelIndex &parent) const
 
 QVariant ContactsModel::data(const QModelIndex &index, int role) const
 {
+    User contact = contacts.at(contacts.size() - index.row() - 1);
+    if (role == NameRole)
+        return QVariant::fromValue(contact.display_name);
+    else if (role == FirstNameRole)
+        return QVariant::fromValue(contact.first_name);
+    else if (role == GaiaIdRole)
+        return QVariant::fromValue(contact.gaia_id);
+    else if (role == ChatIdRole)
+        return QVariant::fromValue(contact.chat_id);
+    else if (role == ImageRole) {
+        if (contact.photo.size()) { // TODO once we should support multiple images
+            return contact.photo;
+        }
+        else {
+            return "";
+        }
+    }
+
+    else if (role == EmailRole) {
+            return QVariant::fromValue(contact.email);
+    }
 
     return QVariant();
 }

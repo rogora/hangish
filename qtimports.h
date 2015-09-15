@@ -45,4 +45,9 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include <QtQuick>
 #include <QtDBus>
 
+#include <QtContacts/QContact>
+#include <QtContacts/QContactManager>
+#include <QtContacts/QContactPhoneNumber>
+#include <QtContacts/QContactName>
+
 #endif // QTIMPORTS_H

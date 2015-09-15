@@ -63,6 +63,10 @@ Page {
                                                Client.deleteCookies();
                                            } );
             }
+            MenuItem {
+                text: qsTr("Contacts")
+                onClicked: pageStack.push(contacts) //Client.testFunction()
+            }
         }
 
 

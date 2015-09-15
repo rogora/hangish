@@ -27,54 +27,28 @@ import Sailfish.Silica 1.0
 import "../delegates"
 
 Page {
-    id: page
-    objectName: "conversation"
+    id: contactsPage
+    objectName: "contacts"
     allowedOrientations: Orientation.All
-
-    property string conversationId: ""
-    property string conversationName: ""
-    property string selfChatId;
-
-    InfoBanner {
-        id: ibanner
-    }
-
-    function loadConversationModel(cid) {
-        Client.updateWatermark(cid)
-        Client.setFocus(cid, 1)
-        page.conversationName = Client.getConversationName(cid)
-        page.selfChatId = Client.getSelfChatId()
-        page.conversationId = cid;
-        conversationModel.cid = cid;
-        listView.positionViewAtEnd()
-    }
-
-    function openText(text) {
-        listView.footerItem.openText(text)
-    }
-
-    function openKeyboard() {
-        listView.footerItem.openKeyboard()
-    }
 
         SilicaListView {
             PullDownMenu {
                 MenuItem {
-                    text: qsTr("Load more...")
-                    onClicked: Client.retrieveConversationLog(page.conversationId)
+                    text: qsTr("By phone contacts")
+                    onClicked: contactsModel.searchPhoneContacts()
                     }
             }
 
             id: listView
-            model: conversationModel
+            model: contactsModel
             anchors.fill: parent
             width: parent.width
             header: PageHeader {
-                title: page.conversationName
+                title: qsTr("Contacts")
             }
-            delegate: Message { }
+            delegate: ContactEntry { }
             VerticalScrollDecorator {}
-            footer: Row {
+            /*footer: Row {
                     width: page.width
                     TextArea {
                         objectName: "sendTextArea"
@@ -200,16 +174,7 @@ Page {
                     }
 
                 }
-          /*
-            PushUpMenu {
-                    Text {
-                        color: Theme.highlightColor
-                        font.family: "cursive"
-                        text: "Hello, Sailor!"
-                    }
-            }
-        }
-        */
+                */
     }
 
 }

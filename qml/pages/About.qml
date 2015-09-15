@@ -85,6 +85,6 @@ Page {
         anchors.bottomMargin: Theme.paddingSmall
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeTiny
-        text: "v0.7.1<br>https://github.com/rogora/hangish"
+        text: "v0.8.0<br>https://github.com/rogora/hangish"
     }
 }

@@ -78,9 +78,10 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
 
     n->setCategory("x-nemo.messaging.im");
     //I may want to personalize the notification, need to create and publish a custom hangish.ini in /usr/share/ngfd/events.d/
-    n->setHintValue("x-nemo-feedback", "chat");
-    n->setHintValue("x-nemo-priority", 100);
+    //n->setHintValue("x-nemo-feedback", "chat");
+    n->setHintValue("x-nemo-feedback", "hangish");
     n->setHintValue("x-nemo-preview-icon", "harbour-hangish");
+    //n->setHintValue("x-nemo-priority", 100);
     //n->setHintValue("lowPowerModeIconId", "hangish-notif-icon");
     //n->setHintValue("statusAreaIconId", "hangish-notif-icon");
     n->setItemCount(1);

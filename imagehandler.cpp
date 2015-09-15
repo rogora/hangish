@@ -60,7 +60,7 @@ QString ImageHandler::getImageAddr(QString imgUrl)
     QString path = QString(cachePath + imgname);
     QFile img(path);
     if (img.exists()) {
-        //qDebug() << "Img exists " << imgname;
+        qDebug() << "Img exists " << imgname;
         //Modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
         //Hope this is ok for Jolla QA
         utime(QString(path).toStdString().c_str(), 0);

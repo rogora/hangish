@@ -35,6 +35,15 @@ class ContactsModel : public QAbstractListModel
 
     Q_OBJECT
 public:
+    enum ContactRoles {
+        NameRole = Qt::UserRole + 1,
+        FirstNameRole,
+        GaiaIdRole,
+        ChatIdRole,
+        ImageRole,
+        EmailRole
+    };
+
     explicit ContactsModel(QObject *parent = 0);
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
@@ -42,11 +51,15 @@ public:
 
     Q_INVOKABLE QString getContactFName(QString cid);
     Q_INVOKABLE QString getContactDName(QString cid);
+    Q_INVOKABLE void searchPhoneContacts();
 
 
 signals:
 
 public slots:
+
+protected:
+    QHash<int, QByteArray> roleNames() const;
 
 };
 

@@ -10,7 +10,7 @@
 #   - translation filenames have to be changed
 
 # The name of your application
-QT += dbus
+QT += dbus contacts
 include(notifications.pri)
 include(translations/translations.pri)
 #include(keepalive.pri)
@@ -66,7 +66,9 @@ OTHER_FILES += \
     qml/harbour-hangish.qml \
     qml/pages/About.qml \
     rpm/harbour-hangish.changes \
-    qml/pages/ConvRenameInput.qml
+    qml/pages/ConvRenameInput.qml \
+    qml/pages/Contacts.qml \
+    qml/delegates/ContactEntry.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line
