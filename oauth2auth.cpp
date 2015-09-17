@@ -209,7 +209,7 @@ void OAuth2Auth::authReply()
         //r = session.get('https://accounts.google.com/accounts/OAuthLogin?source=hangish&issueuberauth=1', headers=headers)
     }
     else {
-        emit authFailed("Error 1");
+        emit authFailed("No network");
     }
 }
 

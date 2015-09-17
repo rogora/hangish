@@ -1778,7 +1778,9 @@ void Client::connectivityChanged(QString a, QDBusVariant b)
     if (a=="State") {
         if (b.variant().toString()=="online") {
             if (stuckWithNoNetwork) {
-                getPVTToken();
+                emit authFailed("Retrying...");
+                auth->auth();
+                //getPVTToken();
                 return;
             }
             channel->setStatus(true);
@@ -1866,6 +1868,9 @@ OAuth2Auth *Client::getAuthenticator()
 void Client::authFailedSlot(QString error)
 {
     emit authFailed(error);
+    //No network?
+    stuckWithNoNetwork = true;
+    emit(channelLost());
 }
 
 void Client::updateClientId(QString newID)
