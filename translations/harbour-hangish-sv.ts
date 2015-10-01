@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="sv_SV">
+<TS version="2.1" language="sv_SE">
 <context>
     <name>About</name>
     <message>
@@ -34,7 +34,7 @@
     <message>
         <location filename="../qml/delegates/ContactEntry.qml" line="10"/>
         <source>Open conversation</source>
-        <translation type="unfinished"></translation>
+        <translation>Öppna konversation</translation>
     </message>
 </context>
 <context>
@@ -42,12 +42,12 @@
     <message>
         <location filename="../qml/pages/Contacts.qml" line="37"/>
         <source>By phone contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Från telefonkontakter</translation>
     </message>
     <message>
         <location filename="../qml/pages/Contacts.qml" line="47"/>
         <source>Contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontakter</translation>
     </message>
 </context>
 <context>
@@ -97,12 +97,12 @@
     <message>
         <location filename="../qml/pages/Conversation.qml" line="140"/>
         <source>Error sending msg</source>
-        <translation type="unfinished"></translation>
+        <translation>Fel vid meddelandesändning</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="144"/>
         <source>Error uploading image</source>
-        <translation type="unfinished"></translation>
+        <translation>Fel vid bilduppladdning</translation>
     </message>
     <message>
         <location filename="../qml/pages/Conversation.qml" line="154"/>
@@ -167,7 +167,7 @@
     <message>
         <location filename="../qml/pages/Roster.qml" line="67"/>
         <source>Contacts</source>
-        <translation type="unfinished"></translation>
+        <translation>Kontakter</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
