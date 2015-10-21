@@ -116,7 +116,7 @@ Page {
                                 return
                             }
 
-                            Client.sendChatMessage(sendBox.text.replace(/(\n)/gm,""), page.conversationId);
+                            Client.sendChatMessage(sendBox.text.replace(/(\n)/gm,"").trim(), page.conversationId);
                             sendBox.deselect();
                             sendBox.text = "";
                             sendBox.placeholderText = qsTr("Sending message...");
