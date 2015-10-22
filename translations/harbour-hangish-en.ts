@@ -158,6 +158,11 @@
     <name>Message</name>
     <message>
         <location filename="../qml/delegates/Message.qml" line="12"/>
+        <source>Copy to clipboard</source>
+        <translation>Copy to clipboard</translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/Message.qml" line="18"/>
         <source>Download to gallery</source>
         <translation>Download to gallery</translation>
     </message>

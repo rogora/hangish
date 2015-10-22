@@ -9,8 +9,14 @@ BackgroundItem {
         menu: ContextMenu {
             //enabled: fullimage.length>3
             MenuItem {
+                text: qsTr("Copy to clipboard")
+                visible: fullimage.length<=3
+                onClicked: Clipboard.text = msgtext
+            }
+
+            MenuItem {
                 text: qsTr("Download to gallery")
-                enabled: fullimage.length>3
+                visible: fullimage.length>3
                 onClicked: ImageHandler.saveImageToGallery(fullimage)
             }
         }
