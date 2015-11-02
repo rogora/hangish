@@ -28,6 +28,7 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36";
 static qint32 MAX_READ_BYTES = 1024 * 1024;
 static QString homePath = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/cookies.json";
+static QString ORIGIN_URL = "https://talkgadget.google.com";
 
 void Channel::processCookies(QNetworkReply *reply)
 {
@@ -153,6 +154,7 @@ void Channel::parseChannelData(QString sreply)
 {
     int idx=0;
     for (;;) {
+        qDebug() << sreply;
         idx = sreply.indexOf('[', idx); // at the beginning there is a length, which we ignore.
         //qDebug() << idx;
         // ignore empty messages
@@ -338,6 +340,7 @@ void Channel::nr()
     processCookies(reply);
 
     QString sreply = reply->read(MAX_READ_BYTES);
+    qDebug() << sreply;
     ////qDebug() << "Got reply for lp " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     ///
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==401) {
@@ -397,14 +400,32 @@ void Channel::parseSid()
         if (parsedData.size() < 1 || parsedData[0].list().size() < 2 || parsedData[0].list()[1].list().size() < 2)
             return;
         sid = parsedData[0].list()[1].list()[1].string();
-        qDebug() << sid;
+        gsessionid = parsedData[1].list()[1].list()[1].string();
+
+        //Add service to channel
+        QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind?ctype=hangouts&VER=8&RID=81188&gsessionid=" + gsessionid + "&SID=" + sid)));
+        //{"3": {"1": {"1": "babel"}}}))
+        QVariant body = "count=1&ofs=1&req0_p=%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%7D%2C%222%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%2C%222%22%3A%22%22%2C%223%22%3A%22JS%22%2C%224%22%3A%22lcsclient%22%7D%2C%223%22%3A1446490244140%2C%224%22%3A1446490244118%2C%225%22%3A%22c3%22%7D%2C%223%22%3A%7B%221%22%3A%7B%221%22%3A%22babel%22%7D%7D%7D";
+        QList<QNetworkCookie> reqCookies;
+        foreach (QNetworkCookie cookie, session_cookies) {
+                reqCookies.append(cookie);
+        }
+        req.setRawHeader("authorization", getAuthHeader());
+        req.setRawHeader("x-origin", QVariant::fromValue(ORIGIN_URL).toByteArray());
+        req.setRawHeader("x-goog-authuser", "0");
+        req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
+        QNetworkReply *rep2 = nam->post(req, body.toByteArray());
+
 
         //ROW 1 and 2 discarded
 
         //ROW 3
         //TODO: add check for ALL these lists
-        if (parsedData.size() < 4 || parsedData[3].list().size() < 2 || parsedData[3].list()[1].list().size() < 2 || parsedData[3].list()[1].list()[1].list().size() < 2)
+        if (parsedData.size() < 4 || parsedData[3].list().size() < 2 || parsedData[3].list()[1].list().size() < 2 || parsedData[3].list()[1].list()[1].list().size() < 2) {
+            longPollRequest();
             return;
+        }
         auto rowData = parsedData[3].list()[1].list()[1].list()[1].list();
         if (rowData[0].string()!="cfj") {
             //Not the right line! Try with the second one
@@ -501,10 +522,17 @@ void Channel::longPollRequest()
     }
     channelEstablishmentOccurring = true;
 
-    QString body = "?VER=8&RID=rpc&ctype=hangouts&t=1&CI=0&clid=" + clid + "&prop=" + prop + "&gsessionid=" + gsessionid + "&SID=" + sid + "&ec="+ec;
-    QNetworkRequest req(QUrl(QString("https://talkgadget.google.com" + path + "bind" + body)));
+    qDebug() << sid;
+    qDebug() << gsessionid;
+
+    QString body = "?VER=8&RID=rpc&ctype=hangouts&t=1&CI=0&gsessionid=" + gsessionid + "&SID=" + sid;
+    QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind" + body)));
     req.setRawHeader("User-Agent", QVariant::fromValue(user_agent).toByteArray());
     req.setRawHeader("Connection", "Keep-Alive");
+    req.setRawHeader("authorization", getAuthHeader());
+    req.setRawHeader("x-origin", QVariant::fromValue(ORIGIN_URL).toByteArray());
+    req.setRawHeader("x-goog-authuser", "0");
+
 
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(session_cookies));
     qDebug() << "Making lp req";
@@ -515,6 +543,24 @@ void Channel::longPollRequest()
     //QObject::connect(this, SIGNAL(cancelAllActiveRequests()), LPrep, SLOT(abort()));
 }
 
+QByteArray Channel::getAuthHeader()
+{
+    QByteArray res = "SAPISIDHASH ";
+    qint64 time_msec = QDateTime::currentMSecsSinceEpoch();//1000;
+    QString auth_string = QString::number(time_msec);
+    auth_string += " ";
+    foreach (QNetworkCookie cookie, session_cookies) {
+        if (cookie.name()=="SAPISID")
+            auth_string += cookie.value();
+    }
+    auth_string += " ";
+    auth_string += ORIGIN_URL;
+    res += QString::number(time_msec);
+    res += "_";
+    res += QCryptographicHash::hash(auth_string.toUtf8(), QCryptographicHash::Sha1).toHex();
+    return res;
+}
+
 void Channel::fetchNewSid()
 {
     if (fetchingSid)
@@ -522,12 +568,15 @@ void Channel::fetchNewSid()
     fetchingSid = true;
 
     qDebug() << "fetch new sid";
-    QNetworkRequest req(QString("https://talkgadget.google.com" + path + "bind"));
-    QVariant body = "ctype=hangouts&VER=8&RID=81187&clid=" + clid + "&prop=" + prop + "&ec="+ec;
+    QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind")));
+    QVariant body = "ctype=hangouts&VER=8&RID=81188";
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, session_cookies) {
             reqCookies.append(cookie);
     }
+    req.setRawHeader("authorization", getAuthHeader());
+    req.setRawHeader("x-origin", QVariant::fromValue(ORIGIN_URL).toByteArray());
+    req.setRawHeader("x-goog-authuser", "0");
     req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
     QNetworkReply *rep = nam->post(req, body.toByteArray());

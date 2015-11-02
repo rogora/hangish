@@ -54,6 +54,7 @@ class Channel : public QObject
     int lastAs;
 
 private:
+    QByteArray getAuthHeader();
     QTimer *checkChannelTimer;
     bool channelEstablishmentOccurring;
     bool isOnline;
