@@ -159,7 +159,7 @@
     <message>
         <location filename="../qml/delegates/Message.qml" line="12"/>
         <source>Copy to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Kopiera till urklipp</translation>
     </message>
     <message>
         <location filename="../qml/delegates/Message.qml" line="18"/>
