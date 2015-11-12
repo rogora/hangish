@@ -31,6 +31,10 @@ Utils::Utils()
 
 QString Utils::cleanText(QString text, QString newLineReplacer)
 {
+    //first remove double back slashes
+    text = text.replace("&#34;","\\\"");
+    //remove one backslash in front of unicodes
+    text.replace("\\\\u", "\\u");
     QString result="";
     int size = text.size();
     for (int i = 0; i < size; ++i) {
@@ -92,11 +96,10 @@ Identity Utils::parseIdentity(const QList<MessageField> &ids)
 Event Utils::parseEvent(const QList<MessageField>& eventFields)
 {
     Event event;
-    event.conversationId = eventFields[0].list()[0].string();
-
+    auto e0 = eventFields[0].list();
+    event.conversationId = e0[0].string();
     auto ids = eventFields[1].list();
     event.sender = parseIdentity(ids);
-
     QString tss = eventFields[2].number();
     qulonglong tsll = tss.toULongLong();
     qint64 ts = (qint64)tsll;
@@ -125,32 +128,36 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
         for (auto text : texts) {
             // parseEventValueSegment():
             auto textList = text.list();
+
             int type = textList[0].number().toInt();
             event.type = type;
+            if (textList.size() < 2) {
+                if (event.value.segments.isEmpty())
+                    event.value.segments.append({type, ""});
+                continue;
+            }
             QString msg = textList[1].string();
             msg = cleanText(msg, "<br>");
-            if (type == 2) { // linke
+            if (type == 2) { // link
                 msg = QString("<a href=\"%1\">%1</a>").arg(msg);
             }
             event.value.segments.append({type, msg});
         }
 
-        auto attachments = eventValueFields[1].list();
-        for (auto attachment : attachments) {
-            auto attachmentList = attachment.list();
-            for (auto innerAttach : attachmentList) {
-                auto innerAttachList = innerAttach.list();
-                if (innerAttachList.size() >= 3 && innerAttachList[2].type() == MessageField::List) {
-                    innerAttachList = innerAttachList[2].list();
-                    if (innerAttachList.size() > 10) {
-                        QString fullImageUrl = innerAttachList[5].string();
-                        QString previewUrl = innerAttachList[9].string();
-                        event.value.attachments.append({0, fullImageUrl, previewUrl});
-                    }
+        // skip this atm
+        if (eventValueFields.size() >= 2) {
+            // i think we may have a map hereby...
+            auto attachments = eventValueFields[1].list();
+            if (attachments.size()) {
+                attachments = attachments[0].list()[0].list()[1].map()[1].list();
+
+                if (attachments.size() > 10) {
+                    QString fullImageUrl = attachments[5].string();
+                    QString previewUrl = attachments[9].string();
+                    event.value.attachments.append({0, fullImageUrl, previewUrl});
                 }
             }
         }
-
         event.value.valid = true;
     }
 

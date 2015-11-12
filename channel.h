@@ -29,6 +29,9 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "conversationmodel.h"
 #include "rostermodel.h"
 
+#include <unistd.h>
+
+
 struct ChannelEvent {
     QString conversationId;
     bool isTyping;

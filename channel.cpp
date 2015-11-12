@@ -153,8 +153,9 @@ void Channel::nrf()
 void Channel::parseChannelData(QString sreply)
 {
     int idx=0;
+    //Replace quotes inside messages with html quotes
+    sreply = sreply.replace("\\\\\\\\\\\\\\\"","&#34;");
     for (;;) {
-        qDebug() << sreply;
         idx = sreply.indexOf('[', idx); // at the beginning there is a length, which we ignore.
         //qDebug() << idx;
         // ignore empty messages
@@ -169,7 +170,6 @@ void Channel::parseChannelData(QString sreply)
         //This case should be caught looping here
         for (int listidx = 0; listidx < completeParsedReply.size(); listidx++) {
             auto parsedReply = completeParsedReply[listidx].list();
-            //qDebug() << parsedReply.size();
             if (parsedReply.size()<2)
                 continue;
             int parcelID = parsedReply[0].number().toInt();
@@ -181,45 +181,41 @@ void Channel::parseChannelData(QString sreply)
             lastValidParcelId = parcelID;
             lastValidParcelIdTS = QDateTime::currentDateTime();
             auto content = parsedReply[1].list();
-            //qDebug() << content[0].string();
-            if (content.size() < 2) continue;
-            if (!content[0].string().contains("c")) continue;
-            auto cContent = content[1].list();
-            if (cContent.size() < 2) continue;
-            cContent = cContent[1].list();
-
-            if (cContent.size() < 1 || !cContent[0].string().contains("bfo")) {
+            if (content.size() < 1) continue;
+            auto cMap = content[0].map();
+            if (cMap.size() < 2)
                 continue;
-            }
+            int idx3=0;
+            QString dbgstr = cMap[1].string().replace("\\\"","\"").replace("\\\\\"","\\\"");
+            QStringRef ref = dbgstr.leftRef(-1);
+            auto innerMap = MessageField::parseListRef(ref, idx3);
+            if (innerMap.size()<4)
+                continue;
+            innerMap = innerMap[3].map();
+            //This is the innermost map, we want "2":[cbu]
+            if (innerMap.size()<4)
+                continue;
 
-            // prepare the inner data to parse:
-            //qDebug() << cContent.size();
-
-            auto stringData = cContent[1].string();
-            stringData = Utils::cleanText(stringData);
-            qDebug() << "inner data##" << stringData;
-            // we can now parse the inner data:
             int idx2 = 0;
-            auto parsedInner = MessageField::parseListRef(stringData.leftRef(-1), idx2);
-            //qDebug() << idx2;
-            if (parsedInner.size()<2)
+            QString cleanContent = innerMap[3].string()/*.remove("\\\\n")*/.replace("\\\"","\"");
+            auto parsedInner = MessageField::parseListRef(cleanContent.leftRef(-1), idx2);
+            if (!parsedInner.size())
                 continue;
-            // TODO can there be multiple cbu in one reply?
             if (!parsedInner[0].string().contains("cbu")) continue;
 
             auto playloadList = parsedInner[1].list();
             if (!playloadList.size()) continue; // TODO is that senseful ??
             playloadList = playloadList[0].list();
+
             if (!playloadList.size() || !playloadList[0].list().size()) continue; // TODO is that senseful ??
-            //qDebug() << playloadList.size();
             int as = playloadList[0].list()[0].number().toInt();
+            qDebug() << as;
             emit activeClientUpdate(as);
             if (playloadList.size() < 2)
                 continue;
             if (playloadList[2].type() == MessageField::List) {
                 // parse events
                 auto eventDataList = playloadList[2].list();
-                //qDebug() << eventDataList.size();
 
                 for (auto eventData : eventDataList) {
                     Event evt = Utils::parseEvent(eventData.list());
@@ -271,6 +267,7 @@ void Channel::parseChannelData(QString sreply)
 
             if (playloadList.size() < 5) continue; // TODO should we really continue?
             // typing notification
+            qDebug() << playloadList[4].type();
             if (playloadList[4].type() == MessageField::List) {
                 auto typingData = playloadList[4].list();
                 ChannelEvent evt;
@@ -400,9 +397,9 @@ void Channel::parseSid()
         if (parsedData.size() < 1 || parsedData[0].list().size() < 2 || parsedData[0].list()[1].list().size() < 2)
             return;
         sid = parsedData[0].list()[1].list()[1].string();
-        gsessionid = parsedData[1].list()[1].list()[1].string();
+        gsessionid = parsedData[1].list()[1].list()[0].map()[1].string();
 
-        //Add service to channel
+        //Add service to channel; copy-paste from chrome
         QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind?ctype=hangouts&VER=8&RID=81188&gsessionid=" + gsessionid + "&SID=" + sid)));
         //{"3": {"1": {"1": "babel"}}}))
         QVariant body = "count=1&ofs=1&req0_p=%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%7D%2C%222%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%2C%222%22%3A%22%22%2C%223%22%3A%22JS%22%2C%224%22%3A%22lcsclient%22%7D%2C%223%22%3A1446490244140%2C%224%22%3A1446490244118%2C%225%22%3A%22c3%22%7D%2C%223%22%3A%7B%221%22%3A%7B%221%22%3A%22babel%22%7D%7D%7D";
@@ -415,7 +412,9 @@ void Channel::parseSid()
         req.setRawHeader("x-goog-authuser", "0");
         req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
         req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-        QNetworkReply *rep2 = nam->post(req, body.toByteArray());
+        //sleep(1) is a workaround suggested by hangups; need to fix this for goods
+        sleep(1);
+        nam->post(req, body.toByteArray());
 
 
         //ROW 1 and 2 discarded

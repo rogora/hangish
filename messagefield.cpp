@@ -27,25 +27,41 @@ along with hangish.  If not, see <http://www.gnu.org/licenses/>
 // Parses the list and sets start to the end of the list
 QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
 {
-    if (text.at(start) != '[') {
+    if (text.at(start) != '[' && text.at(start) != '{') {
         qWarning() << "Not a list to parse";
         start += text.size();
         return {};
     }
-    int openBrackets = 1;
+    int openBrackets = 0;
+    int openMapBrackets = 0;
+    if (text.at(start)=='[')
+        openBrackets++;
+    else
+        openMapBrackets++;
+
     QList<MessageField> results;
     for(int i = start + 1; i < text.length(); ++i) {
         MessageField nextMessageField;
+        //qDebug() << text.at(i);
         if (text.at(i) == '[') {
             nextMessageField.type_ = List;
             nextMessageField.listValue_ = parseListRef(text, i);
             // move the cursor to the comma
             if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
-        } else if (text.at(i) == ',') {
+        }
+        else if (text.at(i) == '{') {
+            nextMessageField.type_ = Map;
+            nextMessageField.mapValue_ = parseMapRef(text, i);
+            // move the cursor to the comma
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+        }
+        else if (text.at(i) == ',') {
             nextMessageField.type_ = Empty;
-        } else if (text.size() > i+3 && text.at(i)=='n' && text.at(i+1)=='u' && text.at(i+2)=='l' && text.at(i+3)=='l') {
+        }
+        else if (text.size() > i+3 && text.at(i)=='n' && text.at(i+1)=='u' && text.at(i+2)=='l' && text.at(i+3)=='l') {
             nextMessageField.type_ = Empty;
             i += 3;
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
         }
         else if (text.at(i) == '"') {
             nextMessageField.type_ = String;
@@ -69,7 +85,34 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             }
             start = i;
             return results;
-        } else if (text.at(i) == '\n') {
+        }
+        else if (text.at(i) == '}') {
+            if (--openMapBrackets) {
+                qWarning() << "Here we shouldn't have any open brackets...";
+                Q_ASSERT(false);
+            }
+            start = i;
+            return results;
+        }/*
+        else if (i + 3 <= text.length() && text.at(i) == '\\' && text.at(i+1) == '\\' && text.at(i+2) == 'n' && text.at(i+3) == ',') {
+            // move the cursor to the comma
+            if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
+            // don't add garbage to the list:
+            i+=3;
+            continue;
+        }*/
+        else if (i + 2 < text.length() && text.at(i) == '\\' && text.at(i+1) == '\\' && text.at(i+2) == 'n') {
+            // move the cursor to the comma, if there is one...
+            if (i + 3 < text.length() && text.at(i+3) == ',') {
+                i += 3;
+                continue;
+            }
+            //... otherwise just skip this newline
+            // don't add garbage to the list:
+            i += 2;
+            continue;
+        }
+        else if (text.at(i) == '\n') {
             // move the cursor to the comma
             if (i + 1 < text.length() && text.at(i+1) == ',') ++i;
             // don't add garbage to the list:
@@ -78,7 +121,8 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
             // TODO: we should parse maps they look like this:  { key : value, ... }
             // Image attachments are in maps.
             // For now ignore them: (seems to work fine)
-            if (text.at(i) == '{' || text.at(i) == ':' || text.at(i) == '}') continue;
+            if (text.at(i)=='\\' || text.at(i)==':')
+                continue;
             qWarning() << "Unknown field type????" << text.right(i);
             // in any case we do not want garbage in the list
             //start += text.right(i).size();
@@ -87,6 +131,11 @@ QList<MessageField> MessageField::parseListRef(QStringRef text, int &start)
         results << nextMessageField;
     }
     Q_ASSERT(false);
+}
+
+QList<MessageField> MessageField::parseMapRef(QStringRef text, int &start)
+{
+    return parseListRef(text, start);
 }
 
 QStringRef MessageField::parseString(QStringRef text, int& start)
