@@ -29,8 +29,6 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "conversationmodel.h"
 #include "rostermodel.h"
 
-#include <unistd.h>
-
 
 struct ChannelEvent {
     QString conversationId;
@@ -69,6 +67,7 @@ private:
     void fetchNewSid();
     void checkChannelAndReconnect();
     void processCookies(QNetworkReply *reply);
+    void addChannelService();
 
 public:
     Channel(QList<QNetworkCookie> cookies, QString ppath, QString pclid, QString pec, QString pprop, User pms, ConversationModel *cModel, RosterModel *rModel);

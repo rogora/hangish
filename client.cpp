@@ -1913,7 +1913,7 @@ void Client::slotError(QNetworkReply::NetworkError err)
 
     //I have error 8 after long inactivity, and the connection can't be reestablished, let's try the following
     //OperationCanceledError is instead triggered by the LPRequst, but if this happens it means that there's an operation stuck for more than 30 seconds; let's try to create a new QNetworkAccessManager and see if it helps
-    if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError) {
+    if (err == QNetworkReply::OperationCanceledError || err==QNetworkReply::NetworkSessionFailedError || err==QNetworkReply::UnknownNetworkError) {
         nam->deleteLater();
         nam = new QNetworkAccessManager();
         //emit qnamUpdated(nam);

@@ -170,11 +170,6 @@
 <context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="67"/>
-        <source>Contacts</source>
-        <translation>Kontakter</translation>
-    </message>
-    <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
         <source>About Hangish</source>
         <translation>Om Hangish</translation>
@@ -190,7 +185,7 @@
         <translation>Tar bort cookies</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="77"/>
+        <location filename="../qml/pages/Roster.qml" line="79"/>
         <source>Conversations</source>
         <translation>Konversationer</translation>
     </message>

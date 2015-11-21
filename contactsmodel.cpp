@@ -41,6 +41,7 @@ QHash<int, QByteArray> ContactsModel::roleNames() const {
 
 void ContactsModel::searchPhoneContacts()
 {
+    /*
     QtContacts::QContactManager *manager = new QtContacts::QContactManager();
     QList<QtContacts::QContact> results = manager->contacts();
     qDebug() << results.size();
@@ -48,12 +49,13 @@ void ContactsModel::searchPhoneContacts()
         QtContacts::QContactPhoneNumber no = c.detail<QtContacts::QContactPhoneNumber>();
         QtContacts::QContactName name = c.detail<QtContacts::QContactName>();
         qDebug() << name.firstName() << " " << name.lastName() << ": " << no.number();
-/*        foreach (QtContacts::QContactDetail d, details) {
-            qDebug() << "New detail";
-            qDebug() << d.value(QtContacts::QContactDetail::TypeName).toString();
-        }
-        */
+//        foreach (QtContacts::QContactDetail d, details) {
+  //          qDebug() << "New detail";
+    //       qDebug() << d.value(QtContacts::QContactDetail::TypeName).toString();
+      //  }
+        //
     }
+*/
 }
 
 void ContactsModel::addContact(User pContact)

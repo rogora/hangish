@@ -53,7 +53,7 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("About Hangish")
-                onClicked: pageStack.push(about) //Client.testFunction()
+                onClicked: pageStack.push(about) //Client.testNotification();
             }
             MenuItem {
                 text: qsTr("Log out and exit")
@@ -63,10 +63,12 @@ Page {
                                                Client.deleteCookies();
                                            } );
             }
+            /*
             MenuItem {
                 text: qsTr("Contacts")
                 onClicked: pageStack.push(contacts) //Client.testFunction()
             }
+            */
         }
 
 

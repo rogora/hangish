@@ -160,7 +160,7 @@ void Channel::parseChannelData(QString sreply)
         //qDebug() << idx;
         // ignore empty messages
         if (idx == -1) return;
-        //qDebug() << "##" << sreply.right(sreply.size()-idx);
+        qDebug() << "##" << sreply.right(sreply.size()-idx);
         auto completeParsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
         //qDebug() << idx;
         //qDebug() << completeParsedReply.size();
@@ -183,8 +183,11 @@ void Channel::parseChannelData(QString sreply)
             auto content = parsedReply[1].list();
             if (content.size() < 1) continue;
             auto cMap = content[0].map();
+
+            qDebug() << cMap.size();
             if (cMap.size() < 2)
                 continue;
+
             int idx3=0;
             QString dbgstr = cMap[1].string().replace("\\\"","\"").replace("\\\\\"","\\\"");
             QStringRef ref = dbgstr.leftRef(-1);
@@ -196,8 +199,16 @@ void Channel::parseChannelData(QString sreply)
             if (innerMap.size()<4)
                 continue;
 
+            QString i3 = innerMap[3].string();
+            if (i3.startsWith("lcsw_hangouts")) {
+                header_client = i3;
+                emit updateClientId(header_client);
+                addChannelService();
+                return;
+            }
+
             int idx2 = 0;
-            QString cleanContent = innerMap[3].string()/*.remove("\\\\n")*/.replace("\\\"","\"");
+            QString cleanContent = i3.replace("\\\"","\"");
             auto parsedInner = MessageField::parseListRef(cleanContent.leftRef(-1), idx2);
             if (!parsedInner.size())
                 continue;
@@ -380,6 +391,23 @@ void Channel::nr()
       //  longPollRequest();
 }
 
+void Channel::addChannelService() {
+    //Add service to channel; copy-paste from chrome
+    QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind?ctype=hangouts&VER=8&RID=81188&gsessionid=" + gsessionid + "&SID=" + sid)));
+    //{"3": {"1": {"1": "babel"}}}))
+    QVariant body = "count=1&ofs=1&req0_p=%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%7D%2C%222%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%2C%222%22%3A%22%22%2C%223%22%3A%22JS%22%2C%224%22%3A%22lcsclient%22%7D%2C%223%22%3A1446490244140%2C%224%22%3A1446490244118%2C%225%22%3A%22c3%22%7D%2C%223%22%3A%7B%221%22%3A%7B%221%22%3A%22babel%22%7D%7D%7D";
+    QList<QNetworkCookie> reqCookies;
+    foreach (QNetworkCookie cookie, session_cookies) {
+            reqCookies.append(cookie);
+    }
+    req.setRawHeader("authorization", getAuthHeader());
+    req.setRawHeader("x-origin", QVariant::fromValue(ORIGIN_URL).toByteArray());
+    req.setRawHeader("x-goog-authuser", "0");
+    req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
+    req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
+    nam->post(req, body.toByteArray());
+}
+
 void Channel::parseSid()
 {
     fetchingSid = false;
@@ -398,64 +426,6 @@ void Channel::parseSid()
             return;
         sid = parsedData[0].list()[1].list()[1].string();
         gsessionid = parsedData[1].list()[1].list()[0].map()[1].string();
-
-        //Add service to channel; copy-paste from chrome
-        QNetworkRequest req(QUrl(QString("https://0.client-channel.google.com/client-channel/channel/bind?ctype=hangouts&VER=8&RID=81188&gsessionid=" + gsessionid + "&SID=" + sid)));
-        //{"3": {"1": {"1": "babel"}}}))
-        QVariant body = "count=1&ofs=1&req0_p=%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%7D%2C%222%22%3A%7B%221%22%3A%7B%221%22%3A3%2C%222%22%3A2%7D%2C%222%22%3A%22%22%2C%223%22%3A%22JS%22%2C%224%22%3A%22lcsclient%22%7D%2C%223%22%3A1446490244140%2C%224%22%3A1446490244118%2C%225%22%3A%22c3%22%7D%2C%223%22%3A%7B%221%22%3A%7B%221%22%3A%22babel%22%7D%7D%7D";
-        QList<QNetworkCookie> reqCookies;
-        foreach (QNetworkCookie cookie, session_cookies) {
-                reqCookies.append(cookie);
-        }
-        req.setRawHeader("authorization", getAuthHeader());
-        req.setRawHeader("x-origin", QVariant::fromValue(ORIGIN_URL).toByteArray());
-        req.setRawHeader("x-goog-authuser", "0");
-        req.setRawHeader("content-type", "application/x-www-form-urlencoded;charset=utf-8");
-        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-        //sleep(1) is a workaround suggested by hangups; need to fix this for goods
-        sleep(1);
-        nam->post(req, body.toByteArray());
-
-
-        //ROW 1 and 2 discarded
-
-        //ROW 3
-        //TODO: add check for ALL these lists
-        if (parsedData.size() < 4 || parsedData[3].list().size() < 2 || parsedData[3].list()[1].list().size() < 2 || parsedData[3].list()[1].list()[1].list().size() < 2) {
-            longPollRequest();
-            return;
-        }
-        auto rowData = parsedData[3].list()[1].list()[1].list()[1].list();
-        if (rowData[0].string()!="cfj") {
-            //Not the right line! Try with the second one
-            if (parsedData.size() < 4 || parsedData[2].list().size() < 2 || parsedData[2].list()[1].list().size() < 2 || parsedData[2].list()[1].list()[1].list().size() < 2)
-                return;
-            rowData = parsedData[2].list()[1].list()[1].list()[1].list();
-            if (rowData[0].string()!="cfj") {
-                qDebug() << "Couldn't find cfj line, returning";
-                return;
-            }
-        }
-
-        QString stringData = rowData[1].string();
-        QStringList temp = stringData.split("/");
-        if (temp.size() < 2) {
-            qDebug() << stringData;
-        }
-        email = temp.at(0);
-
-        if (!email.contains(QChar('@')))
-            //Something went wrong, may happen after channel reestablished
-            //TODO: Try to go on with the old header_client, need some tests
-            return;
-
-        header_client = temp.at(1);
-        emit updateClientId(header_client);
-
-        if (parsedData.size() < 5 || parsedData[4].list().size() < 2 || parsedData[4].list()[1].list().size() < 2 || parsedData[4].list()[1].list()[1].list().size() < 2)
-            return;
-        auto row4Data = parsedData[4].list()[1].list()[1].list()[1].list();
-        gsessionid = row4Data[1].string();
     }
     else {
         QString rep = reply->readAll();
