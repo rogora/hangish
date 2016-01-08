@@ -149,12 +149,15 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
             // i think we may have a map hereby...
             auto attachments = eventValueFields[1].list();
             if (attachments.size()) {
-                attachments = attachments[0].list()[0].list()[1].map()[1].list();
+                auto attachmentMap = attachments[0].list()[0].list()[1].map();
+                if (attachmentMap.size() > 0) {
+                    attachments = attachmentMap[1].list();
 
-                if (attachments.size() > 10) {
-                    QString fullImageUrl = attachments[5].string();
-                    QString previewUrl = attachments[9].string();
-                    event.value.attachments.append({0, fullImageUrl, previewUrl});
+                    if (attachments.size() > 10) {
+                        QString fullImageUrl = attachments[5].string();
+                        QString previewUrl = attachments[9].string();
+                        event.value.attachments.append({0, fullImageUrl, previewUrl});
+                    }
                 }
             }
         }
