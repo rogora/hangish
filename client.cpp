@@ -1583,7 +1583,7 @@ void Client::pvtReply()
 
 void Client::initChat(QString pvt)
 {
-    QString surl = QString("https://talkgadget.google.com/u/0/talkgadget/_/chat?prop=hangish&fid=gtn-roster-iframe-id&ec=[\"ci:ec\",true,true,false]");
+    QString surl = QString("https://hangouts.google.com/webchat/u/0/load?prop=hangish&fid=gtn-roster-iframe-id&ec=[\"ci:ec\",true,true,false]");
     surl += "&pvt=";
     surl += pvt;
     QUrl url(surl);
