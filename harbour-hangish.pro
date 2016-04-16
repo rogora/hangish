@@ -10,7 +10,8 @@
 #   - translation filenames have to be changed
 
 # The name of your application
-QT += dbus contacts
+QT += dbus
+#contacts
 include(notifications.pri)
 include(translations/translations.pri)
 #include(keepalive.pri)

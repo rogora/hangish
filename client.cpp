@@ -364,7 +364,8 @@ Conversation Client::parseConversation(QList<MessageField> conversation)
         Event e = Utils::parseEvent(event.list());
         if (e.notificationLevel != 0 && e.notificationLevel != res.notifLevel) {
             //qDebug() << "Setting notifLev to " << e.notificationLevel;
-            res.notifLevel = (NotificationLevel)e.notificationLevel;
+            //This can be QUIET although the conversation is not
+            //res.notifLevel = (NotificationLevel)e.notificationLevel;
         }
 
         if (e.value.segments.size() > 0 || e.value.attachments.size()>0) //skip empty messages (voice calls)
