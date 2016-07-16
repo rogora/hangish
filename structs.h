@@ -111,6 +111,7 @@ struct EventAttachmentSegment {
     int type;
     QString fullImage;
     QString previewImage;
+    QString video;
 };
 
 struct EventValueSegment {

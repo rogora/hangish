@@ -153,11 +153,18 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
                 if (attachmentMap.size() > 0) {
                     attachments = attachmentMap[1].list();
 
-                    if (attachments.size() > 10) {
+                    if (attachments.size() > 19 && attachments[19].string().size() > 3) {
+                        QString fullImageUrl = attachments[5].string();
+                        QString previewUrl = attachments[9].string();
+                        QString videoUrl = attachments[19].string();
+                        event.value.attachments.append({0, fullImageUrl, previewUrl, videoUrl});
+                    }
+                    else if (attachments.size() > 10) {
                         QString fullImageUrl = attachments[5].string();
                         QString previewUrl = attachments[9].string();
                         event.value.attachments.append({0, fullImageUrl, previewUrl});
                     }
+
                 }
             }
         }

@@ -87,6 +87,65 @@ QString ImageHandler::getImageAddr(QString imgUrl)
     return "";
 }
 
+void ImageHandler::downloadVideo(QString videourl) {
+    QString imgname = videourl;
+    imgname.replace('/', '_');
+    QString path = QString(cachePath + imgname);
+    QFile img(path);
+    if (img.exists()) {
+        //qDebug() << "Img exists " << imgname;
+        //Modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
+        //Hope this is ok for Jolla QA
+        utime(QString(path).toStdString().c_str(), 0);
+        QProcess *m_process = new QProcess(this);
+        m_process->start(QString("xdg-open " + path));
+    }
+    else {
+        if (lock.load()==1) {
+            qDebug() << "Another download in progress, returning url";
+            return;
+        }
+
+        lock.store(1);
+        buffervideo.clear();
+        qDebug() << "Ok, let's download this";
+        QUrl url(videourl);
+        QNetworkRequest req(url);
+        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(auth->getCookies()));
+        QNetworkReply *reply = nam->get(req);
+        //qDebug() << "Getting " << req.url().toString();
+        QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(dataAvailVideo()));
+        QObject::connect(reply, SIGNAL(finished()), this, SLOT(gotVideo()));
+    }
+}
+
+void ImageHandler::dataAvailVideo()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    //qDebug() << "DA " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    buffervideo.append(reply->readAll());
+}
+
+void ImageHandler::gotVideo()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    //qDebug() << "GI " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    buffervideo.append(reply->readAll());
+
+    QString imgpath = QString(cachePath + reply->url().toString().replace('/', '_'));
+    //if (imgpath.endsWith(".mp4"))
+      //  imgpath = imgpath.left(imgpath.size() - 4);
+    QFile img(imgpath);
+    img.open(QIODevice::WriteOnly);
+    img.write(buffervideo);
+    img.close();
+    //qDebug() << "Created ";
+    emit videoReady(imgpath);
+    lock.store(0);
+    QProcess *m_process = new QProcess(this);
+    m_process->start(QString("xdg-open " + imgpath));
+}
+
 void ImageHandler::dataAvail()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());

@@ -246,11 +246,11 @@ User Client::getEntityById(QString cid) {
             qDebug() << "Something went wrong, have " << entities.size();
         }
         else {
-            qDebug() << "Parsing";
-            qDebug() << sreply;
+            //qDebug() << "Parsing";
+            //qDebug() << sreply;
             auto entity = entities[0].list();
             User tmp = parseEntity(entity);
-            qDebug() << "Parsed";
+            //qDebug() << "Parsed";
             if (tmp.chat_id == "NF") {
                 tmp.chat_id = tmp.gaia_id = cid;
             }

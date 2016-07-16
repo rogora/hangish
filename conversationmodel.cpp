@@ -78,7 +78,7 @@ void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event 
 void ConversationModel::addOutgoingMessage(QNetworkReply *id, QString convId, Event evt)
 {
     qDebug() << "Adding outgoing message " << id;
-    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", false, evt.timestamp, 0, true);
+    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", "", false, evt.timestamp, 0, true);
 }
 
 bool ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
@@ -104,6 +104,10 @@ bool ConversationModel::addEventToConversation(QString convId, Event e, bool bot
         QString pImage = "";
         foreach (EventAttachmentSegment eas, e.value.attachments)
             pImage += eas.previewImage;
+        QString uVideo = "";
+        foreach (EventAttachmentSegment eas, e.value.attachments)
+            uVideo += eas.video;
+
 
         //Show full date if event has not happened today; otherwise show only clock time
         QString ts_string;
@@ -116,9 +120,9 @@ bool ConversationModel::addEventToConversation(QString convId, Event e, bool bot
         //Where to add this message? Bottom -> new msg / Top -> old msg
         //If it is added to the bottom, I also wanna know whether it's a duplicate
         if (bottom)
-            return addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type, e.isMine);
+            return addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type, e.isMine);
         else
-            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, false, e.timestamp, e.type);
+            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type);
     }
     return true;
 }
@@ -131,6 +135,7 @@ QHash<int, QByteArray> ConversationModel::roleNames() const {
         roles.insert(TextRole, QByteArray("msgtext"));
         roles.insert(FullImageRole, QByteArray("fullimage"));
         roles.insert(PreviewImageRole, QByteArray("previewimage"));
+        roles.insert(VideoRole, QByteArray("video"));
         roles.insert(TimestampRole, QByteArray("timestamp"));
         roles.insert(ReadRole, QByteArray("read"));
         return roles;
@@ -242,6 +247,9 @@ void ConversationModel::loadConversation(QString cId)
                 QString pImage = "";
                 foreach (EventAttachmentSegment eas, e.value.attachments)
                     pImage += eas.previewImage;
+                QString uVideo = "";
+                foreach (EventAttachmentSegment eas, e.value.attachments)
+                    uVideo += eas.video;
 
                 //Show full date if event has not happened today; otherwise show only clock time
                 QString ts_string;
@@ -258,14 +266,14 @@ void ConversationModel::loadConversation(QString cId)
                         break;
                     }
                 }
-                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, read, e.timestamp, e.type, false);
+                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, read, e.timestamp, e.type, false);
             }
             break;
         }
     }
 }
 
-bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine)
+bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type, bool isMine)
 {
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
@@ -281,7 +289,7 @@ bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender
 
     if (id==NULL && isMine) {
         foreach (ConversationElement *ce, myList) {
-            if (ce->text == text && ce->senderId == senderId && ce->previewImageUrl == previewimageUrl && ce->fullimageUrl == fullimageUrl) {
+            if (ce->text == text && ce->senderId == senderId && ce->previewImageUrl == previewimageUrl && ce->fullimageUrl == fullimageUrl && ce->video == pvideo) {
                 found = true;
                 break;
             }
@@ -295,15 +303,15 @@ bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts, type));
+    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type));
     endInsertRows();
     return true;
 }
 
-void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type)
+void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type)
 {
     beginInsertRows(QModelIndex(), 0, 0);
-    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, read, pts, type));
+    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type));
     endInsertRows();
 }
 
@@ -351,6 +359,8 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const {
         return QVariant::fromValue(fobj->fullimageUrl);
     else if (role == PreviewImageRole)
         return QVariant::fromValue(fobj->previewImageUrl);
+    else if (role == VideoRole)
+        return QVariant::fromValue(fobj->video);
     else if (role == ReadRole)
         return QVariant::fromValue(fobj->read);
 

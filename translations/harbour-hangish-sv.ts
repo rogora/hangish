@@ -119,6 +119,11 @@
         <source>Image saved to gallery!</source>
         <translation>Bilden sparad i galleriet!</translation>
     </message>
+    <message>
+        <location filename="../qml/pages/Conversation.qml" line="195"/>
+        <source>Video Ready!</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CoverPage</name>
@@ -155,6 +160,19 @@
     </message>
 </context>
 <context>
+    <name>MediaPlayerToolBar</name>
+    <message>
+        <location filename="../qml/mediacomponents/MediaPlayerToolBar.qml" line="104"/>
+        <source>Downloading media</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/mediacomponents/MediaPlayerToolBar.qml" line="105"/>
+        <source>Media saved in Gallery</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Message</name>
     <message>
         <location filename="../qml/delegates/Message.qml" line="12"/>
@@ -165,6 +183,11 @@
         <location filename="../qml/delegates/Message.qml" line="18"/>
         <source>Download to gallery</source>
         <translation>Ladda ner till galleriet</translation>
+    </message>
+    <message>
+        <location filename="../qml/delegates/Message.qml" line="84"/>
+        <source>Downloading video...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

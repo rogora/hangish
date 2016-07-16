@@ -33,7 +33,7 @@ class ImageHandler : public QObject
 
 private:
     QNetworkAccessManager *nam;
-    QByteArray buffer;
+    QByteArray buffer, buffervideo;
     QAtomicInt lock;
     OAuth2Auth *auth;
 
@@ -41,11 +41,13 @@ public:
     explicit ImageHandler(QObject *parent = 0);
     Q_INVOKABLE QString getImageAddr(QString imgUrl);
     Q_INVOKABLE bool saveImageToGallery(QString imgUrl);
+    Q_INVOKABLE void downloadVideo(QString videourl);
     void cleanCache();
     void setAuthenticator(OAuth2Auth *pAuth);
 
 signals:
     void imgReady(QString path);
+    void videoReady(QString path);
     void savedToGallery();
 
 public slots:
@@ -53,6 +55,8 @@ public slots:
 private slots:
     void gotImage();
     void dataAvail();
+    void dataAvailVideo();
+    void gotVideo();
 
 };
 

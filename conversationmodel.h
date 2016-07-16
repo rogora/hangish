@@ -37,12 +37,13 @@ public:
     QString senderId;
     QString fullimageUrl;
     QString previewImageUrl;
+    QString video;
     int type;
     bool read;
 
     QDateTime ts;
 
-    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, bool pRead, QDateTime pts, int pType) {
+    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, QString pVideo, bool pRead, QDateTime pts, int pType) {
         id = pId;
         text = pText;
         sender = pSender;
@@ -50,6 +51,7 @@ public:
         timestamp = pTS;
         fullimageUrl = pFullImageUrl;
         previewImageUrl = pPrevImageUrl;
+        video = pVideo;
         read = pRead;
         ts = pts;
         type = pType;
@@ -81,6 +83,7 @@ public:
         TextRole,
         FullImageRole,
         PreviewImageRole,
+        VideoRole,
         TimestampRole,
         ReadRole
     };
@@ -92,8 +95,8 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    bool addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type, bool isMine);
-    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, bool read, QDateTime pts, int type);
+    bool addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type, bool isMine);
+    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type);
     void deleteMsgWError(QString text);
 
 

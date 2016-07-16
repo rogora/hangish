@@ -191,7 +191,9 @@ Page {
                     Connections
                         {
                             target: ImageHandler
-                            onSavedToGallery: ibanner.displayError(qsTr("Image saved to gallery!"))                        }
+                            onSavedToGallery: ibanner.displayError(qsTr("Image saved to gallery!"))
+                            onVideoReady: ibanner.displayError(qsTr("Video Ready!"))
+                        }
                     function openKeyboard() {
                         sendBox.forceActiveFocus()
                     }

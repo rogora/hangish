@@ -78,17 +78,25 @@ BackgroundItem {
             }
 
         onClicked: {
-            if (timestamp != "Error, msg not sent!" && fullimage.length>3) {
+            if (video.length > 3) {
+                console.log("Video!")
+                console.log(video)
+                ibanner.displayError(qsTr("Downloading video..."))
+                ImageHandler.downloadVideo(video)
+                //pageStack.push(Qt.resolvedUrl("../pages/VideoPlayerPage.qml"), { "context": delegate.context, "message": "delegate.message", "videoSrc": video });
+                //pageStack.push(Qt.openUrlExternally(video))
+            }
+            else {
+                if (timestamp != "Error, msg not sent!" && fullimage.length>3) {
                 openFullImage(fullimage)
             }
             else if (timestamp == "Error, msg not sent!") {
                 conversation.openText(msgtext)
                 Client.deleteMessageWError(msgtext);
             }
+            }
         }
     }
-
-
 
     function openFullImage(url) {
         console.log(url)
