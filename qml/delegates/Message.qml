@@ -17,7 +17,11 @@ BackgroundItem {
             MenuItem {
                 text: qsTr("Download to gallery")
                 visible: fullimage.length>3
-                onClicked: ImageHandler.saveImageToGallery(fullimage)
+                onClicked: if (video.length > 3) {
+                               ImageHandler.saveVideoToGallery(video)
+                           } else {
+                               ImageHandler.saveImageToGallery(fullimage)
+                           }
             }
         }
         width: parent.width
@@ -79,12 +83,11 @@ BackgroundItem {
 
         onClicked: {
             if (video.length > 3) {
-                console.log("Video!")
                 console.log(video)
-                ibanner.displayError(qsTr("Downloading video..."))
-                ImageHandler.downloadVideo(video)
-                //pageStack.push(Qt.resolvedUrl("../pages/VideoPlayerPage.qml"), { "context": delegate.context, "message": "delegate.message", "videoSrc": video });
-                //pageStack.push(Qt.openUrlExternally(video))
+                vurl = ImageHandler.downloadVideo(video, true)
+                if (vurl.startsWith("https://")) {
+                    ibanner.displayError(qsTr("Downloading video..."))
+                }
             }
             else {
                 if (timestamp != "Error, msg not sent!" && fullimage.length>3) {

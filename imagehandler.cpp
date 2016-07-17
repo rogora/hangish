@@ -87,7 +87,7 @@ QString ImageHandler::getImageAddr(QString imgUrl)
     return "";
 }
 
-void ImageHandler::downloadVideo(QString videourl) {
+QString ImageHandler::downloadVideo(QString videourl, bool toOpen) {
     QString imgname = videourl;
     imgname.replace('/', '_');
     QString path = QString(cachePath + imgname);
@@ -97,13 +97,16 @@ void ImageHandler::downloadVideo(QString videourl) {
         //Modify the lastModified field; this is necessary because otherwise the lastRead field is not updated
         //Hope this is ok for Jolla QA
         utime(QString(path).toStdString().c_str(), 0);
-        QProcess *m_process = new QProcess(this);
-        m_process->start(QString("xdg-open " + path));
+        if (toOpen) {
+            QProcess *m_process = new QProcess(this);
+            m_process->start(QString("xdg-open " + path));
+        }
+        return path;
     }
     else {
         if (lock.load()==1) {
             qDebug() << "Another download in progress, returning url";
-            return;
+            return "";
         }
 
         lock.store(1);
@@ -116,6 +119,7 @@ void ImageHandler::downloadVideo(QString videourl) {
         //qDebug() << "Getting " << req.url().toString();
         QObject::connect(reply, SIGNAL(readyRead()), this, SLOT(dataAvailVideo()));
         QObject::connect(reply, SIGNAL(finished()), this, SLOT(gotVideo()));
+        return videourl;
     }
 }
 
@@ -178,7 +182,7 @@ void delay()
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-bool ImageHandler::saveImageToGallery(QString imgUrl)
+void ImageHandler::saveImageToGallery(QString imgUrl)
 {
     //qDebug() << "Saving";
     QString savedAddr;
@@ -193,6 +197,22 @@ bool ImageHandler::saveImageToGallery(QString imgUrl)
     if (fileName.endsWith(".jpg"))
         fileName = fileName.left(fileName.size() - 4);
 
+    QFile::copy(savedAddr, galleryPath + fileName);
+    emit savedToGallery();
+}
+
+void ImageHandler::saveVideoToGallery(QString imgUrl)
+{
+    //qDebug() << "Saving";
+    QString savedAddr;
+
+    do {
+        savedAddr = downloadVideo(imgUrl, false);
+        delay();
+    } while (savedAddr=="" || savedAddr.startsWith("https://"));
+
+    QString fileName = imgUrl.right(imgUrl.size() - imgUrl.lastIndexOf('/')-1);
+    //qDebug() << fileName;
     QFile::copy(savedAddr, galleryPath + fileName);
     emit savedToGallery();
 }

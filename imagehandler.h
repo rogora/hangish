@@ -40,8 +40,9 @@ private:
 public:
     explicit ImageHandler(QObject *parent = 0);
     Q_INVOKABLE QString getImageAddr(QString imgUrl);
-    Q_INVOKABLE bool saveImageToGallery(QString imgUrl);
-    Q_INVOKABLE void downloadVideo(QString videourl);
+    Q_INVOKABLE void saveImageToGallery(QString imgUrl);
+    Q_INVOKABLE void saveVideoToGallery(QString imgUrl);
+    Q_INVOKABLE QString downloadVideo(QString videourl, bool toOpen);
     void cleanCache();
     void setAuthenticator(OAuth2Auth *pAuth);
 

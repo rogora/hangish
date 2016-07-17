@@ -69,13 +69,7 @@ OTHER_FILES += \
     rpm/harbour-hangish.changes \
     qml/pages/ConvRenameInput.qml \
     qml/pages/Contacts.qml \
-    qml/delegates/ContactEntry.qml \
-    qml/mediacomponents/MediaPlayerCursor.qml \
-    qml/mediacomponents/MediaPlayerLoadingBar.qml \
-    qml/mediacomponents/MediaPlayerProgressBar.qml \
-    qml/mediacomponents/MediaPlayerTiming.qml \
-    qml/mediacomponents/MediaPlayerTitle.qml \
-    qml/pages/VideoPlayer.qml
+    qml/delegates/ContactEntry.qml
 
 # to disable building translations every time, comment out the
 # following CONFIG line

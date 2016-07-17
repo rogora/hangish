@@ -185,7 +185,7 @@
         <translation>Download to gallery</translation>
     </message>
     <message>
-        <location filename="../qml/delegates/Message.qml" line="84"/>
+        <location filename="../qml/delegates/Message.qml" line="89"/>
         <source>Downloading video...</source>
         <translation type="unfinished"></translation>
     </message>
