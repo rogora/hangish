@@ -67,6 +67,7 @@ void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event 
     foreach (ConversationElement *ce, myList) {
         if (ce->id == id) {
             ce->timestamp = "Sent!";
+            ce->uniqueId = evt.uniqueId;
         }
     }
     for (int i=0; i<myList.size(); i++) {
@@ -78,7 +79,7 @@ void ConversationModel::addSentMessage(QNetworkReply *id, QString convId, Event 
 void ConversationModel::addOutgoingMessage(QNetworkReply *id, QString convId, Event evt)
 {
     qDebug() << "Adding outgoing message " << id;
-    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", "", false, evt.timestamp, 0, true);
+    addConversationElement(id, "", evt.sender.chat_id, "Sending...", evt.value.segments[0].value, "", "", "", false, evt.timestamp, 0, true, evt.uniqueId);
 }
 
 bool ConversationModel::addEventToConversation(QString convId, Event e, bool bottom)
@@ -120,9 +121,9 @@ bool ConversationModel::addEventToConversation(QString convId, Event e, bool bot
         //Where to add this message? Bottom -> new msg / Top -> old msg
         //If it is added to the bottom, I also wanna know whether it's a duplicate
         if (bottom)
-            return addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type, e.isMine);
+            return addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type, e.isMine, e.uniqueId);
         else
-            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type);
+            prependConversationElement(snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, false, e.timestamp, e.type, e.uniqueId);
     }
     return true;
 }
@@ -266,14 +267,14 @@ void ConversationModel::loadConversation(QString cId)
                         break;
                     }
                 }
-                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, read, e.timestamp, e.type, false);
+                addConversationElement(NULL, snd, e.sender.chat_id, ts_string, text, fImage, pImage, uVideo, read, e.timestamp, e.type, false, e.uniqueId);
             }
             break;
         }
     }
 }
 
-bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type, bool isMine)
+bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type, bool isMine, QString uid)
 {
     //if id is NULL this message comes from the channel; and if it is mine, I want to check if I have already the same message shown as outgoing/error/sent
     int i = 0;
@@ -289,7 +290,7 @@ bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender
 
     if (id==NULL && isMine) {
         foreach (ConversationElement *ce, myList) {
-            if (ce->text == text && ce->senderId == senderId && ce->previewImageUrl == previewimageUrl && ce->fullimageUrl == fullimageUrl && ce->video == pvideo) {
+            if (ce->uniqueId == uid /*||             if (ce->text == text && ce->senderId == senderId && ce->previewImageUrl == previewimageUrl && ce->fullimageUrl == fullimageUrl && ce->video == pvideo) {*/) {
                 found = true;
                 break;
             }
@@ -303,15 +304,15 @@ bool ConversationModel::addConversationElement(QNetworkReply *id, QString sender
     }
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type));
+    myList.append(new ConversationElement(id, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type, uid));
     endInsertRows();
     return true;
 }
 
-void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type)
+void ConversationModel::prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString pvideo, bool read, QDateTime pts, int type, QString uid)
 {
     beginInsertRows(QModelIndex(), 0, 0);
-    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type));
+    myList.prepend(new ConversationElement(NULL, sender, senderId, text, timestamp, fullimageUrl, previewimageUrl, pvideo, read, pts, type, uid));
     endInsertRows();
 }
 

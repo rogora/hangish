@@ -182,6 +182,8 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
         //Should parse the new name here
         event.newName = renameData[0].string();
     }
+    //Unique id is in 11
+    event.uniqueId = eventFields[11].string();
     return event;
 }
 

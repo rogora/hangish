@@ -38,12 +38,13 @@ public:
     QString fullimageUrl;
     QString previewImageUrl;
     QString video;
+    QString uniqueId;
     int type;
     bool read;
 
     QDateTime ts;
 
-    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, QString pVideo, bool pRead, QDateTime pts, int pType) {
+    ConversationElement(QNetworkReply *pId, QString pSender, QString pSenderId, QString pText, QString pTS, QString pFullImageUrl, QString pPrevImageUrl, QString pVideo, bool pRead, QDateTime pts, int pType, QString uid) {
         id = pId;
         text = pText;
         sender = pSender;
@@ -55,6 +56,7 @@ public:
         read = pRead;
         ts = pts;
         type = pType;
+        uniqueId = uid;
     }
 };
 
@@ -85,7 +87,8 @@ public:
         PreviewImageRole,
         VideoRole,
         TimestampRole,
-        ReadRole
+        ReadRole,
+        UidRole
     };
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
@@ -95,8 +98,8 @@ public:
     explicit ConversationModel(QObject *parent = 0);
     void loadConversation(QString cId);
     QString getCid();
-    bool addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type, bool isMine);
-    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type);
+    bool addConversationElement(QNetworkReply *id, QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type, bool isMine, QString uid);
+    void prependConversationElement(QString sender, QString senderId, QString timestamp, QString text, QString fullimageUrl, QString previewimageUrl, QString video, bool read, QDateTime pts, int type, QString uid);
     void deleteMsgWError(QString text);
 
 

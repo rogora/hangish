@@ -729,10 +729,29 @@ void Client::sendMessageReply() {
     foreach(QNetworkCookie cookie, c) {
         qDebug() << cookie.name();
     }
-    qDebug() << "Response " << reply->readAll();
+    QString response = reply->readAll();
+    qDebug() << "Response " << response;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         qDebug() << "Message sent correctly";
-        Event evt;
+        int start = 0;
+        auto parsedRep = MessageField::parseListRef(response.leftRef(-1), start);
+        qDebug() << parsedRep.size();
+        auto respHeader = parsedRep[1].list();
+        qDebug() << respHeader.size();
+        if (respHeader.size()) {
+            qDebug() << respHeader[0].number();
+            if (respHeader[0].number().toInt() != 1) {
+                qDebug() << "Something went wrong!";
+                Event evt;
+                conversationModel->addErrorMessage(reply, "convId", evt);
+                emit messageNotSent();
+                reply->deleteLater();
+                return;
+            }
+        }
+        auto event = parsedRep[6].list();
+        qDebug() << event.size();
+        Event evt = Utils::parseEvent(event);
         conversationModel->addSentMessage(reply, "convId", evt);
         emit messageSent();
     }
@@ -776,7 +795,7 @@ QNetworkReply *Client::sendRequest(QString function, QString json) {
 
 QString Client::getRequestHeader()
 {
-    QString res = "[[3, 3, \"";
+    QString res = "[[1, 1, \"";
     res += header_version;
     res += "\", \"";
     res += header_date;

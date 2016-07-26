@@ -55,6 +55,7 @@ QString ImageHandler::getImageAddr(QString imgUrl)
 {
     QString imgname = imgUrl;
     imgname.replace('/', '_');
+    imgname.replace('%', '_');
     if (imgname.endsWith(".jpg"))
         imgname = imgname.left(imgname.size() - 4);
     QString path = QString(cachePath + imgname);
@@ -89,7 +90,7 @@ QString ImageHandler::getImageAddr(QString imgUrl)
 
 QString ImageHandler::downloadVideo(QString videourl, bool toOpen) {
     QString imgname = videourl;
-    imgname.replace('/', '_');
+    imgname.replace('/', '_').replace('%', '_');
     QString path = QString(cachePath + imgname);
     QFile img(path);
     if (img.exists()) {
@@ -136,7 +137,7 @@ void ImageHandler::gotVideo()
     //qDebug() << "GI " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     buffervideo.append(reply->readAll());
 
-    QString imgpath = QString(cachePath + reply->url().toString().replace('/', '_'));
+    QString imgpath = QString(cachePath + reply->url().toString().replace('/', '_').replace('%', '_'));
     //if (imgpath.endsWith(".mp4"))
       //  imgpath = imgpath.left(imgpath.size() - 4);
     QFile img(imgpath);
@@ -163,7 +164,7 @@ void ImageHandler::gotImage()
     //qDebug() << "GI " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     buffer.append(reply->readAll());
 
-    QString imgpath = QString(cachePath + reply->url().toString().replace('/', '_'));
+    QString imgpath = QString(cachePath + reply->url().toString().replace('/', '_').replace('%', '_'));
     if (imgpath.endsWith(".jpg"))
         imgpath = imgpath.left(imgpath.size() - 4);
     QFile img(imgpath);

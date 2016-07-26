@@ -135,6 +135,7 @@ struct Event {
     bool isMine;
     bool isRenameEvent;
     QString newName;
+    QString uniqueId;
 };
 
 struct ContinuationToken {
