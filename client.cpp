@@ -227,10 +227,11 @@ User Client::getEntityById(QString cid) {
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
 
-    qDebug() << "Got reply!";
 
     timeoutTimer.stop();
     QString sreply = reply->readAll();
+    qDebug() << "Got reply! " << sreply;
+
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         qDebug() << "200";
         int idx = 0;
@@ -766,6 +767,10 @@ void Client::sendMessageReply() {
 
 QNetworkReply *Client::sendRequest(QString function, QString json) {
     QString url = endpoint + function;
+    url += "?key=";
+    url += api_key;
+    //url += "AIzaSyAfFJCeph-euFSwtmqFZi0kaKk-cZ5wufM";
+
     //add params
     QNetworkRequest req(url);
     req.setRawHeader("authorization", getAuthHeader());
@@ -781,14 +786,11 @@ QNetworkReply *Client::sendRequest(QString function, QString json) {
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
-    url += "?alt=json&key=";
-    url += api_key;
     QByteArray postData;
-    //postData.append("{\"alt\": \"json\", \"key\": \"" + api_key + "\"}");
     postData.append(json);
     if (!timeoutTimer.isActive())
         timeoutTimer.start(TIMEOUT_MS);
-    //qDebug() << "Sending request " << url;
+    qDebug() << "Sending request " << url;
     return nam->post(req, postData);
     //qDebug() << "req sent " << postData;
 }
