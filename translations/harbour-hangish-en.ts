@@ -136,17 +136,42 @@
 <context>
     <name>FirstPage</name>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="49"/>
+        <location filename="../qml/pages/FirstPage.qml" line="34"/>
+        <source>Login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="57"/>
         <source>Login Failed </source>
         <translation>Login Failed </translation>
     </message>
     <message>
+        <location filename="../qml/pages/FirstPage.qml" line="63"/>
+        <source>Logging in...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="69"/>
+        <source>Initializing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="73"/>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../qml/pages/FirstPage.qml" line="77"/>
+        <source>Conversations</source>
+        <translation type="unfinished">Conversations</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="126"/>
         <source>Logging in</source>
         <translation>Logging in</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="95"/>
+        <location filename="../qml/pages/FirstPage.qml" line="144"/>
         <source>Delete authentication cookie</source>
         <translation>Delete authentication cookie</translation>
     </message>
@@ -188,6 +213,29 @@
         <location filename="../qml/delegates/Message.qml" line="89"/>
         <source>Downloading video...</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PinDialog</name>
+    <message>
+        <location filename="../qml/pages/PinDialog.qml" line="34"/>
+        <source>Login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinDialog.qml" line="48"/>
+        <source>Login Failed </source>
+        <translation type="unfinished">Login Failed </translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinDialog.qml" line="92"/>
+        <source>Logging in</source>
+        <translation type="unfinished">Logging in</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/PinDialog.qml" line="110"/>
+        <source>Delete authentication cookie</source>
+        <translation type="unfinished">Delete authentication cookie</translation>
     </message>
 </context>
 <context>

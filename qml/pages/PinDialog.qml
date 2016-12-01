@@ -26,13 +26,12 @@ import Sailfish.Silica 1.0
 
 
 Dialog {
-    id: page
+    id: dpage
 
     DialogHeader {
             id: dhead
-            visible: Client.isLoginNeeded()
+            visible: true
             acceptText: qsTr("Login")
-            //cancelText: qsTr("Cancel")
         }
 
     Connections
@@ -43,44 +42,21 @@ Dialog {
                 pageStack.replace(Qt.resolvedUrl("Roster.qml"))
             }
 
-            onLoginNeeded: {
-                infotext.visible = false
-                loginIndicator.visible = false
-                pwd.visible = true
-                uname.visible = true
-                dhead.visible = true
-            }
-
             onAuthFailed: {
                 loginIndicator.running = false
                 infotext.text = error
                 resultLabel.text = qsTr("Login Failed ") + error
                 delauthbtn.visible = true
-            }
-
-            onSecondFactorNeeded: {
-                pageStack.push(Qt.resolvedUrl("PinDialog.qml"))
-                infotext.text = qsTr("Logging in...")
-                uname.visible = false
-                pwd.visible = false
-            }
-
-            onInitializing: {
-                infotext.text = qsTr("Initializing")
-            }
-
-            onInitContacts: {
-                infotext.text = qsTr("Contacts")
-            }
-
-            onInitConvs: {
-                infotext.text = qsTr("Conversations")
+                pin.visible = true
             }
         }
 
     onAccepted: {
-        Client.sendPassword(uname.text.trim(), pwd.text.trim())
-    }
+            Client.sendPin(pin.text.trim())
+            loginIndicator.visible = true
+            infotext.visible = true
+            pin.visible = false
+}
 
     Column {
         width: parent.width
@@ -94,28 +70,17 @@ Dialog {
        }
 
     TextArea {
-        id: uname
-        visible: Client.isLoginNeeded()
-        label: "Username"
-        placeholderText: "Username"
+        id: pin
+        label: "pin"
+        placeholderText: "Pin"
         width: parent.width
         EnterKey.enabled: text.length > 0
-        EnterKey.onClicked: page.accept()
-    }
-
-    PasswordField {
-        id: pwd
-        visible: Client.isLoginNeeded()
-        label: "Password"
-        placeholderText: "Password"
-        width: parent.width
-        EnterKey.enabled: text.length > 0
-        EnterKey.onClicked: page.accept()
+        EnterKey.onClicked: dpage.accept()
     }
 
     BusyIndicator {
+        visible: false
         id: loginIndicator
-        visible: !Client.isLoginNeeded()
         running: true
         anchors.horizontalCenter: parent.horizontalCenter
         size: BusyIndicatorSize.Large
@@ -123,6 +88,7 @@ Dialog {
 
     Label {
         id: infotext
+        visible: false
         text: qsTr("Logging in")
         width: parent.width
         font {

@@ -99,4 +99,5 @@ RESOURCES += \
 DISTFILES += \
     qml/pages/VideoPlayer.qml \
     qml/mediacomponents/MediaPlayerToolBar.qml \
-    qml/pages/VideoPlayerPage.qml
+    qml/pages/VideoPlayerPage.qml \
+    qml/pages/PinDialog.qml

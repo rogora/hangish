@@ -109,8 +109,6 @@ public:
     Q_INVOKABLE void sendChatMessage(QString segments, QString conversationId);
     Q_INVOKABLE void sendImage(QString segments, QString conversationId, QString filename);
     Q_INVOKABLE QString getSelfChatId();
-    Q_INVOKABLE void sendCredentials(QString uname, QString passwd);
-    Q_INVOKABLE void sendAuthCode(QString pin);
     Q_INVOKABLE void deleteCookies();
     Q_INVOKABLE void testNotification();
     Q_INVOKABLE void forceChannelRestore();
@@ -130,6 +128,9 @@ public:
     Q_INVOKABLE void changeNotificationsForConversation(QString convId, int level);
     Q_INVOKABLE void deleteMessageWError(QString text);
     Q_INVOKABLE void testFunction();
+    Q_INVOKABLE void sendPassword(QString uname, QString pwd);
+    Q_INVOKABLE void sendPin(QString pin);
+    Q_INVOKABLE bool isLoginNeeded();
     OAuth2Auth *getAuthenticator();
 
 
@@ -172,6 +173,9 @@ public slots:
     void renameConvSlot(QString convId, QString newname);
 
 signals:
+    void initializing();
+    void initContacts();
+    void initConvs();
     void imageUploadFailed();
     void notificationPushed(QString convId);
     void loginNeeded();

@@ -25,7 +25,7 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "messagefield.h"
 
 static QString CHAT_INIT_URL = "https://talkgadget.google.com/u/0/talkgadget/_/chat";
-static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.132 Safari/537.36";
+static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0";
 
 //Timeout to send for setactiveclient requests:
 static int ACTIVE_TIMEOUT_SECS = 300;
@@ -36,6 +36,16 @@ static QString ORIGIN_URL = "https://talkgadget.google.com";
 
 #define TIMEOUT_MS 10000
 #define TIMEOUT_MS_UPLOAD 100000
+
+void Client::sendPin(QString pin)
+{
+    auth->sendPin(pin);
+}
+
+void Client::sendPassword(QString uname, QString pwd)
+{
+    auth->openLoginPage(uname, pwd);
+}
 
 QString Client::getSelfChatId()
 {
@@ -440,7 +450,7 @@ void Client::parseConversationState(MessageField conv)
 QList<Conversation> Client::parseConversations(const QString& conv)
 {
     QList<Conversation> res;
-    QStringRef dsData = Utils::extractArrayForDS(conv, 19);
+    QStringRef dsData = Utils::extractArrayForDS(conv, 20);
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
     //Skip 3 fields
@@ -475,16 +485,18 @@ void Client::postReply(QNetworkReply *reply)
 
 User Client::parseMySelf(const QString& sreply) {
     //SELF INFO
-    QStringRef dsData = Utils::extractArrayForDS(sreply, 20);
+    QStringRef dsData = Utils::extractArrayForDS(sreply, 36);
+    //qDebug() << dsData.toString();
     int idx = 0;
     auto parsedData = MessageField::parseListRef(dsData, idx);
     User res;
     //And then parse a common user
     if (parsedData.size() >= 3) {
-        auto entity = parsedData[2].list();
+        //auto entity = parsedData[2].list();
 
-        res = parseEntity(entity);
-
+        //res = parseEntity(entity);
+        res.chat_id = res.gaia_id = parsedData[1].string();
+        res.email = parsedData[2].string();
         /*
         qDebug() << res.chat_id;
         qDebug() << res.display_name;
@@ -521,6 +533,7 @@ void Client::networkReply()
             reply->deleteLater();
         }
         else {
+            emit initializing();
             QString sreply = reply->readAll();
             //qDebug() << sreply;
 
@@ -559,6 +572,7 @@ void Client::networkReply()
             qDebug() << "HDA " << header_date;
             qDebug() << "HVE " << header_version;
 
+            emit initContacts();
             myself = parseMySelf(sreply);
             if (!myself.email.contains("@"))
             {
@@ -574,6 +588,7 @@ void Client::networkReply()
             foreach (User u, users)
                 contactsModel->addContact(u);
 
+            emit initConvs();
             //Parse conversations
             QList<Conversation> convs = parseConversations(sreply);
             foreach (Conversation c, convs)
@@ -1596,6 +1611,7 @@ void Client::pvtReply()
         else {
             qDebug() << "Unk Error";
             //exit(0);
+            qDebug() << reply->readAll();
             emit authFailed("Unknown Error " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toString());
         }
         reply->close();
@@ -1721,6 +1737,7 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
     //auth = new Authenticator();
     auth = new OAuth2Auth();
     QObject::connect(auth, SIGNAL(loginNeeded()), this, SLOT(loginNeededSlot()));
+    QObject::connect(auth, SIGNAL(secondFactorNeeded()), this, SLOT(secondFactorNeededSlot()));
     QObject::connect(auth, SIGNAL(gotCookies()), this, SLOT(authenticationDone()));
     QObject::connect(auth, SIGNAL(authFailed(QString)), this, SLOT(authFailedSlot(QString)));
 
@@ -1730,19 +1747,6 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
 
     //QObject::connect(conversationModel, SIGNAL(conversationRequested(QString)), this, SLOT(loadConversationModel(QString)));
     QObject::connect(this, SIGNAL(conversationLoaded()), conversationModel, SLOT(conversationLoaded()));
-}
-
-
-void Client::sendCredentials(QString uname, QString passwd)
-{
-    qDebug() << "Should I still send something?";
-    //auth->send_credentials(uname, passwd);
-}
-
-void Client::sendAuthCode(QString pin)
-{
-    //auth->send2ndFactorPin(pin);
-    auth->sendAuthRequest(pin);
 }
 
 void Client::deleteCookies()
@@ -1960,4 +1964,9 @@ void Client::slotError(QNetworkReply::NetworkError err)
 
 void Client::testFunction() {
     //A debuggin slot
+}
+
+bool Client::isLoginNeeded()
+{
+    return auth->isLoginNeeded();
 }
