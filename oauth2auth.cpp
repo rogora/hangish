@@ -348,7 +348,7 @@ void OAuth2Auth::unameReply()
 
     qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     QString response = reply->readAll();
-    //qDebug() << response;
+    qDebug() << response;
 
     //qDebug() << "Got " << c.size() << "from" << reply->url();
     //foreach(QNetworkCookie cookie, c) {
@@ -448,7 +448,7 @@ void OAuth2Auth::pwdReply()
 
     qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() << " - " << reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
     QString response = reply->readAll();
-    //qDebug() << response;
+    qDebug() << response;
 
     //qDebug() << "Got " << c.size() << "from" << reply->url();
     //foreach(QNetworkCookie cookie, c) {
@@ -510,7 +510,7 @@ void OAuth2Auth::pwdReply()
 
     }
     else {
-        emit authFailed("Error L3");
+        emit authFailed("Error L3 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
 }
 

@@ -535,7 +535,7 @@ void Client::networkReply()
         else {
             emit initializing();
             QString sreply = reply->readAll();
-            //qDebug() << sreply;
+            qDebug() << sreply;
 
             //API KEY
             QStringRef dsData = Utils::extractArrayForDS(sreply, 7);

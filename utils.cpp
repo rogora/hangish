@@ -149,7 +149,9 @@ Event Utils::parseEvent(const QList<MessageField>& eventFields)
             // i think we may have a map hereby...
             auto attachments = eventValueFields[1].list();
             if (attachments.size()) {
-                auto attachmentMap = attachments[0].list()[0].list()[1].map();
+                QList<MessageField> attachmentMap = attachments[0].list()[0].list()[1].map();
+                if (attachmentMap.size()==0 && attachments[0].list()[0].list().size() >= 3)
+                    attachmentMap = attachments[0].list()[0].list()[2].map();
                 if (attachmentMap.size() > 0) {
                     attachments = attachmentMap[1].list();
 
