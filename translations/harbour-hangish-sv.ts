@@ -122,7 +122,7 @@
     <message>
         <location filename="../qml/pages/Conversation.qml" line="195"/>
         <source>Video Ready!</source>
-        <translation type="unfinished"></translation>
+        <translation>Video klar!</translation>
     </message>
 </context>
 <context>
@@ -189,12 +189,12 @@
     <message>
         <location filename="../qml/mediacomponents/MediaPlayerToolBar.qml" line="104"/>
         <source>Downloading media</source>
-        <translation type="unfinished"></translation>
+        <translation>Laddar ner media</translation>
     </message>
     <message>
         <location filename="../qml/mediacomponents/MediaPlayerToolBar.qml" line="105"/>
         <source>Media saved in Gallery</source>
-        <translation type="unfinished"></translation>
+        <translation>Media sparades i galleriet</translation>
     </message>
 </context>
 <context>
@@ -212,7 +212,7 @@
     <message>
         <location filename="../qml/delegates/Message.qml" line="89"/>
         <source>Downloading video...</source>
-        <translation type="unfinished"></translation>
+        <translation>Laddar ner video...</translation>
     </message>
 </context>
 <context>
