@@ -23,7 +23,7 @@ along with hangish.  If not, see <http://www.gnu.org/licenses/>
 #include "oauth2auth.h"
 #include <QtWidgets/QApplication>
 #include <QProcess>
-static QString user_agent = "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36";
+static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36";
 QString homeDir;
 QString homePath;
 
