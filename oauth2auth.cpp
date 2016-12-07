@@ -450,17 +450,25 @@ void OAuth2Auth::pwdReply()
     QString response = reply->readAll();
     qDebug() << response;
 
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
-        //GET REFRESH TOKEN
-        QNetworkRequest req(QUrl(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString()));
-        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-        QNetworkReply *reply = nam.get(req);
-        QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
-
+        if (reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString().contains(CLIENT_ID)) {
+            QNetworkRequest req(LOGIN_URL);
+            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
+            req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
+            req.setRawHeader("Upgrade-Insecure-Requests", "1");
+            req.setRawHeader("Host", "accounts.google.com");
+            req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
+            QNetworkReply *reply = nam.get(req);
+            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
+        }
+        else {
+            //GET REFRESH TOKEN
+            QNetworkRequest req(QUrl(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString()));
+            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
+            QNetworkReply *reply = nam.get(req);
+            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
+        }
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         foreach(QNetworkCookie cookie, c) {
@@ -559,10 +567,6 @@ void OAuth2Auth::pinReply()
     QString response = reply->readAll();
     qDebug() << response;
 
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         qDebug() << reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
         //GET REFRESH TOKEN
