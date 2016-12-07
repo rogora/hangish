@@ -160,7 +160,7 @@ void Channel::parseChannelData(QString sreply)
         //qDebug() << idx;
         // ignore empty messages
         if (idx == -1) return;
-        qDebug() << "##" << sreply.right(sreply.size()-idx);
+        //qDebug() << "##" << sreply.right(sreply.size()-idx);
         auto completeParsedReply = MessageField::parseListRef(sreply.leftRef(-1), idx);
         //qDebug() << idx;
         //qDebug() << completeParsedReply.size();
@@ -184,7 +184,7 @@ void Channel::parseChannelData(QString sreply)
             if (content.size() < 1) continue;
             auto cMap = content[0].map();
 
-            qDebug() << cMap.size();
+            //qDebug() << cMap.size();
             if (cMap.size() < 2)
                 continue;
 
@@ -220,7 +220,7 @@ void Channel::parseChannelData(QString sreply)
 
             if (!playloadList.size() || !playloadList[0].list().size()) continue; // TODO is that senseful ??
             int as = playloadList[0].list()[0].number().toInt();
-            qDebug() << as;
+            //qDebug() << as;
             emit activeClientUpdate(as);
             if (playloadList.size() < 2)
                 continue;
@@ -251,7 +251,6 @@ void Channel::parseChannelData(QString sreply)
 
                     bool added = conversationModel->addEventToConversation(evt.conversationId, evt);
                     rosterModel->putOnTop(evt.conversationId);
-                    qDebug() << "Added";
                     lastIncomingConvId = evt.conversationId;
                     if (added && evt.sender.chat_id != myself.chat_id) {
                         qDebug() << "Going to notify";
@@ -278,7 +277,7 @@ void Channel::parseChannelData(QString sreply)
 
             if (playloadList.size() < 5) continue; // TODO should we really continue?
             // typing notification
-            qDebug() << playloadList[4].type();
+            //qDebug() << playloadList[4].type();
             if (playloadList[4].type() == MessageField::List) {
                 auto typingData = playloadList[4].list();
                 ChannelEvent evt;
@@ -296,7 +295,7 @@ void Channel::parseChannelData(QString sreply)
                             evt.typingStatus = typingData[i].number().toInt();
                     }
                 }
-                qDebug() << "Typing" << evt.userId << "in" << evt.conversationId << "state" << evt.typingStatus;
+                //qDebug() << "Typing" << evt.userId << "in" << evt.conversationId << "state" << evt.typingStatus;
 
                 if (!evt.userId.contains(myself.chat_id))
                     emit isTyping(evt.conversationId, evt.userId, evt.typingStatus);

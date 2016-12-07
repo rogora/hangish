@@ -27,7 +27,6 @@ static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 
 QString homeDir;
 QString homePath;
 
-static QString OAUTH2_LOGIN_URL="https://accounts.google.com/o/oauth2/auth?scope=https://www.google.com/accounts/OAuthLogin%20https://www.googleapis.com/auth/userinfo.email&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=936475272427.apps.googleusercontent.com";
 static QString CLIENT_ID = "936475272427.apps.googleusercontent.com";
 static QString CLIENT_SECRET = "KWsJlkaMn1jGLxQpWxMnOox-";
 static QString LOGIN_URL = "https://accounts.google.com/o/oauth2/programmatic_auth?client_id=" + QUrl::toPercentEncoding("936475272427.apps.googleusercontent.com") + "&scope=" + QUrl::toPercentEncoding("https://www.google.com/accounts/OAuthLogin") + "+" + QUrl::toPercentEncoding("https://www.googleapis.com/auth/userinfo.email");
@@ -37,7 +36,6 @@ OAuth2Auth::OAuth2Auth()
     loginNeededVar = false;
     homeDir  = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     homePath = homeDir + "/oauth2.json";
-    //qDebug() << "Making dir " << homeDir;
     QDir().mkpath(homeDir);
 }
 
@@ -51,13 +49,8 @@ bool OAuth2Auth::getSavedToken()
     cookieFile.close();
     QJsonDocument doc = QJsonDocument::fromJson(val.toUtf8());
     QJsonObject obj = doc.object();
-    //foreach (QString s, obj.keys())
-    //{
-    //    qDebug() << s;
-    //}
     rtoken = obj["refresh_token"].toString();
     //REFRESH TOKEN
-    //fetchCookies(obj["access_token"].toString(), obj["refresh_token"].toString());
     QString r = QString("refresh_token=" + obj["refresh_token"].toString() + "&client_id="+CLIENT_ID);
     r+=QString("&client_secret="+CLIENT_SECRET);
     r+="&grant_type=refresh_token";
@@ -75,16 +68,12 @@ void OAuth2Auth::fetchCookiesReply()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
         QString response = reply->readAll();
         //qDebug() << response;
 
-        //MAKE REQ
+        // MAKE REQ
         QNetworkRequest req2( QUrl("https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth="+response) );
         req2.setRawHeader("Authorization", auth_header.toLocal8Bit().data() );
         req2.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
@@ -101,17 +90,11 @@ void OAuth2Auth::fetchCookiesReply2()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
-        //GET REFRESH TOKEN
-        //QString response = reply->readAll();
-        //qDebug() << response;
+        // Nothing to do here
     }
     else {
-        emit authFailed("Error 2");
+        emit authFailed("Error 2 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
 }
 
@@ -120,20 +103,18 @@ void OAuth2Auth::fetchCookiesReply3()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
     foreach(QNetworkCookie cookie, c) {
-        //qDebug() << cookie.name();
         sessionCookies.append(cookie);
     }
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
-        QString response = reply->readAll();
+        //QString response = reply->readAll();
         //qDebug() << response;
         emit gotCookies();
     }
     else {
         //qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        emit authFailed("Error 3");
+        emit authFailed("Error 3 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
 }
 
@@ -173,24 +154,17 @@ void OAuth2Auth::authReply()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
     QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
     QString response = reply->readAll();
     //qDebug() << response;
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
+
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         //GET REFRESH TOKEN
         QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8());
         QJsonObject obj = doc.object();
-        //foreach (QString s, obj.keys())
-        //{
-        //    qDebug() << s;
-        //}
+
         if (rtoken.length() > 0)
             obj.insert("refresh_token", rtoken);
         QJsonDocument doc2(obj);
-        //qDebug() << obj.take("refresh_token");
 
         //SAVE TOKEN
         QFile cookieFile(homePath);
@@ -208,7 +182,6 @@ void OAuth2Auth::authReply()
 
         //MAKE NEW REQ
         fetchCookies(obj["access_token"].toString(), obj["refresh_token"].toString());
-        //headers = { 'Authorization':'Bearer {0}'.format(js['access_token']) }
     }
     else {
         emit authFailed("No network");
@@ -240,8 +213,6 @@ void OAuth2Auth::auth()
             loginNeededVar = true;
             emit loginNeeded();
         }
-        //openLoginPage();
-        //open html page
 }
 
 void OAuth2Auth::openLoginPage(QString uname, QString pwd)
@@ -269,10 +240,6 @@ void OAuth2Auth::loginpageReply()
         qDebug() << cookie.name();
         sessionCookies.append(cookie);
     }
-    //qDebug() << "Got " << c.size() << "from" << reply->url();
-    //foreach(QNetworkCookie cookie, c) {
-    //    qDebug() << cookie.name();
-    //}
     QString response = reply->readAll();
     //qDebug() << response;
 
@@ -442,6 +409,13 @@ void OAuth2Auth::pwdReply()
                     break;
             sessionCookies.removeAt(co);
         }
+        if (cookie.name() == "oauth_code") {
+            qDebug() << "We're done, challenge passed";
+            sessionCookies.clear();
+            nam.clearAccessCache();
+            sendAuthRequest(cookie.value());
+            return;
+        }
         sessionCookies.append(cookie);
     }
 
@@ -460,7 +434,7 @@ void OAuth2Auth::pwdReply()
             req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
             req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
             QNetworkReply *reply = nam.get(req);
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
+            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
         }
         else {
             //GET REFRESH TOKEN

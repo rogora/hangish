@@ -115,6 +115,7 @@ CoverBackground {
         CoverAction {
             iconSource: "image://theme/icon-cover-subview"
             onTriggered: {
+                //Client.testNotification()
                 showRosterPage()
                 activate()
             }
