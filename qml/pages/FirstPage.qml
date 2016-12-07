@@ -61,8 +61,11 @@ Dialog {
             onSecondFactorNeeded: {
                 pageStack.push(Qt.resolvedUrl("PinDialog.qml"))
                 infotext.text = qsTr("Logging in...")
+                loginIndicator.visible = true
+                loginIndicator.running = true
                 uname.visible = false
                 pwd.visible = false
+                dhead.acceptText = qsTr("Wait")
             }
 
             onInitializing: {
@@ -80,6 +83,9 @@ Dialog {
 
     onAccepted: {
         Client.sendPassword(uname.text.trim(), pwd.text.trim())
+        loginIndicator.visible = true
+        loginIndicator.running = true
+        dhead.acceptText = qsTr("Wait")
     }
 
     Column {

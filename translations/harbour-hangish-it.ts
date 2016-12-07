@@ -143,35 +143,41 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="57"/>
         <source>Login Failed </source>
-        <translation>Autenticazione fallia</translation>
+        <translation>Autenticazione fallita</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="63"/>
         <source>Logging in...</source>
-        <translation type="unfinished"></translation>
+        <translation>Autenticazione...</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="69"/>
+        <location filename="../qml/pages/FirstPage.qml" line="68"/>
+        <location filename="../qml/pages/FirstPage.qml" line="88"/>
+        <source>Wait</source>
+        <translation>Attendere</translation>
+    </message>
+    <message>
+        <location filename="../qml/pages/FirstPage.qml" line="72"/>
         <source>Initializing</source>
         <translation>Inizializzazione</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="73"/>
+        <location filename="../qml/pages/FirstPage.qml" line="76"/>
         <source>Contacts</source>
         <translation>Contatti</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="77"/>
+        <location filename="../qml/pages/FirstPage.qml" line="80"/>
         <source>Conversations</source>
         <translation>Conversazioni</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="126"/>
+        <location filename="../qml/pages/FirstPage.qml" line="132"/>
         <source>Logging in</source>
         <translation>Autenticazione</translation>
     </message>
     <message>
-        <location filename="../qml/pages/FirstPage.qml" line="144"/>
+        <location filename="../qml/pages/FirstPage.qml" line="150"/>
         <source>Delete authentication cookie</source>
         <translation>Cancella il cookie di autenticazione</translation>
     </message>
