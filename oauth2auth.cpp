@@ -33,6 +33,7 @@ static QString LOGIN_URL = "https://accounts.google.com/o/oauth2/programmatic_au
 
 OAuth2Auth::OAuth2Auth()
 {
+    nam = new QNetworkAccessManager();
     loginNeededVar = false;
     homeDir  = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
     homePath = homeDir + "/oauth2.json";
@@ -58,8 +59,9 @@ bool OAuth2Auth::getSavedToken()
     QByteArray reqString(r.toUtf8());
     QNetworkRequest req( QUrl( QString("https://accounts.google.com/o/oauth2/token") ) );
     req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
-    QNetworkReply *reply = nam.post(req, reqString);
+    QNetworkReply *reply = nam->post(req, reqString);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(authReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
     return true;
 }
 
@@ -77,12 +79,14 @@ void OAuth2Auth::fetchCookiesReply()
         QNetworkRequest req2( QUrl("https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth="+response) );
         req2.setRawHeader("Authorization", auth_header.toLocal8Bit().data() );
         req2.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-        QNetworkReply *reply2 = nam.get(req2);
+        QNetworkReply *reply2 = nam->get(req2);
         QObject::connect(reply2, SIGNAL(finished()), this, SLOT(fetchCookiesReply3()));
+        QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
     }
     else {
         emit authFailed("Error 1");
     }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::fetchCookiesReply2()
@@ -96,6 +100,7 @@ void OAuth2Auth::fetchCookiesReply2()
     else {
         emit authFailed("Error 2 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::fetchCookiesReply3()
@@ -116,17 +121,19 @@ void OAuth2Auth::fetchCookiesReply3()
         //qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         emit authFailed("Error 3 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
+    reply->deleteLater();
 }
 
 
-void OAuth2Auth::fetchCookies(QString access_token, QString refresh_token)
+void OAuth2Auth::fetchCookies(QString access_token)
 {
     QNetworkRequest req( QUrl("https://accounts.google.com/accounts/OAuthLogin?source=hangish&issueuberauth=1") );
     auth_header = "Bearer " + access_token;
     req.setRawHeader("Authorization", auth_header.toLocal8Bit().data() );
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    QNetworkReply *reply = nam.get(req);
+    QNetworkReply *reply = nam->get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(fetchCookiesReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
 void OAuth2Auth::sendAuthRequest(QString code)
@@ -137,16 +144,48 @@ void OAuth2Auth::sendAuthRequest(QString code)
     QByteArray reqString(r.toUtf8());
     QNetworkRequest req( QUrl( QString("https://accounts.google.com/o/oauth2/token") ) );
     req.setRawHeader("Content-Type", "application/x-www-form-urlencoded");
-    QNetworkReply *reply = nam.post(req, reqString);
+    QNetworkReply *reply = nam->post(req, reqString);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(authReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
-void OAuth2Auth::followRedirection(QUrl url)
+void OAuth2Auth::followRedirection(QNetworkReply *reply, int caller)
 {
-    QNetworkRequest req( url );
-    req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-    //req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-    nam.get(req);
+    QString redir = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
+    QVariant vredir(redir);
+    redir = QUrl::fromPercentEncoding(vredir.toByteArray());
+    qDebug() << redir;
+    if (redir == "https://accounts.google.com/o/oauth2/programmatic_auth?client_id=936475272427.apps.googleusercontent.com") {
+    //GET REFRESH TOKEN
+    //if (reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString().contains(CLIENT_ID)) {
+        QNetworkRequest req(LOGIN_URL);
+        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
+        req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
+        req.setRawHeader("Upgrade-Insecure-Requests", "1");
+        req.setRawHeader("Host", "accounts.google.com");
+        req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
+        QNetworkReply *reply = nam->get(req);
+        QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
+        QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
+    }
+    else {
+        QNetworkRequest req(redir);
+        req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
+        req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
+        req.setRawHeader("Upgrade-Insecure-Requests", "1");
+        req.setRawHeader("Host", "accounts.google.com");
+        req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
+
+        QNetworkReply *reply = nam->get(req);
+        if (caller == 0)
+            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
+        else if (caller == 1)
+            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
+        QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
+    }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::authReply()
@@ -181,11 +220,12 @@ void OAuth2Auth::authReply()
         qDebug() << "Written cookies to " << homePath;
 
         //MAKE NEW REQ
-        fetchCookies(obj["access_token"].toString(), obj["refresh_token"].toString());
+        fetchCookies(obj["access_token"].toString());
     }
     else {
         emit authFailed("No network");
     }
+    reply->deleteLater();
 }
 
 QList<QNetworkCookie> OAuth2Auth::getCookies()
@@ -227,8 +267,9 @@ void OAuth2Auth::openLoginPage(QString uname, QString pwd)
     req.setRawHeader("Host", "accounts.google.com");
     req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 
-    QNetworkReply *reply = nam.get(req);
+    QNetworkReply *reply = nam->get(req);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(loginpageReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
 void OAuth2Auth::loginpageReply()
@@ -247,8 +288,9 @@ void OAuth2Auth::loginpageReply()
         //GET REFRESH TOKEN
         QNetworkRequest req(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl());
         req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-        QNetworkReply *reply = nam.get(req);
+        QNetworkReply *reply = nam->get(req);
         QObject::connect(reply, SIGNAL(finished()), this, SLOT(loginpageReply()));
+        QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         // get gxf
@@ -268,6 +310,7 @@ void OAuth2Auth::loginpageReply()
     else {
         emit authFailed("Error L1");
     }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::sendUsername(QString username)
@@ -291,8 +334,9 @@ void OAuth2Auth::sendUsername(QString username)
     QString r = "gxf=" + QUrl::toPercentEncoding(gxf) + "&GALX=" + QUrl::toPercentEncoding(GALX) + "&Email=" + username + "&oauth=1&signIn=Next&Page=PasswordSeparationSignIn&PersistentCookie=yes&ltmpl=embedded&oauth=1&pstMsg=1&sarp=1&scc=1&continue=" + QUrl::toPercentEncoding(contString);
     //qDebug() << r;
     QByteArray reqString(r.toUtf8());
-    QNetworkReply *reply = nam.post(req, reqString);
+    QNetworkReply *reply = nam->post(req, reqString);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(unameReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
 void OAuth2Auth::unameReply()
@@ -330,8 +374,9 @@ void OAuth2Auth::unameReply()
         req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
         req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
 
-        QNetworkReply *reply = nam.get(req);
+        QNetworkReply *reply = nam->get(req);
         QObject::connect(reply, SIGNAL(finished()), this, SLOT(unameReply()));
+        QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         // get gxf and update
@@ -363,6 +408,7 @@ void OAuth2Auth::unameReply()
     else {
         emit authFailed("Error L2");
     }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::sendPassword(QString uname, QString password)
@@ -389,9 +435,10 @@ void OAuth2Auth::sendPassword(QString uname, QString password)
     req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
     QString r = "gxf=" + QUrl::toPercentEncoding(gxf) + "&GALX=" + GALX + "&Email=" + uname + "&Passwd=" + password + "&ProfileInformation=" + QUrl::toPercentEncoding(prInfo) + "&SessionState=" + QUrl::toPercentEncoding(sessState) + "&continue=" + QUrl::toPercentEncoding(contString) + "&signIn=Sign+in&ltmpl=embedded&oauth=1&pstMsg=1&checkedDomains=youtube&bgresponse=js_disabled&sarp=1&scc=1&Page=PasswordSeparationSignIn&identifier-captcha-input=&identifiertoken=&identifiertoken_audio=&PersistentCookie=yes";
     QByteArray reqString(r.toUtf8());
-    QNetworkReply *reply = nam.post(req, reqString);
+    QNetworkReply *reply = nam->post(req, reqString);
     //qDebug() << r;
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
 void OAuth2Auth::pwdReply()
@@ -409,11 +456,12 @@ void OAuth2Auth::pwdReply()
                     break;
             sessionCookies.removeAt(co);
         }
-        if (cookie.name() == "oauth_code") {
+        else if (cookie.name() == "oauth_code") {
             qDebug() << "We're done, challenge passed";
             sessionCookies.clear();
-            nam.clearAccessCache();
+            nam->clearAccessCache();
             sendAuthRequest(cookie.value());
+            reply->deleteLater();
             return;
         }
         sessionCookies.append(cookie);
@@ -425,24 +473,7 @@ void OAuth2Auth::pwdReply()
     qDebug() << response;
 
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
-        if (reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString().contains(CLIENT_ID)) {
-            QNetworkRequest req(LOGIN_URL);
-            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-            req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-            req.setRawHeader("Upgrade-Insecure-Requests", "1");
-            req.setRawHeader("Host", "accounts.google.com");
-            req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
-            QNetworkReply *reply = nam.get(req);
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
-        }
-        else {
-            //GET REFRESH TOKEN
-            QNetworkRequest req(QUrl(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString()));
-            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-            QNetworkReply *reply = nam.get(req);
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pwdReply()));
-        }
+        followRedirection(reply, 0);
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         foreach(QNetworkCookie cookie, c) {
@@ -488,12 +519,11 @@ void OAuth2Auth::pwdReply()
             tli = response.indexOf("value=\"", tli) + strlen("value=\"");
             TL = response.mid(tli, response.indexOf("\"", tli + 1) - tli);
         }
-
-
     }
     else {
         emit authFailed("Error L3 " + reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt());
     }
+    reply->deleteLater();
 }
 
 void OAuth2Auth::sendPin(QString pin)
@@ -508,8 +538,9 @@ void OAuth2Auth::sendPin(QString pin)
     req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
     QString r = "Pin=" + pin + "&gxf=" + QUrl::toPercentEncoding(gxf) + "&continue=" + QUrl::toPercentEncoding(contString) + "&TL=" + QUrl::toPercentEncoding(TL) + "&TrustDevice=on&challengeId=" + challengeId + "&challengeType=" + challengeType + "&pstMsg=1&sarp=1&scc=1";
     QByteArray reqString(r.toUtf8());
-    QNetworkReply *reply = nam.post(req, reqString);
+    QNetworkReply *reply = nam->post(req, reqString);
     QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
+    QObject::connect(reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
 }
 
 void OAuth2Auth::pinReply()
@@ -532,8 +563,9 @@ void OAuth2Auth::pinReply()
         if (cookie.name() == "oauth_code") {
             qDebug() << "We're done, challenge passed";
             sessionCookies.clear();
-            nam.clearAccessCache();
+            nam->clearAccessCache();
             sendAuthRequest(cookie.value());
+            reply->deleteLater();
             return;
         }
     }
@@ -542,30 +574,7 @@ void OAuth2Auth::pinReply()
     qDebug() << response;
 
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
-        qDebug() << reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
-        //GET REFRESH TOKEN
-        if (reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString().contains(CLIENT_ID)) {
-            QNetworkRequest req(LOGIN_URL);
-            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-            req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-            req.setRawHeader("Upgrade-Insecure-Requests", "1");
-            req.setRawHeader("Host", "accounts.google.com");
-            req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
-            QNetworkReply *reply = nam.get(req);
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
-        }
-        else {
-            QNetworkRequest req(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl());
-            req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(sessionCookies));
-            req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
-            req.setRawHeader("Upgrade-Insecure-Requests", "1");
-            req.setRawHeader("Host", "accounts.google.com");
-            req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-            req.setRawHeader("Referer", "https://accounts.google.com/AccountLoginInfo");
-            QNetworkReply *reply = nam.get(req);
-            QObject::connect(reply, SIGNAL(finished()), this, SLOT(pinReply()));
-        }
+        followRedirection(reply, 1);
     }
     else if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         foreach(QNetworkCookie cookie, c) {
@@ -580,4 +589,11 @@ void OAuth2Auth::pinReply()
     else {
         emit authFailed("Error L4");
     }
+    reply->deleteLater();
+}
+
+void OAuth2Auth::netError(QNetworkReply::NetworkError err) {
+    qDebug() << "Error in authenticator " << err;
+    nam->deleteLater();
+    nam = new QNetworkAccessManager();
 }
