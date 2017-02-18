@@ -315,7 +315,7 @@ void OAuth2Auth::loginpageReply()
 
 void OAuth2Auth::sendUsername(QString username)
 {
-    QNetworkRequest req(QUrl("https://accounts.google.com/accountLoginInfo"));
+    QNetworkRequest req(QUrl("https://accounts.google.com/_/signin/v1/lookup"));
     QString GALX = "";
     foreach (QNetworkCookie c, sessionCookies) {
         qDebug() << c.name() << ": " << c.value();
