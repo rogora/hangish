@@ -138,7 +138,7 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="34"/>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="57"/>
@@ -148,18 +148,18 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="63"/>
         <source>Logging in...</source>
-        <translation type="unfinished"></translation>
+        <translation>Loggar in...</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="68"/>
         <location filename="../qml/pages/FirstPage.qml" line="88"/>
         <source>Wait</source>
-        <translation type="unfinished"></translation>
+        <translation>Vänta</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="72"/>
         <source>Initializing</source>
-        <translation type="unfinished"></translation>
+        <translation>Startar</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="76"/>
@@ -226,7 +226,7 @@
     <message>
         <location filename="../qml/pages/PinDialog.qml" line="34"/>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <location filename="../qml/pages/PinDialog.qml" line="48"/>
