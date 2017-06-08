@@ -138,7 +138,7 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="34"/>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="57"/>
@@ -148,18 +148,18 @@
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="63"/>
         <source>Logging in...</source>
-        <translation type="unfinished"></translation>
+        <translation>Loggar in</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="68"/>
         <location filename="../qml/pages/FirstPage.qml" line="88"/>
         <source>Wait</source>
-        <translation type="unfinished"></translation>
+        <translation>Vänta</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="72"/>
         <source>Initializing</source>
-        <translation type="unfinished"></translation>
+        <translation>Startar</translation>
     </message>
     <message>
         <location filename="../qml/pages/FirstPage.qml" line="76"/>
@@ -226,17 +226,17 @@
     <message>
         <location filename="../qml/pages/Options.qml" line="25"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Spara</translation>
     </message>
     <message>
         <location filename="../qml/pages/Options.qml" line="31"/>
         <source>Background</source>
-        <translation type="unfinished"></translation>
+        <translation>Bakgrund</translation>
     </message>
     <message>
         <location filename="../qml/pages/Options.qml" line="32"/>
         <source>Hangish will continue working in background after closing</source>
-        <translation type="unfinished"></translation>
+        <translation>Hangish fortsätter att köras i bakgrunden efter stängning</translation>
     </message>
 </context>
 <context>
@@ -244,7 +244,7 @@
     <message>
         <location filename="../qml/pages/PinDialog.qml" line="34"/>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga in</translation>
     </message>
     <message>
         <location filename="../qml/pages/PinDialog.qml" line="48"/>
@@ -267,7 +267,7 @@
     <message>
         <location filename="../qml/pages/Roster.qml" line="73"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Alternativ</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
@@ -277,7 +277,7 @@
     <message>
         <location filename="../qml/pages/Roster.qml" line="59"/>
         <source>Log out</source>
-        <translation type="unfinished"></translation>
+        <translation>Logga ut</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="60"/>
