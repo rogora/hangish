@@ -63,10 +63,12 @@ Page {
                                                Client.deleteCookies();
                                            } );
             }
+            /*
             MenuItem {
                 text: qsTr("Kill Hangish")
                 onClicked: Client.kill(); //Client.testNotification();
             }
+            */
             MenuItem {
                 text: qsTr("Options")
                 onClicked: pageStack.push(options) //Client.testNotification();

@@ -226,17 +226,17 @@
     <message>
         <location filename="../qml/pages/Options.qml" line="25"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../qml/pages/Options.qml" line="31"/>
         <source>Background</source>
-        <translation></translation>
+        <translation>Background</translation>
     </message>
     <message>
         <location filename="../qml/pages/Options.qml" line="32"/>
         <source>Hangish will continue working in background after closing</source>
-        <translation></translation>
+        <translation>Hangish continuerá a funzionare in background dopo la chiusura</translation>
     </message>
 </context>
 <context>
@@ -265,9 +265,9 @@
 <context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="71"/>
+        <location filename="../qml/pages/Roster.qml" line="73"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Opzioni</translation>
     </message>
     <message>
         <location filename="../qml/pages/Roster.qml" line="55"/>
@@ -285,12 +285,7 @@
         <translation>Cancellazione dei cookie</translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="67"/>
-        <source>Kill Hangish</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/Roster.qml" line="87"/>
+        <location filename="../qml/pages/Roster.qml" line="89"/>
         <source>Conversations</source>
         <translation>Conversazioni</translation>
     </message>

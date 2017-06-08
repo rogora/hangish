@@ -265,7 +265,7 @@
 <context>
     <name>Roster</name>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="71"/>
+        <location filename="../qml/pages/Roster.qml" line="73"/>
         <source>Options</source>
         <translation type="unfinished"></translation>
     </message>
@@ -285,12 +285,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/pages/Roster.qml" line="67"/>
-        <source>Kill Hangish</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/pages/Roster.qml" line="87"/>
+        <location filename="../qml/pages/Roster.qml" line="89"/>
         <source>Conversations</source>
         <translation type="unfinished"></translation>
     </message>
