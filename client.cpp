@@ -1761,6 +1761,50 @@ void Client::deleteCookies()
     exit(0);
 }
 
+void Client::kill()
+{
+    exit(0);
+}
+
+bool Client::getDaemonize()
+{
+    QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString homePath = homeDir + "/.daemonize";
+    QFile daemonfile(homePath);
+    if (daemonfile.exists())
+        qDebug() << "Daemonize: true";
+    else
+        qDebug() << "Daemonize: false";
+    return daemonfile.exists();
+}
+
+bool Client::toggleDaemonize(bool t)
+{
+    if (t)
+        qDebug() << "Setting daemonize: true";
+    else
+        qDebug() << "Setting daemonize: false";
+    if (!t) {
+        // remove file
+        QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QString homePath = homeDir + "/.daemonize";
+        QFile daemonfile(homePath);
+        daemonfile.remove();
+        qApp->setQuitOnLastWindowClosed(true);
+        return false;
+    } else {
+        // create file
+        QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QString homePath = homeDir + "/.daemonize";
+        QFile daemonfile(homePath);
+        daemonfile.open(QIODevice::WriteOnly);
+        daemonfile.write("daemon");
+        daemonfile.close();
+        qApp->setQuitOnLastWindowClosed(false);
+        return true;
+    }
+}
+
 void Client::testNotification()
 {
     //qDebug() << "Sending test notif";

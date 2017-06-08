@@ -76,7 +76,7 @@ void Channel::checkChannelAndReconnect()
     if (lastPushReceived.secsTo(QDateTime::currentDateTime()) > 30) {
         if (LPrep != NULL)
             LPrep->abort();
-        qDebug() << "Dead, here I should sync al evts from last ts and notify QML that we're offline";
+        qDebug() << "Dead, here I should sync all evts from last ts and notify QML that we're offline";
         qDebug() << "start new lpconn";
         if (isOnline && channelError == false)
             emit(channelLost());

@@ -55,6 +55,7 @@ public slots:
 
 public Q_SLOTS:
     void test();
+    void wakeUp();
     void notificationPushedIntf(const QString &convId);
 
 };

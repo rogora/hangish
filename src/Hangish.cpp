@@ -36,17 +36,37 @@ int main(int argc, char *argv[])
 {
     QCoreApplication::setOrganizationName("Hangish");
     QCoreApplication::setApplicationName("Hangish");
-    QCoreApplication::setApplicationVersion("0.8.6");
+    QCoreApplication::setApplicationVersion("0.9.0");
 
     qsrand(QTime::currentTime().msec());
 
     QScopedPointer<QGuiApplication> app(SailfishApp::application(argc, argv));
+
+    // Many thanks to sailorgram for daemon handling
+    QDBusConnection sessionbus = QDBusConnection::sessionBus();
+
+        if(sessionbus.interface()->isServiceRegistered("harbour.hangish")) // Only a Single Instance is allowed
+        {
+            qDebug() << "opened already";
+            QDBusMessage message = QDBusMessage::createMethodCall("harbour.hangish", "/", "harbour.hangish", "wakeUp");
+            QDBusConnection connection = QDBusConnection::sessionBus();
+            connection.send(message);
+            if(app->hasPendingEvents())
+                app->processEvents();
+
+            return 0;
+        }
+        else {
+            qDebug() << "first instance";
+        }
+
     QScopedPointer<QQuickView> view(SailfishApp::createView());
     ConversationModel *conversationModel = new ConversationModel();
     RosterModel *rosterModel = new RosterModel();
     ContactsModel *contactsModel = new ContactsModel();
     FileModel *fileModel = new FileModel();
     Client *c = new Client(rosterModel, conversationModel, contactsModel);
+    app->setQuitOnLastWindowClosed(!c->getDaemonize());
     ImageHandler *ih = new ImageHandler();
     ih->setAuthenticator(c->getAuthenticator());
     //Do this once when app is launching

@@ -46,6 +46,11 @@ Notifier::Notifier(QObject *parent, ContactsModel *contacts) :
     }
 }
 
+void Notifier::wakeUp()
+{
+    emit notificationPushed("foo");
+}
+
 void Notifier::test()
 {
     qDebug() << "test succeeded!";
