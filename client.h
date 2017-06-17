@@ -24,6 +24,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <QtCore/QScopedPointer>
+#include <sailfishapp.h>
 #include <QDateTime>
 
 //#include "authenticator.h"
@@ -131,6 +133,9 @@ public:
     Q_INVOKABLE void sendPassword(QString uname, QString pwd);
     Q_INVOKABLE void sendPin(QString pin);
     Q_INVOKABLE bool isLoginNeeded();
+    Q_INVOKABLE void kill();
+    Q_INVOKABLE bool toggleDaemonize(bool t);
+    Q_INVOKABLE bool getDaemonize();
     OAuth2Auth *getAuthenticator();
 
 

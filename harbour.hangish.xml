@@ -2,6 +2,7 @@
 <node>
   <interface name="harbour.hangish">
     <method name="test" />
+    <method name="wakeUp" />
     <method name="notificationPushedIntf">
      <arg name="convId" type="s" direction="in"/>
     </method>

@@ -51,6 +51,10 @@ ApplicationWindow
         id: about
     }
 
+    Options {
+        id: options
+    }
+
     Contacts {
         id: contacts
     }

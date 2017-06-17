@@ -43,7 +43,7 @@ Page {
             horizontalAlignment: Text.AlignHCenter
             font.pixelSize: Theme.fontSizeExtraSmall
             color: Theme.secondaryColor
-            text: "Copyright © 2015 Daniele Rogora"
+            text: "Copyright © 2017 Daniele Rogora"
         }
         Item {
             width: 1
@@ -85,6 +85,6 @@ Page {
         anchors.bottomMargin: Theme.paddingSmall
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeTiny
-        text: "v0.8.6<br>https://github.com/rogora/hangish"
+        text: "v0.9.1<br>https://github.com/rogora/hangish"
     }
 }

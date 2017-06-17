@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
 X-Nemo-Application-Type=silica-qt5
+X-Nemo-Single-Instance=no
 #X-Nemo-Application-Type=qt5
 Icon=harbour-hangish
 Exec=harbour-hangish

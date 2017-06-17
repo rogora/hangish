@@ -257,11 +257,8 @@ User Client::getEntityById(QString cid) {
             qDebug() << "Something went wrong, have " << entities.size();
         }
         else {
-            //qDebug() << "Parsing";
-            //qDebug() << sreply;
             auto entity = entities[0].list();
             User tmp = parseEntity(entity);
-            //qDebug() << "Parsed";
             if (tmp.chat_id == "NF") {
                 tmp.chat_id = tmp.gaia_id = cid;
             }
@@ -270,11 +267,8 @@ User Client::getEntityById(QString cid) {
                 tmp.display_name = "Unknown";
             if (tmp.first_name == "")
                 tmp.first_name = "Unknown";
-            qDebug() << "Corrected";
             contactsModel->addContact(tmp);
-            qDebug() << "Added";
             reply->deleteLater();
-            qDebug() << "DeletedLater";
             return tmp;
         }
     }
@@ -328,9 +322,7 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
                 qDebug() << "Have a UNF here " << tmp.chat_id;
                 User parsedUser = getEntityById(tmp.chat_id);
                 //Put it anyway, as a reminder that we should update it
-                qDebug() << "Returned";
                 res.participants.append({parsedUser, {}});
-                qDebug() << "Appended";
             }
         }
     }
@@ -344,7 +336,6 @@ void Client::parseConversationAbstract(QList<MessageField> abstractFields, Conve
             if (p.user.chat_id == r.userid.chat_id)
             {
                 p.last_read_timestamp = r.last_read;
-                //qDebug() << p.last_read_timestamp.toString();
                 break;
             }
         }
@@ -390,8 +381,6 @@ void Client::parseConversationState(MessageField conv)
     //qDebug() << "CONV_STATE: ";// << conv;
 
     Conversation c = parseConversation(conv.list());
-    qDebug() << c.id;
-    //qDebug() << c.events.size();
 
     //Now formalize what happened:
 
@@ -542,10 +531,10 @@ void Client::networkReply()
             int idx = 0;
             auto ds7Parsed = MessageField::parseListRef(dsData, idx);
             api_key = ds7Parsed[2].string();
-            qDebug() << "API KEY: " << api_key;
+            //qDebug() << "API KEY: " << api_key;
             if (api_key.contains("AF_initDataKeys") || api_key.size() < 10 || api_key.size() > 50) {
-                qDebug() << sreply;
-                qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                //qDebug() << sreply;
+                //qDebug() << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
                 //exit(-1);
                 qDebug() << "Auth expired!";
                 //Not smart for sure, but it should be safe
@@ -567,11 +556,11 @@ void Client::networkReply()
             auto ds2Parsed = MessageField::parseListRef(dsData, idx);
             header_date = ds2Parsed[4].string();
             header_version = ds2Parsed[6].string();
-
+/*
             qDebug() << "HID " << header_id;
             qDebug() << "HDA " << header_date;
             qDebug() << "HVE " << header_version;
-
+*/
             emit initContacts();
             myself = parseMySelf(sreply);
             if (!myself.email.contains("@"))
@@ -584,10 +573,11 @@ void Client::networkReply()
             rosterModel->setMySelf(myself);
 
             //Parse users!
+            /* Temporarily disables; moved to ds:22 with some modifications
             users = parseUsers(sreply);
             foreach (User u, users)
                 contactsModel->addContact(u);
-
+            */
             emit initConvs();
             //Parse conversations
             QList<Conversation> convs = parseConversations(sreply);
@@ -1761,6 +1751,51 @@ void Client::deleteCookies()
     exit(0);
 }
 
+void Client::kill()
+{
+    qApp->quit();
+    exit(0);
+}
+
+bool Client::getDaemonize()
+{
+    QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString homePath = homeDir + "/.daemonize";
+    QFile daemonfile(homePath);
+    if (daemonfile.exists())
+        qDebug() << "Daemonize: true";
+    else
+        qDebug() << "Daemonize: false";
+    return daemonfile.exists();
+}
+
+bool Client::toggleDaemonize(bool t)
+{
+    if (t)
+        qDebug() << "Setting daemonize: true";
+    else
+        qDebug() << "Setting daemonize: false";
+    if (!t) {
+        // remove file
+        QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QString homePath = homeDir + "/.daemonize";
+        QFile daemonfile(homePath);
+        daemonfile.remove();
+        qApp->setQuitOnLastWindowClosed(true);
+        return false;
+    } else {
+        // create file
+        QString homeDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QString homePath = homeDir + "/.daemonize";
+        QFile daemonfile(homePath);
+        daemonfile.open(QIODevice::WriteOnly);
+        daemonfile.write("daemon");
+        daemonfile.close();
+        qApp->setQuitOnLastWindowClosed(false);
+        return true;
+    }
+}
+
 void Client::testNotification()
 {
     //qDebug() << "Sending test notif";
@@ -1932,7 +1967,7 @@ void Client::slotError(QNetworkReply::NetworkError err)
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
     qDebug() << "Error in client " << err;
 
-    if (reply == imageBeingUploaded) {
+    if (reply != nullptr && reply == imageBeingUploaded) {
         qDebug() << "Image upload failed";
         emit imageUploadFailed();
     }

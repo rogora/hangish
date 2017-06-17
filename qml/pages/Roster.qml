@@ -53,15 +53,25 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("About Hangish")
-                onClicked: pageStack.push(about) //Client.testNotification();
+                onClicked: pageStack.push(about); //Client.testNotification(); //
             }
             MenuItem {
-                text: qsTr("Log out and exit")
+                text: qsTr("Log out")
                 onClicked: remorse.execute(qsTr("Deleting cookies"),
                                            function()
                                            {
                                                Client.deleteCookies();
                                            } );
+            }
+            /*
+            MenuItem {
+                text: qsTr("Kill Hangish")
+                onClicked: Client.kill(); //Client.testNotification();
+            }
+            */
+            MenuItem {
+                text: qsTr("Options")
+                onClicked: pageStack.push(options) //Client.testNotification();
             }
             /*
             MenuItem {
