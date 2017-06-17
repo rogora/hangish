@@ -53,7 +53,7 @@ Page {
         PullDownMenu {
             MenuItem {
                 text: qsTr("About Hangish")
-                onClicked: pageStack.push(about) //Client.testNotification();
+                onClicked: pageStack.push(about); //Client.testNotification(); //
             }
             MenuItem {
                 text: qsTr("Log out")

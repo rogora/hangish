@@ -82,9 +82,11 @@ void Notifier::showNotification(QString preview, QString summary, QString body, 
     Notification *n = new Notification(myParent);
 
     n->setCategory("x-nemo.messaging.im");
-    //I may want to personalize the notification, need to create and publish a custom hangish.ini in /usr/share/ngfd/events.d/
+    // I may want to personalize the notification, need to create and publish a custom hangish.ini in /usr/share/ngfd/events.d/
+    // ... or, else, I could hope that everyone that uses hangish also uses sailogram, and
+    // borrow their notification... Maybe harbours would be ok with this :)
     n->setHintValue("x-nemo-feedback", "chat_exists");
-    //n->setHintValue("x-nemo-feedback", "social");
+    //n->setHintValue("x-nemo-feedback", "sailorgram");
     n->setHintValue("x-nemo-preview-icon", "harbour-hangish");
     //n->setHintValue("x-nemo-priority", 100);
     //n->setHintValue("lowPowerModeIconId", "hangish-notif-icon");
