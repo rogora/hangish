@@ -25,7 +25,8 @@ along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>
 #include "messagefield.h"
 
 static QString CHAT_INIT_URL = "https://talkgadget.google.com/u/0/talkgadget/_/chat";
-static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0";
+//static QString user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0";
+static QString user_agent = "hangish";
 
 //Timeout to send for setactiveclient requests:
 static int ACTIVE_TIMEOUT_SECS = 300;
@@ -241,6 +242,7 @@ User Client::getEntityById(QString cid) {
     timeoutTimer.stop();
     QString sreply = reply->readAll();
     qDebug() << "Got reply! " << sreply;
+    processCookies(reply);
 
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
         qDebug() << "200";
@@ -268,6 +270,7 @@ User Client::getEntityById(QString cid) {
             if (tmp.first_name == "")
                 tmp.first_name = "Unknown";
             contactsModel->addContact(tmp);
+            users.append(tmp); //cache the parsed user
             reply->deleteLater();
             return tmp;
         }
@@ -464,14 +467,6 @@ QList<Conversation> Client::parseConversations(const QString& conv)
     return res;
 }
 
-void Client::postReply(QNetworkReply *reply)
-{
-    timeoutTimer.stop();
-    if (reply->error() == QNetworkReply::NoError) {
-        //qDebug() << "No errors on Post";
-    }
-}
-
 User Client::parseMySelf(const QString& sreply) {
     //SELF INFO
     QStringRef dsData = Utils::extractArrayForDS(sreply, 36);
@@ -502,17 +497,8 @@ void Client::networkReply()
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "DBG Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        for (int i=0; i<sessionCookies.size(); i++) {
-            if (sessionCookies[i].name() == cookie.name()) {
-                qDebug() << "Updating cookie " << cookie.name();
-                sessionCookies[i].setValue(cookie.value());
-            }
-        }
-    }
+    processCookies(reply);
+
     if (reply->error() == QNetworkReply::NoError) {
         if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
             qDebug() << "Redir";
@@ -523,6 +509,7 @@ void Client::networkReply()
         }
         else {
             emit initializing();
+            initCompleted = true;
             QString sreply = reply->readAll();
             qDebug() << sreply;
 
@@ -625,13 +612,8 @@ void Client::uploadPerformedReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    processCookies(reply);
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -663,6 +645,9 @@ void Client::uploadPerformedReply()
 
 void Client::performImageUpload(QString url)
 {
+    if (pvtUpdateNeeded)
+        getPVTToken();
+
     OutgoingImage oi = outgoingImages.at(0);
 
     QFile inFile(oi.filename);
@@ -679,7 +664,6 @@ void Client::performImageUpload(QString url)
 
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, sessionCookies) {
-        if (cookie.name()=="SAPISID" || cookie.name()=="SSID" || cookie.name()=="HSID" || cookie.name()=="APISID" || cookie.name()=="SID")
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
@@ -697,13 +681,8 @@ void Client::uploadImageReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    processCookies(reply);
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -729,12 +708,9 @@ void Client::sendMessageReply() {
     pendingRequests.remove(reply);
 
     qDebug() << reply;
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+
+    processCookies(reply);
+
     QString response = reply->readAll();
     qDebug() << "Response " << response;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -771,10 +747,12 @@ void Client::sendMessageReply() {
 }
 
 QNetworkReply *Client::sendRequest(QString function, QString json) {
+    if (pvtUpdateNeeded)
+        getPVTToken();
+
     QString url = endpoint + function;
     url += "?key=";
     url += api_key;
-    //url += "AIzaSyAfFJCeph-euFSwtmqFZi0kaKk-cZ5wufM";
 
     //add params
     QNetworkRequest req(url);
@@ -787,7 +765,7 @@ QNetworkReply *Client::sendRequest(QString function, QString json) {
 
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, sessionCookies) {
-        if (cookie.name()=="SAPISID" || cookie.name()=="SSID" || cookie.name()=="HSID" || cookie.name()=="APISID" || cookie.name()=="SID")
+        //qDebug() << "Sending cookie " << cookie.name() << " - " << cookie.value();
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
@@ -902,6 +880,9 @@ void Client::sendChatMessage(QString segments, QString conversationId) {
 
 void Client::sendImage(QString segments, QString conversationId, QString filename)
 {
+    if (pvtUpdateNeeded)
+        getPVTToken();
+
     QFile inFile(filename);
     if (!inFile.open(QIODevice::ReadOnly)) {
         qDebug() << "File not found";
@@ -998,7 +979,6 @@ void Client::sendImage(QString segments, QString conversationId, QString filenam
 
     QList<QNetworkCookie> reqCookies;
     foreach (QNetworkCookie cookie, sessionCookies) {
-        if (cookie.name()=="SAPISID" || cookie.name()=="SSID" || cookie.name()=="HSID" || cookie.name()=="APISID" || cookie.name()=="SID")
             reqCookies.append(cookie);
     }
     req.setHeader(QNetworkRequest::CookieHeader, QVariant::fromValue(reqCookies));
@@ -1017,12 +997,7 @@ void Client::syncAllNewEventsReply()
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1056,12 +1031,7 @@ void Client::syncAllNewEventsDataArrval()
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1149,12 +1119,7 @@ void Client::leaveConversation(QString convId)
 void Client::leaveConversationReply() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1193,12 +1158,7 @@ void Client::deleteConversation(QString convId)
 void Client::deleteConversationReply() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1241,12 +1201,7 @@ void Client::changeNotificationsForConversationReply()
 {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1290,12 +1245,7 @@ void Client::renameConversation(QString convId, QString newName)
 void Client::renameConversationReply() {
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1338,12 +1288,7 @@ void Client::retrieveConversationLogReply()
     //The content of this reply contains CLIENT_CONVERSATION_STATE, such as lost messages
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
 
-    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-    qDebug() << "Got " << c.size() << "from" << reply->url();
-    foreach(QNetworkCookie cookie, c) {
-        qDebug() << cookie.name();
-    }
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
@@ -1367,6 +1312,7 @@ void Client::setPresenceReply()
 
     QString sreply = reply->readAll();
     qDebug() << "Set presence response " << sreply;
+    processCookies(reply);
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
         qDebug() << "There was an error setting presence! " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     }
@@ -1378,7 +1324,7 @@ void Client::setFocusReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Set focus response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
@@ -1428,7 +1374,7 @@ void Client::setTypingReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Set typing response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
@@ -1442,7 +1388,7 @@ void Client::setActiveClientReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Set active client response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
@@ -1501,7 +1447,7 @@ void Client::updateWatermarkReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
-
+    processCookies(reply);
     QString sreply = reply->readAll();
     qDebug() << "Update watermark response " << sreply;
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()!=200) {
@@ -1551,25 +1497,9 @@ void Client::pvtReply()
     timeoutTimer.stop();
 
     QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
+    processCookies(reply);
 
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200) {
-        QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
-        QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
-        qDebug() << "Got " << c.size() << "cookies from" << reply->url();
-
-        //TODO: make this procedure safe even with more than 1 cookie as answer
-        bool updated = false;
-        foreach(QNetworkCookie cookie, c) {
-            for (int i=0; i<sessionCookies.size(); i++) {
-                if (sessionCookies[i].name() == cookie.name()) {
-                    qDebug() << "Updating cookie " << sessionCookies[i].name();
-                    sessionCookies[i].setValue(cookie.value());
-                    updated = true;
-                }
-            }
-        }
-        if (!updated)
-            sessionCookies.append(c);
         //END OF TODO
         QString rep = reply->readAll();
         reply->close();
@@ -1580,14 +1510,8 @@ void Client::pvtReply()
         if (parsedRep.size() > 1)
             pvtToken = parsedRep[1].string();
 
-
-        if (c.size()>0) {
-            auth->updateCookies(sessionCookies);
-        }
-        else {
-            nam->setCookieJar(new QNetworkCookieJar(this));
+        if (!initCompleted)
             initChat(pvtToken);
-        }
     }
     else {
         qDebug() << "Pvt req returned " << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1611,6 +1535,7 @@ void Client::pvtReply()
 
 void Client::initChat(QString pvt)
 {
+    initCompleted = true;
     QString surl = QString("https://hangouts.google.com/webchat/u/0/load?prop=hangish&fid=gtn-roster-iframe-id&ec=[\"ci:ec\",true,true,false]");
     surl += "&pvt=";
     surl += pvt;
@@ -1628,6 +1553,8 @@ void Client::initChat(QString pvt)
 
 void Client::getPVTToken()
 {
+    pvtUpdateNeeded = false;
+    qDebug() << "Gonna ask for the pvt token";
     QNetworkRequest req( QUrl( QString("https://talkgadget.google.com/talkgadget/_/extension-start") ) );
     req.setRawHeader("User-Agent", user_agent.toLocal8Bit().data());
 
@@ -1645,20 +1572,39 @@ void Client::authenticationDone()
     sessionCookies = auth->getCookies();
     stuckWithNoNetwork = false;
     nam->setCookieJar(new QNetworkCookieJar(this));
-    getPVTToken();
+    pvtUpdateNeeded = true;
+    if (!initCompleted)
+        getPVTToken();
 }
 
-void Client::cookieUpdateSlot(QNetworkCookie cookie)
+void Client::cookieUpdateSlot(QList<QNetworkCookie> c)
 {
-    qDebug() << "CLT: upd " << cookie.name();
-    for (int i=0; i<sessionCookies.size(); i++) {
-        if (sessionCookies[i].name() == cookie.name()) {
-            qDebug() << "Updating cookie " << sessionCookies[i].name();
-            sessionCookies[i].setValue(cookie.value());
+    //qDebug() << "CLT: upd " << cookie.name();
+    bool found = false;
+    int at_least_one_updated   = 0;
+    bool at_least_one_added     = false;
+    foreach(QNetworkCookie cookie, c) {
+        for (int i=0; i<sessionCookies.size(); i++) {
+            found = false;
+            if (sessionCookies[i].name() == cookie.name()) {
+                found = true;
+                if (sessionCookies[i].value() != cookie.value()) {
+                    qDebug() << "Updating cookie " << i << " " << sessionCookies[i].name() << "; " << sessionCookies[i].value() << " - " << cookie.value();
+                    sessionCookies[i].setValue(cookie.value());
+                    at_least_one_updated += 1;
+                }
+            }
+        }
+        if (!found) {
+            qDebug() << "Adding " << cookie.name() << " - " << cookie.value();
+            at_least_one_added = true;
+            sessionCookies.append(cookie);
         }
     }
-    nam->setCookieJar(new QNetworkCookieJar(this));
-    //auth->updateCookies(sessionCookies);
+    if ((at_least_one_updated || at_least_one_added) /*&& (at_least_one_added || at_least_one_updated > 1)*/) {
+        // SIDCC changes at every connection, trapping us in a loop
+        auth->updateCookies(sessionCookies);
+    }
 }
 
 void Client::catchNotificationForCover(int num) {
@@ -1719,6 +1665,7 @@ Client::Client(RosterModel *prosterModel, ConversationModel *pconversationModel,
     needSync = false;
     needLogin = false;
     initCompleted = false;
+    pvtUpdateNeeded = true;
     rosterModel = prosterModel;
     conversationModel = pconversationModel;
     contactsModel = pcontactsModel;
@@ -2004,4 +1951,36 @@ void Client::testFunction() {
 bool Client::isLoginNeeded()
 {
     return auth->isLoginNeeded();
+}
+
+void Client::processCookies(QNetworkReply *reply)
+{
+    QVariant v = reply->header(QNetworkRequest::SetCookieHeader);
+    QList<QNetworkCookie> c = qvariant_cast<QList<QNetworkCookie> >(v);
+    qDebug() << "Got " << c.size() << "cookies from" << reply->url();
+    bool found = false;
+    int at_least_one_updated   = 0;
+    bool at_least_one_added     = false;
+    foreach(QNetworkCookie cookie, c) {
+        for (int i=0; i<sessionCookies.size(); i++) {
+            found = false;
+            if (sessionCookies[i].name() == cookie.name()) {
+                found = true;
+                if (sessionCookies[i].value() != cookie.value()) {
+                    qDebug() << "Updating cookie " << i << " " << sessionCookies[i].name() << "; " << sessionCookies[i].value() << " - " << cookie.value();
+                    sessionCookies[i].setValue(cookie.value());
+                    at_least_one_updated += 1;
+                }
+            }
+        }
+        if (!found) {
+            qDebug() << "Adding " << cookie.name() << " - " << cookie.value();
+            at_least_one_added = true;
+            sessionCookies.append(cookie);
+        }
+    }
+    if ((at_least_one_updated || at_least_one_added) /*&& (at_least_one_added || at_least_one_updated > 1)*/) {
+        // SIDCC changes at every connection, trapping us in a loop
+        auth->updateCookies(sessionCookies);
+    }
 }

@@ -39,9 +39,8 @@ void Channel::processCookies(QNetworkReply *reply)
     foreach(QNetworkCookie cookie, c) {
         qDebug() << cookie.name();
         for (int i=0; i<session_cookies.size(); i++) {
-            if (session_cookies[i].name() == cookie.name()) {
+            if (session_cookies[i].name() == cookie.name() && session_cookies[i].value() != cookie.value()) {
                 session_cookies[i].setValue(cookie.value());
-                emit cookieUpdateNeeded(cookie);
                 qDebug() << "Updated cookie " << cookie.name();
                 cookieUpdated = true;
             }
@@ -50,6 +49,7 @@ void Channel::processCookies(QNetworkReply *reply)
 
     if (cookieUpdated) {
         nam->setCookieJar(new QNetworkCookieJar(this));
+        emit cookieUpdateNeeded(session_cookies);
     }
 }
 
@@ -458,7 +458,7 @@ void Channel::slotError(QNetworkReply::NetworkError err)
         //session.open();
 
         nam->setCookieJar(new QNetworkCookieJar(this));
-        emit cookieUpdateNeeded(QNetworkCookie());
+        //emit cookieUpdateNeeded(QNetworkCookie());
     }
     checkChannelTimer->start();
 /*

@@ -73,7 +73,7 @@ void OAuth2Auth::fetchCookiesReply()
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
         QString response = reply->readAll();
-        //qDebug() << response;
+        qDebug() << response;
 
         // MAKE REQ
         QNetworkRequest req2( QUrl("https://accounts.google.com/MergeSession?service=mail&continue=http://www.google.com&uberauth="+response) );
@@ -113,8 +113,8 @@ void OAuth2Auth::fetchCookiesReply3()
     }
     if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==200 || reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()==302) {
         //GET REFRESH TOKEN
-        //QString response = reply->readAll();
-        //qDebug() << response;
+        QString response = reply->readAll();
+        qDebug() << response;
         emit gotCookies();
     }
     else {

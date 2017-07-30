@@ -62,9 +62,11 @@ private:
     QTimer timeoutTimer;
     QString syncAllNewEventsString;
     Notifier *notifier;
+    bool needInit;
     bool needLogin;
     bool needSync;
     bool stuckWithNoNetwork;
+    bool pvtUpdateNeeded;
     QDateTime needSyncTS;
     QDateTime lastSetActive, lastSetPresence;
     QList<OutgoingImage> outgoingImages;
@@ -104,6 +106,7 @@ private:
     QByteArray getAuthHeader();
     QNetworkReply * sendRequest(QString function, QString json);
     void syncAllNewEvents(QDateTime timestamp);
+    void processCookies(QNetworkReply *reply);
 
 public:
     Client(RosterModel *prosterModel, ConversationModel *pconversationModel, ContactsModel *pcontactsModel);
@@ -146,7 +149,6 @@ public slots:
     void authenticationDone();
     void initDone();
     void networkReply();
-    void postReply(QNetworkReply *reply);
     void sendMessageReply();
     void uploadImageReply();
     void uploadPerformedReply();
@@ -166,7 +168,7 @@ public slots:
     void loginNeededSlot();
     void updateClientId(QString newID);
     void setFocusReply();
-    void cookieUpdateSlot(QNetworkCookie cookie);
+    void cookieUpdateSlot(QList<QNetworkCookie> c);
     void catchNotificationForCover(int num);
     void catchDeletedNotifications();
     void retrieveConversationLogReply();

@@ -91,7 +91,7 @@ private slots:
     void longPollRequest();
 
 signals:
-    void cookieUpdateNeeded(QNetworkCookie cookie);
+    void cookieUpdateNeeded(QList<QNetworkCookie> cookies);
     void updateClientId(QString newID);
     void activeClientUpdate(int state);
     void updateWM(QString convId);
